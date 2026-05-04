@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CloudRain, Loader2, MapPin } from "lucide-react"
+import { CloudRain, Loader2, MapPin, Key } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 
 export function WeatherAdvice() {
@@ -13,11 +13,22 @@ export function WeatherAdvice() {
   const { language, t } = useLanguage()
 
   const fetchAdvice = async () => {
+    const apiKey = localStorage.getItem("jaliz-api-key")
+    const modelName = localStorage.getItem("jaliz-model")
+
+    if (!apiKey) {
+      setError(t("api_key_required"))
+      return
+    }
+
     setLoading(true)
     setError(null)
+    
     try {
       const mockLocation = { latitude: 35.6892, longitude: 51.3890 }
-      
+      const savedPlants = localStorage.getItem("jaliz-plants")
+      const userPlants = savedPlants ? JSON.parse(savedPlants) : []
+
       const response = await fetch("/api/advice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -25,10 +36,9 @@ export function WeatherAdvice() {
           latitude: mockLocation.latitude,
           longitude: mockLocation.longitude,
           language: language,
-          plants: [
-            { name: "Monstera Deliciosa", type: "Indoor Tropical" },
-            { name: "Tomato", type: "Outdoor Vegetable" }
-          ]
+          plants: userPlants,
+          api_key: apiKey,
+          model_name: modelName
         })
       })
 
@@ -46,43 +56,44 @@ export function WeatherAdvice() {
   }
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md border-emerald-100 bg-gradient-to-br from-white to-emerald-50/50">
+    <Card className="overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200 bg-white">
       <CardHeader className="space-y-1 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl flex items-center gap-2 text-emerald-900">
+          <CardTitle className="text-xl flex items-center gap-2 text-slate-900">
             <CloudRain className="h-5 w-5 text-emerald-500" />
             {t("weather_title")}
           </CardTitle>
-          <div className="flex items-center text-xs text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
-            <MapPin className="h-3 w-3 mr-1" />
+          <div className="flex items-center text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-full font-medium">
+            <MapPin className="h-3 w-3 mr-1 rtl:ml-1 rtl:mr-0" />
             {language === "en" ? "Tehran, IR" : "تهران، ایران"}
           </div>
         </div>
-        <CardDescription>{t("weather_desc")}</CardDescription>
+        <CardDescription className="text-slate-500">{t("weather_desc")}</CardDescription>
       </CardHeader>
       
       <CardContent className="pb-4 min-h-[120px] flex flex-col justify-center">
         {loading ? (
-          <div className="flex flex-col items-center justify-center text-emerald-600 space-y-2 py-4">
+          <div className="flex flex-col items-center justify-center text-emerald-600 space-y-3 py-6">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="text-sm font-medium animate-pulse">{t("analyzing")}</span>
           </div>
         ) : advice ? (
-          <div className="p-4 rounded-lg bg-white/80 border border-emerald-100 shadow-sm whitespace-pre-wrap text-emerald-900 text-sm leading-relaxed backdrop-blur-sm">
+          <div className="p-5 rounded-xl bg-slate-50 border border-slate-100 shadow-inner whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">
             {advice}
           </div>
         ) : error ? (
-          <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm">
+          <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-100 text-sm flex items-center gap-2">
+            {error === t("api_key_required") && <Key className="h-4 w-4 shrink-0" />}
             {error}
           </div>
         ) : (
-          <div className="text-center text-emerald-600/70 py-6 text-sm">
+          <div className="text-center text-slate-500 py-8 text-sm px-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
             {t("advice_prompt")}
           </div>
         )}
       </CardContent>
       
-      <CardFooter className="bg-emerald-50/50 pt-4">
+      <CardFooter className="bg-slate-50/50 pt-4 border-t border-slate-100">
         <Button 
           onClick={fetchAdvice} 
           disabled={loading} 
