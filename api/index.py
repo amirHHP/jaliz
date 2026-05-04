@@ -19,6 +19,7 @@ class PlantInfo(BaseModel):
 class WeatherAdviceRequest(BaseModel):
     latitude: float
     longitude: float
+    language: Optional[str] = "en"
     plants: List[PlantInfo]
 
 @app.get("/api/health")
@@ -31,6 +32,7 @@ def get_weather_advice(request: WeatherAdviceRequest):
         advice = weather_agent.get_advice(
             lat=request.latitude,
             lon=request.longitude,
+            language=request.language,
             plants=[p.dict() for p in request.plants]
         )
         return {"advice": advice}
