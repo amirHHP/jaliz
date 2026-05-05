@@ -1,7 +1,7 @@
 import os
 import requests
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from typing import List, Dict
 
 class WeatherAgent:
@@ -99,4 +99,10 @@ Actionable Advice:"""
         chain = prompt | llm
         result = chain.invoke({"weather": weather_summary, "plants": plant_list_str, "lang_instruction": lang_instruction})
         
-        return result.content
+        content = result.content
+        if isinstance(content, list):
+            content = " ".join([b.get("text", "") for b in content if isinstance(b, dict) and "text" in b])
+        elif isinstance(content, dict):
+            content = content.get("text", str(content))
+            
+        return str(content)

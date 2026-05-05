@@ -2,7 +2,11 @@ import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-from .weather_agent import WeatherAgent
+
+try:
+    from weather_agent import WeatherAgent
+except ImportError:
+    from .weather_agent import WeatherAgent
 import google.generativeai as genai
 
 app = FastAPI()

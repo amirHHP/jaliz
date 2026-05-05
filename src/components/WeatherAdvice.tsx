@@ -47,7 +47,7 @@ export function WeatherAdvice() {
       }
 
       const data = await response.json()
-      setAdvice(data.advice)
+      setAdvice(typeof data.advice === "string" ? data.advice : JSON.stringify(data.advice))
     } catch (err: any) {
       setError(err.message || "An error occurred.")
     } finally {
