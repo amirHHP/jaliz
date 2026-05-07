@@ -25,7 +25,7 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { href: "/", key: "dashboard" },
-  { href: "#", key: "marketplace" },
+  { href: "/marketplace", key: "marketplace" },
   { href: "/plants", key: "my_plants" },
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]

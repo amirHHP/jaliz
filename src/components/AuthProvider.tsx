@@ -15,6 +15,7 @@ import {
   LocalAuthService,
   RegisterInput,
   User,
+  UserProfilePatch,
   UserRole,
 } from "@/lib/auth"
 
@@ -35,6 +36,10 @@ interface AuthContextValue {
   register: (input: RegisterInput) => Promise<User>
   login: (email: string, password: string) => Promise<User>
   logout: () => void
+  /** Update mutable profile fields on the *current* user. */
+  updateMyProfile: (patch: UserProfilePatch) => User
+  /** Look up any user by id (useful for showing message authors / listing owners). */
+  getUser: (id: string) => User | undefined
   // Admin operations (callers should already be admin; service only enforces
   // shape, the UI gates these behind /admin which checks `isAdmin`).
   listUsers: () => User[]
@@ -120,6 +125,25 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
     setStatus("unauthenticated")
   }, [])
 
+  const updateMyProfile = useCallback(
+    (patch: UserProfilePatch) => {
+      const current = serviceRef.current!.getCurrentUser()
+      if (!current) {
+        throw new Error("updateMyProfile requires an authenticated user")
+      }
+      const updated = serviceRef.current!.updateProfile(current.id, patch)
+      setUser(updated)
+      bump()
+      return updated
+    },
+    [bump],
+  )
+
+  const getUser = useCallback(
+    (id: string) => serviceRef.current!.getUser(id),
+    [],
+  )
+
   const listUsers = useCallback(() => serviceRef.current!.listUsers(), [])
 
   const updateUserRole = useCallback(
@@ -180,6 +204,8 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
       register,
       login,
       logout,
+      updateMyProfile,
+      getUser,
       listUsers,
       updateUserRole,
       setUserActive,
@@ -193,6 +219,8 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
       register,
       login,
       logout,
+      updateMyProfile,
+      getUser,
       listUsers,
       updateUserRole,
       setUserActive,

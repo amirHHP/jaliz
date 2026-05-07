@@ -4,6 +4,7 @@ import {
   RegisterInput,
   StoredUser,
   User,
+  UserProfilePatch,
   UserRole,
 } from "./types"
 import { generateSalt, hashPassword, verifyPassword } from "./password"
@@ -115,6 +116,11 @@ export class LocalAuthService implements IAuthService {
     return this.currentUser
   }
 
+  getUser(id: string): User | undefined {
+    const stored = this.findStoredById(id)
+    return stored ? toPublicUser(stored) : undefined
+  }
+
   async register(input: RegisterInput): Promise<User> {
     return this.createUser(input, "user")
   }
@@ -177,6 +183,22 @@ export class LocalAuthService implements IAuthService {
     if (this.currentUser?.id === id) {
       this.logout()
     }
+  }
+
+  updateProfile(id: string, patch: UserProfilePatch): User {
+    return this.mutateUser(id, (u) => {
+      const next = { ...u }
+      if (patch.fullName !== undefined) {
+        const trimmed = patch.fullName.trim()
+        if (trimmed) next.fullName = trimmed
+      }
+      if (patch.phone !== undefined) {
+        const trimmed = patch.phone.trim()
+        // Allow clearing the phone by passing an empty string.
+        next.phone = trimmed || undefined
+      }
+      return next
+    })
   }
 
   async resetPassword(id: string, newPassword: string): Promise<void> {
