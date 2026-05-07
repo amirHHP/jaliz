@@ -8,7 +8,9 @@
     "dev:py": "cd api && ../.venv/bin/uvicorn index:app --reload --port 8000",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -30,6 +32,7 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "uvicorn": "^0.0.1-security"
+    "uvicorn": "^0.0.1-security",
+    "vitest": "^4.1.5"
   }
 }

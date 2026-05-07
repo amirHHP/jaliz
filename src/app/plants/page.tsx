@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
-import { Leaf, Plus, Droplets, Activity, X, Globe, Settings } from "lucide-react"
+import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { SettingsModal } from "@/components/SettingsModal"
+import { Header } from "@/components/Header"
 
 interface Plant {
   id: string
@@ -22,10 +22,9 @@ interface Plant {
 }
 
 export default function MyPlantsPage() {
-  const { language, setLanguage, t } = useLanguage()
+  const { t } = useLanguage()
   const [plants, setPlants] = useState<Plant[]>([])
   const [isAdding, setIsAdding] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   
   // Form State
   const [newName, setNewName] = useState("")
@@ -37,6 +36,7 @@ export default function MyPlantsPage() {
   const [newLastWatered, setNewLastWatered] = useState("")
   const [newRecentlyReplanted, setNewRecentlyReplanted] = useState(false)
   const [newHealth, setNewHealth] = useState<Plant["health"]>("Excellent")
+  const [newImage, setNewImage] = useState<string>("")
 
   useEffect(() => {
     const saved = localStorage.getItem("jaliz-plants")
@@ -65,6 +65,43 @@ export default function MyPlantsPage() {
     localStorage.setItem("jaliz-plants", JSON.stringify(newPlants))
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          const MAX_WIDTH = 800
+          const MAX_HEIGHT = 800
+          let width = img.width
+          let height = img.height
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width
+              width = MAX_WIDTH
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height
+              height = MAX_HEIGHT
+            }
+          }
+          
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext("2d")
+          ctx?.drawImage(img, 0, 0, width, height)
+          setNewImage(canvas.toDataURL("image/jpeg", 0.7))
+        }
+        img.src = event.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleAddPlant = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) return
@@ -79,7 +116,8 @@ export default function MyPlantsPage() {
       hasDrainage: newHasDrainage,
       lastWatered: newLastWatered || new Date().toISOString().split('T')[0],
       recentlyReplanted: newRecentlyReplanted,
-      health: newHealth
+      health: newHealth,
+      image: newImage
     }
 
     savePlants([...plants, newPlant])
@@ -93,56 +131,18 @@ export default function MyPlantsPage() {
     setNewLastWatered("")
     setNewRecentlyReplanted(false)
     setNewHealth("Excellent")
+    setNewImage("")
   }
 
   const deletePlant = (id: string) => {
     savePlants(plants.filter(p => p.id !== id))
   }
 
-  const toggleLanguage = () => {
-    setLanguage(language === "en" ? "fa" : "en")
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-emerald-700">
-            <div className="p-2 bg-emerald-100 rounded-xl shadow-sm">
-              <Leaf className="h-6 w-6 text-emerald-600" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">{t("app_title")}</span>
-          </div>
-          <nav className="hidden md:flex gap-6 text-sm font-medium">
-            <a href="/" className="text-slate-600 hover:text-emerald-700 transition-colors">{t("dashboard")}</a>
-            <a href="#" className="text-slate-600 hover:text-emerald-700 transition-colors">{t("marketplace")}</a>
-            <a href="/plants" className="text-emerald-700 font-semibold transition-colors">{t("my_plants")}</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={toggleLanguage}
-              className="flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200"
-            >
-              <Globe className="h-4 w-4" />
-              {language === "en" ? "فارسی" : "English"}
-            </button>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center justify-center h-9 w-9 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors bg-slate-100 rounded-full border border-slate-200"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-            <div className="h-9 w-9 rounded-full bg-emerald-100 border-2 border-white shadow-sm overflow-hidden flex-shrink-0">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t("my_plants")}</h1>
@@ -173,6 +173,15 @@ export default function MyPlantsPage() {
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
                     placeholder={t("plant_name_ph")}
+                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-700">{t("plant_type")}</label>
+                  <input 
+                    value={newType}
+                    onChange={e => setNewType(e.target.value)}
+                    placeholder={t("plant_type_ph")}
                     className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
@@ -258,8 +267,14 @@ export default function MyPlantsPage() {
                   <input 
                     type="file"
                     accept="image/*"
+                    onChange={handleImageChange}
                     className="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium file:px-3 file:py-1 file:rounded-md file:mr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
                   />
+                  {newImage && (
+                    <div className="mt-4 h-40 w-40 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                      <img src={newImage} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
                 </div>
               </CardContent>
               <CardFooter className="justify-end gap-3 pt-4 pb-6 bg-slate-50/50 border-t border-slate-100 mt-4">
@@ -274,7 +289,7 @@ export default function MyPlantsPage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {plants.length === 0 ? (
             <div className="col-span-full py-16 text-center text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed shadow-sm">
               <Leaf className="h-12 w-12 mx-auto mb-4 text-slate-300" />
@@ -284,34 +299,49 @@ export default function MyPlantsPage() {
             plants.map(plant => {
               const daysAgo = Math.floor((Date.now() - new Date(plant.lastWatered).getTime()) / (1000 * 3600 * 24))
               return (
-                <Card key={plant.id} className="group relative overflow-hidden transition-all duration-300 hover:shadow-md border-slate-200 bg-white hover:-translate-y-1">
+                <Card key={plant.id} className="group relative overflow-hidden transition-all duration-300 hover:shadow-md border-slate-200 bg-white hover:-translate-y-1 flex flex-col">
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="absolute top-2 right-2 h-8 w-8 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-red-600 hover:bg-red-50 z-10 transition-opacity"
+                    className="absolute top-2 right-2 h-8 w-8 text-white opacity-0 group-hover:opacity-100 hover:text-red-100 hover:bg-red-500/90 z-20 transition-opacity bg-black/20 backdrop-blur-sm"
                     onClick={() => deletePlant(plant.id)}
                   >
                     <X className="h-4 w-4" />
                   </Button>
-                  <CardHeader className="pb-3 border-b border-slate-50/50">
-                    <CardTitle className="text-xl text-slate-900 pr-8">{plant.name}</CardTitle>
-                    <div className="inline-flex items-center text-xs font-medium bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md w-fit mt-2">
-                      {plant.type}
+                  
+                  {/* Image Section */}
+                  <div className="w-full h-48 bg-slate-100 relative overflow-hidden border-b border-slate-100 shrink-0">
+                    {plant.image ? (
+                      <img src={plant.image} alt={plant.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                        <ImageIcon className="h-12 w-12 mb-2 opacity-50" />
+                        <span className="text-xs font-medium uppercase tracking-wider">No Photo</span>
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3 flex gap-2 z-10">
+                      <div className="inline-flex items-center text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-md shadow-sm uppercase tracking-wider">
+                        {plant.type}
+                      </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4 pt-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center text-slate-600">
-                        <Droplets className="h-4 w-4 ml-0 mr-2 rtl:ml-2 rtl:mr-0 text-sky-500" />
-                        <span className="text-slate-800 font-medium">
+                  </div>
+
+                  <CardContent className="space-y-4 pt-5 pb-5 grow flex flex-col">
+                    <div>
+                      <CardTitle className="text-xl text-slate-900 leading-tight">{plant.name}</CardTitle>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs pt-1">
+                      <div className="flex items-center text-slate-600" title="Last Watered">
+                        <Droplets className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-sky-500" />
+                        <span className="font-medium truncate">
                           {daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`}
                         </span>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm border-t border-slate-100 pt-3">
-                      <div className="flex items-center text-slate-600">
-                        <Activity className="h-4 w-4 ml-0 mr-2 rtl:ml-2 rtl:mr-0 text-emerald-500" />
-                        <span className={`font-medium ${
+                      
+                      <div className="flex items-center text-slate-600" title="Health Status">
+                        <Activity className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-emerald-500" />
+                        <span className={`font-medium truncate ${
                           plant.health === 'Excellent' ? 'text-emerald-600' : 
                           plant.health === 'Good' ? 'text-emerald-500' : 'text-amber-500'
                         }`}>
@@ -319,7 +349,48 @@ export default function MyPlantsPage() {
                            plant.health === 'Good' ? t("health_good") : t("health_needs_attention")}
                         </span>
                       </div>
+
+                      <div className="flex items-center text-slate-600" title="Location">
+                        <MapPin className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-indigo-400" />
+                        <span className="font-medium truncate">
+                          {plant.locationType === 'Indoor' ? t("location_indoor") : t("location_outdoor")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-slate-600" title="Light Exposure">
+                        <Sun className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-400" />
+                        <span className="font-medium truncate">
+                          {plant.lightExposure === 'Low Light' ? t("light_low") :
+                           plant.lightExposure === 'Partial Shade' ? t("light_partial") :
+                           plant.lightExposure === 'Bright Indirect' ? t("light_bright") : t("light_full")}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center text-slate-600" title="Pot Type">
+                        <Box className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-700/60" />
+                        <span className="font-medium truncate">
+                          {plant.potType === 'Terracotta' ? t("pot_terracotta") :
+                           plant.potType === 'Plastic' ? t("pot_plastic") :
+                           plant.potType === 'Ceramic' ? t("pot_ceramic") :
+                           plant.potType === 'Metal' ? t("pot_metal") : t("pot_other")}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center text-slate-600" title="Drainage">
+                        <Droplets className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-slate-300" />
+                        <span className="font-medium truncate flex items-center gap-1">
+                          {t("has_drainage")}
+                          {plant.hasDrainage ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/> : <X className="h-3.5 w-3.5 text-red-400"/>}
+                        </span>
+                      </div>
                     </div>
+                    
+                    {plant.recentlyReplanted && (
+                      <div className="mt-auto pt-3 border-t border-slate-100 flex items-center text-amber-600 text-xs font-medium">
+                        <Sprout className="h-4 w-4 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
+                        {t("recently_replanted")}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )
