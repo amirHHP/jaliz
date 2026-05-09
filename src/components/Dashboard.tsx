@@ -5,6 +5,7 @@ import { MarketplaceGrid } from "@/components/MarketplaceGrid"
 import { WeatherAdvice } from "@/components/WeatherAdvice"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
+import { WateringSchedule } from "@/components/WateringSchedule"
 
 /**
  * Authenticated home view. Greets the signed-in user, surfaces today's
@@ -38,25 +39,7 @@ export function Dashboard() {
           <div className="lg:col-span-5 space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
             <WeatherAdvice />
 
-            <div className="bg-slate-900 text-white rounded-xl p-6 relative overflow-hidden shadow-lg border border-slate-800">
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-600/30 blur-2xl"></div>
-              <h3 className="font-semibold text-lg relative z-10 text-emerald-50">
-                {t("watering_title")}
-              </h3>
-              <p className="text-slate-300 text-sm mt-2 mb-5 relative z-10">
-                {t("watering_desc")}
-              </p>
-              <div className="flex -space-x-2 relative z-10 rtl:space-x-reverse">
-                {["M", "F", "S"].map((initial, i) => (
-                  <div
-                    key={i}
-                    className="w-9 h-9 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-xs font-semibold text-emerald-400 shadow-sm"
-                  >
-                    {initial}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <WateringSchedule />
           </div>
 
           <div className="lg:col-span-7 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both">

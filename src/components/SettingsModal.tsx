@@ -106,8 +106,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-slate-200 bg-white">
-        <CardHeader className="flex flex-row justify-between items-center bg-slate-50 border-b border-slate-100 pb-4">
+      <Card className="w-full max-w-md shadow-2xl border-slate-200 bg-white max-h-[95vh] flex flex-col">
+        <CardHeader className="flex flex-row justify-between items-center bg-slate-50 border-b border-slate-100 pb-4 shrink-0">
           <CardTitle className="text-xl flex items-center gap-2 text-slate-800">
             <Settings className="h-5 w-5 text-slate-500" />
             {t("api_key_title")}
@@ -117,7 +117,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </Button>
         </CardHeader>
         
-        <CardContent className="pt-6 space-y-5">
+        <CardContent className="pt-6 space-y-5 overflow-y-auto">
           <p className="text-sm text-slate-600">
             {t("api_key_desc")}
           </p>
@@ -186,7 +186,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           )}
         </CardContent>
         
-        <CardFooter className="bg-slate-50/50 border-t border-slate-100 pt-4 flex justify-between items-center">
+        <CardFooter className="bg-slate-50/50 border-t border-slate-100 pt-4 pb-4 flex justify-between items-center shrink-0">
           <div>
             {saved && (
               <span className="text-emerald-600 text-sm flex items-center gap-1 animate-in fade-in">

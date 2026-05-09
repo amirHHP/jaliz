@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
-import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon } from "lucide-react"
+import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
@@ -19,6 +19,8 @@ interface Plant {
   recentlyReplanted: boolean
   health: "Excellent" | "Good" | "Needs Attention"
   image?: string
+  careTips?: string
+  wateringTips?: string
 }
 
 export default function MyPlantsPage() {
@@ -37,6 +39,9 @@ export default function MyPlantsPage() {
   const [newRecentlyReplanted, setNewRecentlyReplanted] = useState(false)
   const [newHealth, setNewHealth] = useState<Plant["health"]>("Excellent")
   const [newImage, setNewImage] = useState<string>("")
+  const [newCareTips, setNewCareTips] = useState("")
+  const [newWateringTips, setNewWateringTips] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("jaliz-plants")
@@ -48,13 +53,17 @@ export default function MyPlantsPage() {
           id: "1", name: "Monstera Deliciosa", type: "Indoor Tropical", 
           locationType: "Indoor", lightExposure: "Bright Indirect", potType: "Ceramic", 
           hasDrainage: true, lastWatered: new Date().toISOString().split('T')[0], 
-          recentlyReplanted: false, health: "Excellent" 
+          recentlyReplanted: false, health: "Excellent",
+          careTips: "Requires bright, indirect sunlight to thrive.",
+          wateringTips: "Water every 1-2 weeks, allowing soil to dry out between waterings."
         },
         { 
           id: "2", name: "Tomato", type: "Outdoor Vegetable", 
           locationType: "Outdoor", lightExposure: "Full Sun", potType: "Plastic", 
           hasDrainage: true, lastWatered: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], 
-          recentlyReplanted: true, health: "Good" 
+          recentlyReplanted: true, health: "Good",
+          careTips: "Needs regular pruning and full sun exposure.",
+          wateringTips: "Keep soil consistently moist but not waterlogged."
         }
       ])
     }
@@ -102,6 +111,53 @@ export default function MyPlantsPage() {
     }
   }
 
+  const handleAIAnalyze = async () => {
+    if (!newName.trim() && !newImage) {
+      alert("Please provide a plant name or upload an image for AI analysis.")
+      return
+    }
+
+    setIsAnalyzing(true)
+    try {
+      const apiKey = localStorage.getItem("jaliz-api-key") || localStorage.getItem("jaliz-gemini-key") || ""
+      const modelName = localStorage.getItem("jaliz-model") || "gemini-1.5-pro"
+      const lang = localStorage.getItem("jaliz-lang") || "en"
+      
+      const response = await fetch("/api/analyze-plant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          image: newImage,
+          name: newName,
+          language: lang,
+          api_key: apiKey,
+          model_name: modelName
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error("Analysis failed. Please check your API key in settings.")
+      }
+
+      const data = await response.json()
+      
+      if (data.name) setNewName(data.name)
+      if (data.type) setNewType(data.type)
+      if (data.locationType) setNewLocationType(data.locationType as any)
+      if (data.lightExposure) setNewLightExposure(data.lightExposure as any)
+      if (data.potType) setNewPotType(data.potType as any)
+      if (data.hasDrainage !== undefined) setNewHasDrainage(data.hasDrainage)
+      if (data.careTips) setNewCareTips(data.careTips)
+      if (data.wateringTips) setNewWateringTips(data.wateringTips)
+      
+    } catch (error) {
+      console.error("AI Analysis error:", error)
+      alert(error instanceof Error ? error.message : "Failed to analyze plant")
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   const handleAddPlant = (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) return
@@ -117,7 +173,9 @@ export default function MyPlantsPage() {
       lastWatered: newLastWatered || new Date().toISOString().split('T')[0],
       recentlyReplanted: newRecentlyReplanted,
       health: newHealth,
-      image: newImage
+      image: newImage,
+      careTips: newCareTips,
+      wateringTips: newWateringTips
     }
 
     savePlants([...plants, newPlant])
@@ -132,6 +190,8 @@ export default function MyPlantsPage() {
     setNewRecentlyReplanted(false)
     setNewHealth("Excellent")
     setNewImage("")
+    setNewCareTips("")
+    setNewWateringTips("")
   }
 
   const deletePlant = (id: string) => {
@@ -166,6 +226,25 @@ export default function MyPlantsPage() {
             </CardHeader>
             <form onSubmit={handleAddPlant} className="bg-white">
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                <div className="col-span-1 md:col-span-2 mb-2 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-emerald-800 font-medium flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      AI Auto-fill
+                    </h4>
+                    <p className="text-sm text-emerald-600 mt-1">
+                      Type the plant name or upload an image below, then let AI fill in the rest of the details!
+                    </p>
+                  </div>
+                  <Button 
+                    type="button" 
+                    onClick={handleAIAnalyze} 
+                    disabled={isAnalyzing || (!newName && !newImage)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap shadow-sm"
+                  >
+                    {isAnalyzing ? "Analyzing..." : "Auto-fill with AI"}
+                  </Button>
+                </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("plant_name")} *</label>
                   <input 
@@ -275,6 +354,26 @@ export default function MyPlantsPage() {
                       <img src={newImage} alt="Preview" className="w-full h-full object-cover" />
                     </div>
                   )}
+                </div>
+                <div className="space-y-2 col-span-1 md:col-span-2">
+                  <label className="text-sm font-medium text-slate-700">{t("care_tips")}</label>
+                  <textarea 
+                    value={newCareTips}
+                    onChange={e => setNewCareTips(e.target.value)}
+                    placeholder={t("care_tips_ph")}
+                    dir="auto"
+                    className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
+                  />
+                </div>
+                <div className="space-y-2 col-span-1 md:col-span-2">
+                  <label className="text-sm font-medium text-slate-700">{t("watering_tips")}</label>
+                  <textarea 
+                    value={newWateringTips}
+                    onChange={e => setNewWateringTips(e.target.value)}
+                    placeholder={t("watering_tips_ph")}
+                    dir="auto"
+                    className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
+                  />
                 </div>
               </CardContent>
               <CardFooter className="justify-end gap-3 pt-4 pb-6 bg-slate-50/50 border-t border-slate-100 mt-4">
@@ -386,9 +485,26 @@ export default function MyPlantsPage() {
                     </div>
                     
                     {plant.recentlyReplanted && (
-                      <div className="mt-auto pt-3 border-t border-slate-100 flex items-center text-amber-600 text-xs font-medium">
+                      <div className="pt-2 border-t border-slate-100 flex items-center text-amber-600 text-xs font-medium">
                         <Sprout className="h-4 w-4 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
                         {t("recently_replanted")}
+                      </div>
+                    )}
+
+                    {(plant.careTips || plant.wateringTips) && (
+                      <div className="mt-auto pt-3 border-t border-slate-100 space-y-2">
+                        {plant.careTips && (
+                          <div className="flex items-start text-xs text-slate-600">
+                            <Info className="h-3.5 w-3.5 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-emerald-500 mt-0.5" />
+                            <span className="leading-snug">{plant.careTips}</span>
+                          </div>
+                        )}
+                        {plant.wateringTips && (
+                          <div className="flex items-start text-xs text-slate-600">
+                            <Droplets className="h-3.5 w-3.5 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-sky-500 mt-0.5" />
+                            <span className="leading-snug">{plant.wateringTips}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </CardContent>
