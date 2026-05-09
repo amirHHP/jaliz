@@ -6,6 +6,7 @@ import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircl
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
+import { PlantModal } from "@/components/PlantModal"
 
 interface Plant {
   id: string
@@ -27,6 +28,7 @@ export default function MyPlantsPage() {
   const { t } = useLanguage()
   const [plants, setPlants] = useState<Plant[]>([])
   const [isAdding, setIsAdding] = useState(false)
+  const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
   
   // Form State
   const [newName, setNewName] = useState("")
@@ -196,7 +198,15 @@ export default function MyPlantsPage() {
 
   const deletePlant = (id: string) => {
     savePlants(plants.filter(p => p.id !== id))
+    setSelectedPlantId(null)
   }
+
+  const handleSavePlant = (updated: Plant) => {
+    savePlants(plants.map(p => p.id === updated.id ? updated : p))
+    setSelectedPlantId(null)
+  }
+
+  const selectedPlant = plants.find(p => p.id === selectedPlantId) ?? null
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
@@ -398,15 +408,11 @@ export default function MyPlantsPage() {
             plants.map(plant => {
               const daysAgo = Math.floor((Date.now() - new Date(plant.lastWatered).getTime()) / (1000 * 3600 * 24))
               return (
-                <Card key={plant.id} className="group relative overflow-hidden transition-all duration-300 hover:shadow-md border-slate-200 bg-white hover:-translate-y-1 flex flex-col">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-2 right-2 h-8 w-8 text-white opacity-0 group-hover:opacity-100 hover:text-red-100 hover:bg-red-500/90 z-20 transition-opacity bg-black/20 backdrop-blur-sm"
-                    onClick={() => deletePlant(plant.id)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                <Card
+                  key={plant.id}
+                  className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200 bg-white hover:-translate-y-1 flex flex-col cursor-pointer ring-0 hover:ring-2 hover:ring-emerald-300"
+                  onClick={() => setSelectedPlantId(plant.id)}
+                >
                   
                   {/* Image Section */}
                   <div className="w-full h-48 bg-slate-100 relative overflow-hidden border-b border-slate-100 shrink-0">
@@ -514,6 +520,16 @@ export default function MyPlantsPage() {
           )}
         </div>
       </main>
+
+      {/* Plant detail/edit modal */}
+      {selectedPlant && (
+        <PlantModal
+          plant={selectedPlant}
+          onClose={() => setSelectedPlantId(null)}
+          onSave={handleSavePlant}
+          onDelete={deletePlant}
+        />
+      )}
     </div>
   )
 }
