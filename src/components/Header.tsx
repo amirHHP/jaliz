@@ -8,14 +8,17 @@ import {
   Leaf,
   LogIn,
   LogOut,
-  Settings,
+  Menu,
   Shield,
   UserPlus,
+  X,
 } from "lucide-react"
 
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { SettingsModal } from "@/components/SettingsModal"
+import { Settings as SettingsIcon } from "lucide-react"
+
 
 interface NavLink {
   href: string
@@ -40,8 +43,10 @@ export function Header() {
   const { status, user, isAdmin, logout } = useAuth()
   const pathname = usePathname() ?? "/"
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+
   const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
   // Close the account dropdown on outside click / Escape.
@@ -63,6 +68,11 @@ export function Header() {
     }
   }, [menuOpen])
 
+  // Close mobile menu on route change.
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "fa" : "en")
   }
@@ -70,8 +80,9 @@ export function Header() {
   const visibleLinks = NAV_LINKS.filter((l) => !l.adminOnly || isAdmin)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md shadow-sm">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <>
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-emerald-700">
           <div className="p-2 bg-emerald-100 rounded-xl shadow-sm">
             <Leaf className="h-6 w-6 text-emerald-600" />
@@ -81,6 +92,7 @@ export function Header() {
           </span>
         </Link>
 
+        {/* Desktop navigation */}
         <nav className="hidden md:flex gap-6 text-sm font-medium">
           {visibleLinks.map((link) => {
             const isActive =
@@ -104,20 +116,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={toggleLanguage}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 transition-colors bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200"
-          >
-            <Globe className="h-4 w-4" />
-            {language === "en" ? "فارسی" : "English"}
-          </button>
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center justify-center h-9 w-9 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors bg-slate-100 rounded-full border border-slate-200"
-            aria-label={t("settings")}
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+
 
           {/* Auth area. Render a stable placeholder while loading to avoid
               hydration mismatches between server and client. */}
@@ -156,6 +155,25 @@ export function Header() {
                       </span>
                     )}
                   </div>
+                  <button
+                    role="menuitem"
+                    onClick={toggleLanguage}
+                    className="w-full text-start flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <Globe className="h-4 w-4 text-slate-500" />
+                    {language === "en" ? "فارسی" : "English"}
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      setSettingsOpen(true)
+                    }}
+                    className="w-full text-start flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <SettingsIcon className="h-4 w-4 text-slate-500" />
+                    {t("settings")}
+                  </button>
                   {isAdmin && (
                     <Link
                       href="/admin"
@@ -183,6 +201,14 @@ export function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <button
+                onClick={toggleLanguage}
+                className="hidden md:flex items-center justify-center h-8 w-8 rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                aria-label={language === "en" ? "تغییر زبان به فارسی" : "Switch to English"}
+                title={language === "en" ? "فارسی" : "English"}
+              >
+                <Globe className="h-4 w-4" />
+              </button>
               <Link
                 href="/login"
                 className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-emerald-700 px-3 py-1.5 rounded-full hover:bg-emerald-50 transition-colors"
@@ -199,10 +225,115 @@ export function Header() {
               </Link>
             </div>
           )}
+
+          {/* Mobile hamburger button */}
+          <button
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
 
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-    </header>
+      {/* Mobile navigation drawer */}
+      <div
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <nav className="border-t border-slate-200 bg-white/95 backdrop-blur-md px-4 py-3 space-y-1">
+          {visibleLinks.map((link) => {
+            const isActive =
+              link.href === "/"
+                ? pathname === "/"
+                : link.href !== "#" && pathname.startsWith(link.href)
+            return (
+              <Link
+                key={link.key}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-emerald-50 text-emerald-700 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-emerald-700"
+                }`}
+              >
+                {t(link.key)}
+              </Link>
+            )
+          })}
+
+          {/* Mobile auth actions */}
+          {status !== "loading" && status !== "authenticated" && (
+            <div className="border-t border-slate-100 pt-2 mt-2 space-y-1">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-emerald-700 transition-colors"
+              >
+                <LogIn className="h-4 w-4" />
+                {t("sign_in")}
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+              >
+                <UserPlus className="h-4 w-4" />
+                {t("sign_up")}
+              </Link>
+            </div>
+          )}
+
+          {status === "authenticated" && user && (
+            <div className="border-t border-slate-100 pt-2 mt-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  logout()
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-red-600 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                {t("sign_out")}
+              </button>
+            </div>
+          )}
+
+          {/* Mobile language toggle */}
+          <div className="border-t border-slate-100 pt-2 mt-2">
+            <button
+              onClick={toggleLanguage}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-emerald-700 transition-colors"
+            >
+              <Globe className="h-4 w-4" />
+              {language === "en" ? "فارسی" : "English"}
+            </button>
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false)
+                setSettingsOpen(true)
+              }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-emerald-700 transition-colors"
+            >
+              <SettingsIcon className="h-4 w-4" />
+              {t("settings")}
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      </header>
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </>
   )
 }

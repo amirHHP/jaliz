@@ -42,6 +42,7 @@ export type AuthErrorCode =
   | "INVALID_EMAIL"
   | "EMPTY_FIELD"
   | "FORBIDDEN"
+  | "GENERIC"
 
 export class AuthError extends Error {
   readonly code: AuthErrorCode

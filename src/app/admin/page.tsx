@@ -11,12 +11,14 @@ import {
   Search,
   Shield,
   ShieldOff,
+  Sparkles,
   Trash2,
   UserCheck,
   UserCog,
   Users,
   UserX,
   X,
+  Key,
 } from "lucide-react"
 
 import { Header } from "@/components/Header"
@@ -37,12 +39,12 @@ export default function AdminPage() {
     status,
     user: currentUser,
     isAdmin,
-    revision,
-    listUsers,
     updateUserRole,
     setUserActive,
     deleteUser,
     resetPassword,
+    users,
+    refreshUsers,
   } = useAuth()
 
   const [search, setSearch] = useState("")
@@ -50,15 +52,71 @@ export default function AdminPage() {
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
 
-  // Derive the user list directly from the service. Re-evaluates whenever
-  // the AuthProvider bumps `revision` after a mutation, which keeps the
-  // table in sync without an effect.
-  const users = useMemo<User[]>(() => {
-    if (status !== "authenticated" || !isAdmin) return []
-    return listUsers()
-    // `revision` is the explicit signal that the underlying store changed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, isAdmin, listUsers, revision])
+  // AI API key state
+  const [aiApiKey, setAiApiKey] = useState("")
+  const [aiModels, setAiModels] = useState<{name: string; inputTokenLimit: number; outputTokenLimit: number}[]>([])
+  const [aiSelectedModel, setAiSelectedModel] = useState("")
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiSaved, setAiSaved] = useState(false)
+
+  // Load existing AI settings on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem("jaliz-api-key") || ""
+    const storedModel = localStorage.getItem("jaliz-model") || ""
+    const storedModels = localStorage.getItem("jaliz-models-cache")
+    setAiApiKey(storedKey)
+    setAiSelectedModel(storedModel)
+    if (storedModels) {
+      try { setAiModels(JSON.parse(storedModels)) } catch {}
+    }
+  }, [])
+
+  const fetchAiModels = async () => {
+    if (!aiApiKey.trim()) return
+    setAiLoading(true)
+    setAiError(null)
+    setAiSaved(false)
+    try {
+      const response = await fetch("/api/models", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ api_key: aiApiKey.trim() }),
+      })
+      if (!response.ok) throw new Error(t("api_key_required"))
+      const data = await response.json()
+      if (data.models && data.models.length > 0) {
+        setAiModels(data.models)
+        localStorage.setItem("jaliz-models-cache", JSON.stringify(data.models))
+        if (!aiSelectedModel || !data.models.find((m: {name:string}) => m.name === aiSelectedModel)) {
+          setAiSelectedModel(data.models[0].name)
+        }
+      } else {
+        throw new Error("No compatible models found.")
+      }
+    } catch (err: unknown) {
+      setAiError(err instanceof Error ? err.message : "Error fetching models")
+      setAiModels([])
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  const handleAiSave = () => {
+    if (!aiApiKey.trim()) return
+    localStorage.setItem("jaliz-api-key", aiApiKey.trim())
+    if (aiSelectedModel) localStorage.setItem("jaliz-model", aiSelectedModel)
+    setAiSaved(true)
+    setTimeout(() => setAiSaved(false), 3000)
+  }
+
+  // Load users when admin is authenticated
+  useEffect(() => {
+    if (status === "authenticated" && isAdmin) {
+      refreshUsers()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isAdmin])
 
   // Redirect anonymous users to login. We don't redirect *signed-in*
   // non-admins so we can show a nicer "admin only" message instead of
@@ -88,10 +146,11 @@ export default function AdminPage() {
     [users],
   )
 
-  const safeRun = (fn: () => void) => {
+  const safeRun = async (fn: () => Promise<unknown>) => {
     setActionError(null)
     try {
-      fn()
+      await fn()
+      await refreshUsers()
     } catch (err) {
       setActionError(authErrorTranslationKey(err))
     }
@@ -182,6 +241,96 @@ export default function AdminPage() {
             label={t("admin_admins")}
             value={totals.admins}
           />
+        </div>
+
+        {/* AI API Configuration */}
+        <div className="bg-white border border-emerald-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+            <div className="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <Sparkles className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">{t("admin_ai_title")}</h2>
+              <p className="text-xs text-slate-500 mt-0.5">{t("admin_ai_desc")}</p>
+            </div>
+            {aiApiKey && (
+              <span className="ms-auto inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                <CheckCircle2 className="h-3 w-3" />
+                {language === "fa" ? "فعال" : "Active"}
+              </span>
+            )}
+          </div>
+
+          <div className="p-5 space-y-4">
+            {/* API Key row */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                <Key className="h-4 w-4 text-emerald-600" />
+                {t("admin_ai_key_label")}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={aiApiKey}
+                  onChange={(e) => { setAiApiKey(e.target.value); setAiSaved(false) }}
+                  placeholder={t("admin_ai_key_ph")}
+                  className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                />
+                <button
+                  type="button"
+                  onClick={fetchAiModels}
+                  disabled={aiLoading || !aiApiKey.trim()}
+                  className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                  {t("admin_ai_fetch_models")}
+                </button>
+              </div>
+              {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+            </div>
+
+            {/* Model selector */}
+            {aiModels.length > 0 && (
+              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                <label className="text-sm font-medium text-slate-700">{t("admin_ai_select_model")}</label>
+                <select
+                  value={aiSelectedModel}
+                  onChange={(e) => setAiSelectedModel(e.target.value)}
+                  className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
+                >
+                  {aiModels.map(m => (
+                    <option key={m.name} value={m.name}>
+                      {m.name.replace("models/", "")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Save row */}
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                {aiSaved && (
+                  <span className="text-emerald-600 text-sm flex items-center gap-1.5 animate-in fade-in">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {t("admin_ai_saved")}
+                  </span>
+                )}
+                {!aiApiKey && !aiSaved && (
+                  <span className="text-slate-400 text-xs">{t("admin_ai_no_key")}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleAiSave}
+                disabled={!aiApiKey.trim()}
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+              >
+                <Key className="h-4 w-4" />
+                {t("admin_ai_save")}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Search */}

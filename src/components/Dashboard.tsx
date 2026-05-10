@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Header } from "@/components/Header"
 import { MarketplaceGrid } from "@/components/MarketplaceGrid"
 import { WeatherAdvice } from "@/components/WeatherAdvice"
@@ -19,9 +20,24 @@ export function Dashboard() {
   // welcome string for anonymous visitors (which the router shouldn't show
   // here, but we stay defensive).
   const firstName = user?.fullName?.trim().split(/\s+/)[0]
+  
+  const [timeGreetingKey, setTimeGreetingKey] = useState<string>("morning_greeting")
+
+  useEffect(() => {
+    // Determine dynamic greeting based on local time after mount to avoid hydration mismatch
+    const hour = new Date().getHours()
+    if (hour >= 12 && hour < 17) {
+      setTimeGreetingKey("afternoon_greeting")
+    } else if (hour >= 17 && hour < 20) {
+      setTimeGreetingKey("evening_greeting")
+    } else if (hour >= 20 || hour < 5) {
+      setTimeGreetingKey("night_greeting")
+    }
+  }, [])
+
   const welcomeTitle = firstName
-    ? t("welcome_title").replace(/Sarah|سارا/, firstName)
-    : t("welcome_title")
+    ? t(timeGreetingKey as any).replace(/Sarah|سارا/, firstName)
+    : t(timeGreetingKey as any)
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
@@ -37,9 +53,9 @@ export function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-5 space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
-            <WeatherAdvice />
-
             <WateringSchedule />
+
+            <WeatherAdvice />
           </div>
 
           <div className="lg:col-span-7 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both">

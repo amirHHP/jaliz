@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CloudRain, Loader2, MapPin, Key } from "lucide-react"
@@ -10,24 +10,44 @@ export function WeatherAdvice() {
   const [loading, setLoading] = useState(false)
   const [advice, setAdvice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [userLocation, setUserLocation] = useState<string>("")
   const { language, t } = useLanguage()
 
-  const fetchAdvice = async () => {
-    const apiKey = localStorage.getItem("jaliz-api-key")
-    const modelName = localStorage.getItem("jaliz-model")
-
-    if (!apiKey) {
-      setError(t("api_key_required"))
-      return
+  useEffect(() => {
+    // Read user location from localStorage or fallback
+    const loc = localStorage.getItem("jaliz-location")
+    if (loc) {
+      setUserLocation(loc)
+    } else {
+      setUserLocation(language === "en" ? "Tehran, IR" : "تهران، ایران")
     }
+  }, [language])
 
+  const fetchAdvice = async () => {
     setLoading(true)
     setError(null)
     
     try {
+      // Get current user's plants from Supabase
+      const { data: { session } } = await (await import("@/lib/supabase")).supabase.auth.getSession()
+      let userPlants: unknown[] = []
+      if (session?.user) {
+        const { data } = await (await import("@/lib/supabase")).supabase
+          .from("user_plants")
+          .select("name, type, location_type, light_exposure, pot_type, has_drainage, recently_replanted")
+          .eq("user_id", session.user.id)
+        userPlants = (data ?? []).map((p) => ({
+          name: p.name,
+          type: p.type,
+          locationType: p.location_type,
+          lightExposure: p.light_exposure,
+          potType: p.pot_type,
+          hasDrainage: p.has_drainage,
+          recentlyReplanted: p.recently_replanted,
+        }))
+      }
+
       const mockLocation = { latitude: 35.6892, longitude: 51.3890 }
-      const savedPlants = localStorage.getItem("jaliz-plants")
-      const userPlants = savedPlants ? JSON.parse(savedPlants) : []
 
       const response = await fetch("/api/advice", {
         method: "POST",
@@ -35,10 +55,9 @@ export function WeatherAdvice() {
         body: JSON.stringify({
           latitude: mockLocation.latitude,
           longitude: mockLocation.longitude,
+          userLocation: userLocation,
           language: language,
-          plants: userPlants,
-          api_key: apiKey,
-          model_name: modelName
+          plants: userPlants
         })
       })
 
@@ -48,8 +67,8 @@ export function WeatherAdvice() {
 
       const data = await response.json()
       setAdvice(typeof data.advice === "string" ? data.advice : JSON.stringify(data.advice))
-    } catch (err: any) {
-      setError(err.message || "An error occurred.")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred.")
     } finally {
       setLoading(false)
     }
@@ -63,9 +82,9 @@ export function WeatherAdvice() {
             <CloudRain className="h-5 w-5 text-emerald-500" />
             {t("weather_title")}
           </CardTitle>
-          <div className="flex items-center text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-full font-medium">
-            <MapPin className="h-3 w-3 mr-1 rtl:ml-1 rtl:mr-0" />
-            {language === "en" ? "Tehran, IR" : "تهران، ایران"}
+          <div className="flex items-center text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded-full font-medium max-w-[150px] truncate">
+            <MapPin className="h-3 w-3 mr-1 rtl:ml-1 rtl:mr-0 shrink-0" />
+            <span className="truncate">{userLocation}</span>
           </div>
         </div>
         <CardDescription className="text-slate-500">{t("weather_desc")}</CardDescription>
@@ -83,13 +102,10 @@ export function WeatherAdvice() {
           </div>
         ) : error ? (
           <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-100 text-sm flex items-center gap-2">
-            {error === t("api_key_required") && <Key className="h-4 w-4 shrink-0" />}
             {error}
           </div>
         ) : (
-          <div className="text-center text-slate-500 py-8 text-sm px-4 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
-            {t("advice_prompt")}
-          </div>
+          <div className="h-4"></div>
         )}
       </CardContent>
       

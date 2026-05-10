@@ -16,10 +16,10 @@ import {
   IListingService,
   Listing,
   ListingFilter,
-  LocalListingService,
   Message,
   UpdateListingInput,
 } from "@/lib/marketplace"
+import { SupabaseListingService } from "@/lib/marketplace/supabase-listing-service"
 
 interface MarketplaceContextValue {
   ready: boolean
@@ -66,7 +66,7 @@ export function MarketplaceProvider({
 }: MarketplaceProviderProps) {
   const serviceRef = useRef<IListingService | null>(null)
   if (serviceRef.current === null) {
-    serviceRef.current = service ?? new LocalListingService()
+    serviceRef.current = service ?? new SupabaseListingService()
   }
 
   const [ready, setReady] = useState(false)

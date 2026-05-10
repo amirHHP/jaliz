@@ -26,9 +26,10 @@ class WeatherAgent:
             return response.json()
         return {"error": f"Failed to fetch weather: {response.text}"}
 
-    def get_advice(self, lat: float, lon: float, language: str = "en", plants: List[Dict] = [], api_key: str = None, model_name: str = None) -> str:
+    def get_advice(self, lat: float, lon: float, userLocation: str = None, language: str = "en", plants: List[Dict] = [], api_key: str = None, model_name: str = None) -> str:
         """Analyzes weather and plant list to generate actionable advice."""
-        if not api_key:
+        effective_key = api_key or os.getenv("GEMINI_API_KEY")
+        if not effective_key:
             if language == "fa":
                 return "🌱 توجه: لطفاً کلید API جمینای خود را در تنظیمات وارد کنید تا مشاوره تخصصی دریافت کنید."
             return "🌱 Note: Please enter your Gemini API key in Settings to get expert advice."
@@ -36,7 +37,7 @@ class WeatherAgent:
         # Initialize the Gemini model
         llm = ChatGoogleGenerativeAI(
             model=model_name or "gemini-1.5-flash",
-            google_api_key=api_key,
+            google_api_key=effective_key,
             temperature=0.7
         )
 
@@ -54,6 +55,8 @@ class WeatherAgent:
             weather_desc = forecasts[0]['weather'][0]['description'] if forecasts else "Unknown"
             
             weather_summary = f"Expect {weather_desc}. Temperatures will range from {min_temp}°C to {max_temp}°C over the next 48 hours."
+            if userLocation:
+                weather_summary += f" The user's location is '{userLocation}'."
 
         plant_details = []
         for p in plants:

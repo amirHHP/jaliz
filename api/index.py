@@ -28,6 +28,7 @@ class PlantInfo(BaseModel):
 class WeatherAdviceRequest(BaseModel):
     latitude: float
     longitude: float
+    userLocation: Optional[str] = None
     language: Optional[str] = "en"
     plants: List[PlantInfo]
     api_key: Optional[str] = None
@@ -69,6 +70,7 @@ def get_weather_advice(request: WeatherAdviceRequest):
         advice = weather_agent.get_advice(
             lat=request.latitude,
             lon=request.longitude,
+            userLocation=request.userLocation,
             language=request.language,
             plants=[p.dict() for p in request.plants],
             api_key=request.api_key,
@@ -84,10 +86,11 @@ def analyze_plant(request: PlantAnalysisRequest):
     import json
     import re
     try:
-        if not request.api_key:
+        api_key = request.api_key or os.getenv("GEMINI_API_KEY")
+        if not api_key:
             raise HTTPException(status_code=400, detail="API key is required")
         
-        genai.configure(api_key=request.api_key)
+        genai.configure(api_key=api_key)
         model_name = request.model_name or "gemini-1.5-pro"
         model = genai.GenerativeModel(model_name)
         

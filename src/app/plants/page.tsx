@@ -1,7 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
+import { useAuth } from "@/components/AuthProvider"
+import { supabase } from "@/lib/supabase"
 import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -24,13 +26,33 @@ interface Plant {
   wateringTips?: string
 }
 
+function dbRowToPlant(row: Record<string, unknown>): Plant {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    type: (row.type as string) ?? "",
+    locationType: (row.location_type as Plant["locationType"]) ?? "Indoor",
+    lightExposure: (row.light_exposure as Plant["lightExposure"]) ?? "Bright Indirect",
+    potType: (row.pot_type as Plant["potType"]) ?? "Plastic",
+    hasDrainage: (row.has_drainage as boolean) ?? true,
+    lastWatered: (row.last_watered as string) ?? new Date().toISOString().split("T")[0],
+    recentlyReplanted: (row.recently_replanted as boolean) ?? false,
+    health: (row.health as Plant["health"]) ?? "Excellent",
+    image: (row.image as string | undefined) ?? undefined,
+    careTips: (row.care_tips as string | undefined) ?? undefined,
+    wateringTips: (row.watering_tips as string | undefined) ?? undefined,
+  }
+}
+
 export default function MyPlantsPage() {
   const { t } = useLanguage()
+  const { user, status } = useAuth()
   const [plants, setPlants] = useState<Plant[]>([])
+  const [loading, setLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
-  
-  // Form State
+
+  // Form state
   const [newName, setNewName] = useState("")
   const [newType, setNewType] = useState("")
   const [newLocationType, setNewLocationType] = useState<Plant["locationType"]>("Indoor")
@@ -45,173 +67,134 @@ export default function MyPlantsPage() {
   const [newWateringTips, setNewWateringTips] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  useEffect(() => {
-    const saved = localStorage.getItem("jaliz-plants")
-    if (saved) {
-      setPlants(JSON.parse(saved))
-    } else {
-      setPlants([
-        { 
-          id: "1", name: "Monstera Deliciosa", type: "Indoor Tropical", 
-          locationType: "Indoor", lightExposure: "Bright Indirect", potType: "Ceramic", 
-          hasDrainage: true, lastWatered: new Date().toISOString().split('T')[0], 
-          recentlyReplanted: false, health: "Excellent",
-          careTips: "Requires bright, indirect sunlight to thrive.",
-          wateringTips: "Water every 1-2 weeks, allowing soil to dry out between waterings."
-        },
-        { 
-          id: "2", name: "Tomato", type: "Outdoor Vegetable", 
-          locationType: "Outdoor", lightExposure: "Full Sun", potType: "Plastic", 
-          hasDrainage: true, lastWatered: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0], 
-          recentlyReplanted: true, health: "Good",
-          careTips: "Needs regular pruning and full sun exposure.",
-          wateringTips: "Keep soil consistently moist but not waterlogged."
-        }
-      ])
-    }
-  }, [])
+  const fetchPlants = useCallback(async () => {
+    if (!user) { setLoading(false); return }
+    setLoading(true)
+    const { data, error } = await supabase
+      .from("user_plants")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true })
+    if (!error && data) setPlants(data.map(dbRowToPlant))
+    setLoading(false)
+  }, [user])
 
-  const savePlants = (newPlants: Plant[]) => {
-    setPlants(newPlants)
-    localStorage.setItem("jaliz-plants", JSON.stringify(newPlants))
-  }
+  useEffect(() => {
+    if (status === "authenticated") fetchPlants()
+    else if (status === "unauthenticated") setLoading(false)
+  }, [status, fetchPlants])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const img = new Image()
-        img.onload = () => {
-          const canvas = document.createElement("canvas")
-          const MAX_WIDTH = 800
-          const MAX_HEIGHT = 800
-          let width = img.width
-          let height = img.height
-          
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width
-              width = MAX_WIDTH
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height
-              height = MAX_HEIGHT
-            }
-          }
-          
-          canvas.width = width
-          canvas.height = height
-          const ctx = canvas.getContext("2d")
-          ctx?.drawImage(img, 0, 0, width, height)
-          setNewImage(canvas.toDataURL("image/jpeg", 0.7))
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        const MAX = 800
+        let w = img.width, h = img.height
+        if (w > h ? w > MAX : h > MAX) {
+          if (w > h) { h *= MAX / w; w = MAX } else { w *= MAX / h; h = MAX }
         }
-        img.src = event.target?.result as string
+        canvas.width = w; canvas.height = h
+        canvas.getContext("2d")?.drawImage(img, 0, 0, w, h)
+        setNewImage(canvas.toDataURL("image/jpeg", 0.7))
       }
-      reader.readAsDataURL(file)
+      img.src = event.target?.result as string
     }
+    reader.readAsDataURL(file)
   }
 
   const handleAIAnalyze = async () => {
-    if (!newName.trim() && !newImage) {
-      alert("Please provide a plant name or upload an image for AI analysis.")
-      return
-    }
-
+    if (!newName.trim() && !newImage) { alert("Please provide a plant name or image."); return }
     setIsAnalyzing(true)
     try {
-      const apiKey = localStorage.getItem("jaliz-api-key") || localStorage.getItem("jaliz-gemini-key") || ""
+      const apiKey = localStorage.getItem("jaliz-api-key") || ""
       const modelName = localStorage.getItem("jaliz-model") || "gemini-1.5-pro"
       const lang = localStorage.getItem("jaliz-lang") || "en"
-      
       const response = await fetch("/api/analyze-plant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: newImage,
-          name: newName,
-          language: lang,
-          api_key: apiKey,
-          model_name: modelName
-        })
+        body: JSON.stringify({ image: newImage, name: newName, language: lang, api_key: apiKey, model_name: modelName }),
       })
-
-      if (!response.ok) {
-        throw new Error("Analysis failed. Please check your API key in settings.")
-      }
-
+      if (!response.ok) throw new Error("Analysis failed. Check your API key in settings.")
       const data = await response.json()
-      
       if (data.name) setNewName(data.name)
       if (data.type) setNewType(data.type)
-      if (data.locationType) setNewLocationType(data.locationType as any)
-      if (data.lightExposure) setNewLightExposure(data.lightExposure as any)
-      if (data.potType) setNewPotType(data.potType as any)
+      if (data.locationType) setNewLocationType(data.locationType)
+      if (data.lightExposure) setNewLightExposure(data.lightExposure)
+      if (data.potType) setNewPotType(data.potType)
       if (data.hasDrainage !== undefined) setNewHasDrainage(data.hasDrainage)
       if (data.careTips) setNewCareTips(data.careTips)
       if (data.wateringTips) setNewWateringTips(data.wateringTips)
-      
     } catch (error) {
-      console.error("AI Analysis error:", error)
       alert(error instanceof Error ? error.message : "Failed to analyze plant")
     } finally {
       setIsAnalyzing(false)
     }
   }
 
-  const handleAddPlant = (e: React.FormEvent) => {
+  const handleAddPlant = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newName.trim()) return
-
-    const newPlant: Plant = {
-      id: Date.now().toString(),
+    if (!newName.trim() || !user) return
+    const { data, error } = await supabase.from("user_plants").insert({
+      user_id: user.id,
       name: newName,
       type: newType || "Unknown",
-      locationType: newLocationType,
-      lightExposure: newLightExposure,
-      potType: newPotType,
-      hasDrainage: newHasDrainage,
-      lastWatered: newLastWatered || new Date().toISOString().split('T')[0],
-      recentlyReplanted: newRecentlyReplanted,
+      location_type: newLocationType,
+      light_exposure: newLightExposure,
+      pot_type: newPotType,
+      has_drainage: newHasDrainage,
+      last_watered: newLastWatered || new Date().toISOString().split("T")[0],
+      recently_replanted: newRecentlyReplanted,
       health: newHealth,
-      image: newImage,
-      careTips: newCareTips,
-      wateringTips: newWateringTips
+      image: newImage || null,
+      care_tips: newCareTips || null,
+      watering_tips: newWateringTips || null,
+    }).select().single()
+    if (!error && data) {
+      setPlants((prev) => [...prev, dbRowToPlant(data)])
+      setIsAdding(false)
+      setNewName(""); setNewType(""); setNewLocationType("Indoor")
+      setNewLightExposure("Bright Indirect"); setNewPotType("Plastic")
+      setNewHasDrainage(true); setNewLastWatered(""); setNewRecentlyReplanted(false)
+      setNewHealth("Excellent"); setNewImage(""); setNewCareTips(""); setNewWateringTips("")
     }
-
-    savePlants([...plants, newPlant])
-    setIsAdding(false)
-    setNewName("")
-    setNewType("")
-    setNewLocationType("Indoor")
-    setNewLightExposure("Bright Indirect")
-    setNewPotType("Plastic")
-    setNewHasDrainage(true)
-    setNewLastWatered("")
-    setNewRecentlyReplanted(false)
-    setNewHealth("Excellent")
-    setNewImage("")
-    setNewCareTips("")
-    setNewWateringTips("")
   }
 
-  const deletePlant = (id: string) => {
-    savePlants(plants.filter(p => p.id !== id))
+  const deletePlant = async (id: string) => {
+    await supabase.from("user_plants").delete().eq("id", id)
+    setPlants((prev) => prev.filter((p) => p.id !== id))
     setSelectedPlantId(null)
   }
 
-  const handleSavePlant = (updated: Plant) => {
-    savePlants(plants.map(p => p.id === updated.id ? updated : p))
+  const handleSavePlant = async (updated: Plant) => {
+    const { data, error } = await supabase.from("user_plants").update({
+      name: updated.name,
+      type: updated.type,
+      location_type: updated.locationType,
+      light_exposure: updated.lightExposure,
+      pot_type: updated.potType,
+      has_drainage: updated.hasDrainage,
+      last_watered: updated.lastWatered,
+      recently_replanted: updated.recentlyReplanted,
+      health: updated.health,
+      image: updated.image || null,
+      care_tips: updated.careTips || null,
+      watering_tips: updated.wateringTips || null,
+    }).eq("id", updated.id).select().single()
+    if (!error && data) {
+      setPlants((prev) => prev.map((p) => p.id === updated.id ? dbRowToPlant(data) : p))
+    }
     setSelectedPlantId(null)
   }
 
-  const selectedPlant = plants.find(p => p.id === selectedPlantId) ?? null
+  const selectedPlant = plants.find((p) => p.id === selectedPlantId) ?? null
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
       <Header />
-
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
@@ -238,60 +221,31 @@ export default function MyPlantsPage() {
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
                 <div className="col-span-1 md:col-span-2 mb-2 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
-                    <h4 className="text-emerald-800 font-medium flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      AI Auto-fill
-                    </h4>
-                    <p className="text-sm text-emerald-600 mt-1">
-                      Type the plant name or upload an image below, then let AI fill in the rest of the details!
-                    </p>
+                    <h4 className="text-emerald-800 font-medium flex items-center gap-2"><Sparkles className="h-4 w-4" />AI Auto-fill</h4>
+                    <p className="text-sm text-emerald-600 mt-1">Type the plant name or upload an image below, then let AI fill in the rest!</p>
                   </div>
-                  <Button 
-                    type="button" 
-                    onClick={handleAIAnalyze} 
-                    disabled={isAnalyzing || (!newName && !newImage)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap shadow-sm"
-                  >
+                  <Button type="button" onClick={handleAIAnalyze} disabled={isAnalyzing || (!newName && !newImage)} className="bg-emerald-600 hover:bg-emerald-700 text-white whitespace-nowrap shadow-sm">
                     {isAnalyzing ? "Analyzing..." : "Auto-fill with AI"}
                   </Button>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("plant_name")} *</label>
-                  <input 
-                    required
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
-                    placeholder={t("plant_name_ph")}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-                  />
+                  <input required value={newName} onChange={(e) => setNewName(e.target.value)} placeholder={t("plant_name_ph")} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 placeholder:text-slate-400" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("plant_type")}</label>
-                  <input 
-                    value={newType}
-                    onChange={e => setNewType(e.target.value)}
-                    placeholder={t("plant_type_ph")}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-                  />
+                  <input value={newType} onChange={(e) => setNewType(e.target.value)} placeholder={t("plant_type_ph")} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 placeholder:text-slate-400" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("location_type")}</label>
-                  <select 
-                    value={newLocationType}
-                    onChange={e => setNewLocationType(e.target.value as any)}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
-                  >
+                  <select value={newLocationType} onChange={(e) => setNewLocationType(e.target.value as Plant["locationType"])} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900">
                     <option value="Indoor">{t("location_indoor")}</option>
                     <option value="Outdoor">{t("location_outdoor")}</option>
                   </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("light_exposure")}</label>
-                  <select 
-                    value={newLightExposure}
-                    onChange={e => setNewLightExposure(e.target.value as any)}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
-                  >
+                  <select value={newLightExposure} onChange={(e) => setNewLightExposure(e.target.value as Plant["lightExposure"])} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900">
                     <option value="Low Light">{t("light_low")}</option>
                     <option value="Partial Shade">{t("light_partial")}</option>
                     <option value="Bright Indirect">{t("light_bright")}</option>
@@ -300,11 +254,7 @@ export default function MyPlantsPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("pot_type")}</label>
-                  <select 
-                    value={newPotType}
-                    onChange={e => setNewPotType(e.target.value as any)}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
-                  >
+                  <select value={newPotType} onChange={(e) => setNewPotType(e.target.value as Plant["potType"])} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900">
                     <option value="Terracotta">{t("pot_terracotta")}</option>
                     <option value="Plastic">{t("pot_plastic")}</option>
                     <option value="Ceramic">{t("pot_ceramic")}</option>
@@ -312,109 +262,61 @@ export default function MyPlantsPage() {
                     <option value="Other">{t("pot_other")}</option>
                   </select>
                 </div>
-                <div className="space-y-2 flex items-center h-full pt-6 gap-2">
-                  <input 
-                    type="checkbox"
-                    checked={newHasDrainage}
-                    onChange={e => setNewHasDrainage(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
-                  />
-                  <label className="text-sm font-medium text-slate-700">{t("has_drainage")}</label>
-                </div>
-                <div className="space-y-2 flex items-center h-full pt-6 gap-2">
-                  <input 
-                    type="checkbox"
-                    checked={newRecentlyReplanted}
-                    onChange={e => setNewRecentlyReplanted(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
-                  />
-                  <label className="text-sm font-medium text-slate-700">{t("recently_replanted")}</label>
-                </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("last_watered")}</label>
-                  <input 
-                    type="date"
-                    value={newLastWatered}
-                    onChange={e => setNewLastWatered(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
-                  />
+                  <input type="date" value={newLastWatered} onChange={(e) => setNewLastWatered(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700">{t("health_status")}</label>
-                  <select 
-                    value={newHealth}
-                    onChange={e => setNewHealth(e.target.value as any)}
-                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
-                  >
+                  <select value={newHealth} onChange={(e) => setNewHealth(e.target.value as Plant["health"])} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900">
                     <option value="Excellent">{t("health_excellent")}</option>
                     <option value="Good">{t("health_good")}</option>
                     <option value="Needs Attention">{t("health_needs_attention")}</option>
                   </select>
                 </div>
+                <div className="space-y-2 flex items-center h-full pt-6 gap-2">
+                  <input type="checkbox" checked={newHasDrainage} onChange={(e) => setNewHasDrainage(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600" />
+                  <label className="text-sm font-medium text-slate-700">{t("has_drainage")}</label>
+                </div>
+                <div className="space-y-2 flex items-center h-full pt-6 gap-2">
+                  <input type="checkbox" checked={newRecentlyReplanted} onChange={(e) => setNewRecentlyReplanted(e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600" />
+                  <label className="text-sm font-medium text-slate-700">{t("recently_replanted")}</label>
+                </div>
                 <div className="space-y-2 col-span-1 md:col-span-2">
                   <label className="text-sm font-medium text-slate-700">{t("plant_image")}</label>
-                  <input 
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium file:px-3 file:py-1 file:rounded-md file:mr-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900"
-                  />
-                  {newImage && (
-                    <div className="mt-4 h-40 w-40 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
-                      <img src={newImage} alt="Preview" className="w-full h-full object-cover" />
-                    </div>
-                  )}
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="flex w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm file:border-0 file:bg-slate-100 file:text-slate-700 file:font-medium file:px-3 file:py-1 file:rounded-md file:mr-3 text-slate-900" />
+                  {newImage && <div className="mt-4 h-40 w-40 rounded-xl overflow-hidden border border-slate-200 shadow-sm"><img src={newImage} alt="Preview" className="w-full h-full object-cover" /></div>}
                 </div>
                 <div className="space-y-2 col-span-1 md:col-span-2">
                   <label className="text-sm font-medium text-slate-700">{t("care_tips")}</label>
-                  <textarea 
-                    value={newCareTips}
-                    onChange={e => setNewCareTips(e.target.value)}
-                    placeholder={t("care_tips_ph")}
-                    dir="auto"
-                    className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-                  />
+                  <textarea value={newCareTips} onChange={(e) => setNewCareTips(e.target.value)} placeholder={t("care_tips_ph")} dir="auto" className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 placeholder:text-slate-400" />
                 </div>
                 <div className="space-y-2 col-span-1 md:col-span-2">
                   <label className="text-sm font-medium text-slate-700">{t("watering_tips")}</label>
-                  <textarea 
-                    value={newWateringTips}
-                    onChange={e => setNewWateringTips(e.target.value)}
-                    placeholder={t("watering_tips_ph")}
-                    dir="auto"
-                    className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-                  />
+                  <textarea value={newWateringTips} onChange={(e) => setNewWateringTips(e.target.value)} placeholder={t("watering_tips_ph")} dir="auto" className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 placeholder:text-slate-400" />
                 </div>
               </CardContent>
               <CardFooter className="justify-end gap-3 pt-4 pb-6 bg-slate-50/50 border-t border-slate-100 mt-4">
-                <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="text-slate-600">
-                  {t("cancel")}
-                </Button>
-                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-                  {t("save")}
-                </Button>
+                <Button type="button" variant="ghost" onClick={() => setIsAdding(false)} className="text-slate-600">{t("cancel")}</Button>
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">{t("save")}</Button>
               </CardFooter>
             </form>
           </Card>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {plants.length === 0 ? (
+          {loading ? (
+            <div className="col-span-full py-16 text-center text-slate-400">Loading...</div>
+          ) : plants.length === 0 ? (
             <div className="col-span-full py-16 text-center text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed shadow-sm">
               <Leaf className="h-12 w-12 mx-auto mb-4 text-slate-300" />
               <p className="text-lg">{t("no_plants")}</p>
             </div>
           ) : (
-            plants.map(plant => {
+            plants.map((plant) => {
               const daysAgo = Math.floor((Date.now() - new Date(plant.lastWatered).getTime()) / (1000 * 3600 * 24))
               return (
-                <Card
-                  key={plant.id}
-                  className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200 bg-white hover:-translate-y-1 flex flex-col cursor-pointer ring-0 hover:ring-2 hover:ring-emerald-300"
-                  onClick={() => setSelectedPlantId(plant.id)}
-                >
-                  
-                  {/* Image Section */}
+                <Card key={plant.id} className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200 bg-white hover:-translate-y-1 flex flex-col cursor-pointer ring-0 hover:ring-2 hover:ring-emerald-300" onClick={() => setSelectedPlantId(plant.id)}>
                   <div className="w-full h-48 bg-slate-100 relative overflow-hidden border-b border-slate-100 shrink-0">
                     {plant.image ? (
                       <img src={plant.image} alt={plant.name} className="w-full h-full object-cover" />
@@ -424,93 +326,23 @@ export default function MyPlantsPage() {
                         <span className="text-xs font-medium uppercase tracking-wider">No Photo</span>
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 flex gap-2 z-10">
-                      <div className="inline-flex items-center text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-md shadow-sm uppercase tracking-wider">
-                        {plant.type}
-                      </div>
-                    </div>
+                    <div className="absolute top-3 left-3"><div className="inline-flex items-center text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-md shadow-sm uppercase tracking-wider">{plant.type}</div></div>
                   </div>
-
                   <CardContent className="space-y-4 pt-5 pb-5 grow flex flex-col">
-                    <div>
-                      <CardTitle className="text-xl text-slate-900 leading-tight">{plant.name}</CardTitle>
-                    </div>
-                    
+                    <div><CardTitle className="text-xl text-slate-900 leading-tight">{plant.name}</CardTitle></div>
                     <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs pt-1">
-                      <div className="flex items-center text-slate-600" title="Last Watered">
-                        <Droplets className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-sky-500" />
-                        <span className="font-medium truncate">
-                          {daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center text-slate-600" title="Health Status">
-                        <Activity className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-emerald-500" />
-                        <span className={`font-medium truncate ${
-                          plant.health === 'Excellent' ? 'text-emerald-600' : 
-                          plant.health === 'Good' ? 'text-emerald-500' : 'text-amber-500'
-                        }`}>
-                          {plant.health === 'Excellent' ? t("health_excellent") : 
-                           plant.health === 'Good' ? t("health_good") : t("health_needs_attention")}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center text-slate-600" title="Location">
-                        <MapPin className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-indigo-400" />
-                        <span className="font-medium truncate">
-                          {plant.locationType === 'Indoor' ? t("location_indoor") : t("location_outdoor")}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center text-slate-600" title="Light Exposure">
-                        <Sun className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-400" />
-                        <span className="font-medium truncate">
-                          {plant.lightExposure === 'Low Light' ? t("light_low") :
-                           plant.lightExposure === 'Partial Shade' ? t("light_partial") :
-                           plant.lightExposure === 'Bright Indirect' ? t("light_bright") : t("light_full")}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center text-slate-600" title="Pot Type">
-                        <Box className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-amber-700/60" />
-                        <span className="font-medium truncate">
-                          {plant.potType === 'Terracotta' ? t("pot_terracotta") :
-                           plant.potType === 'Plastic' ? t("pot_plastic") :
-                           plant.potType === 'Ceramic' ? t("pot_ceramic") :
-                           plant.potType === 'Metal' ? t("pot_metal") : t("pot_other")}
-                        </span>
-                      </div>
-                      
-                      <div className="flex items-center text-slate-600" title="Drainage">
-                        <Droplets className="h-4 w-4 shrink-0 mr-2 rtl:ml-2 rtl:mr-0 text-slate-300" />
-                        <span className="font-medium truncate flex items-center gap-1">
-                          {t("has_drainage")}
-                          {plant.hasDrainage ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/> : <X className="h-3.5 w-3.5 text-red-400"/>}
-                        </span>
-                      </div>
+                      <div className="flex items-center text-slate-600"><Droplets className="h-4 w-4 shrink-0 mr-2 text-sky-500" /><span className="font-medium truncate">{daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`}</span></div>
+                      <div className="flex items-center text-slate-600"><Activity className="h-4 w-4 shrink-0 mr-2 text-emerald-500" /><span className={`font-medium truncate ${plant.health === "Excellent" ? "text-emerald-600" : plant.health === "Good" ? "text-emerald-500" : "text-amber-500"}`}>{plant.health === "Excellent" ? t("health_excellent") : plant.health === "Good" ? t("health_good") : t("health_needs_attention")}</span></div>
+                      <div className="flex items-center text-slate-600"><MapPin className="h-4 w-4 shrink-0 mr-2 text-indigo-400" /><span className="font-medium truncate">{plant.locationType === "Indoor" ? t("location_indoor") : t("location_outdoor")}</span></div>
+                      <div className="flex items-center text-slate-600"><Sun className="h-4 w-4 shrink-0 mr-2 text-amber-400" /><span className="font-medium truncate">{plant.lightExposure === "Low Light" ? t("light_low") : plant.lightExposure === "Partial Shade" ? t("light_partial") : plant.lightExposure === "Bright Indirect" ? t("light_bright") : t("light_full")}</span></div>
+                      <div className="flex items-center text-slate-600"><Box className="h-4 w-4 shrink-0 mr-2 text-amber-700/60" /><span className="font-medium truncate">{plant.potType === "Terracotta" ? t("pot_terracotta") : plant.potType === "Plastic" ? t("pot_plastic") : plant.potType === "Ceramic" ? t("pot_ceramic") : plant.potType === "Metal" ? t("pot_metal") : t("pot_other")}</span></div>
+                      <div className="flex items-center text-slate-600"><Droplets className="h-4 w-4 shrink-0 mr-2 text-slate-300" /><span className="font-medium truncate flex items-center gap-1">{t("has_drainage")}{plant.hasDrainage ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <X className="h-3.5 w-3.5 text-red-400" />}</span></div>
                     </div>
-                    
-                    {plant.recentlyReplanted && (
-                      <div className="pt-2 border-t border-slate-100 flex items-center text-amber-600 text-xs font-medium">
-                        <Sprout className="h-4 w-4 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0" />
-                        {t("recently_replanted")}
-                      </div>
-                    )}
-
+                    {plant.recentlyReplanted && <div className="pt-2 border-t border-slate-100 flex items-center text-amber-600 text-xs font-medium"><Sprout className="h-4 w-4 shrink-0 mr-1.5" />{t("recently_replanted")}</div>}
                     {(plant.careTips || plant.wateringTips) && (
                       <div className="mt-auto pt-3 border-t border-slate-100 space-y-2">
-                        {plant.careTips && (
-                          <div className="flex items-start text-xs text-slate-600">
-                            <Info className="h-3.5 w-3.5 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-emerald-500 mt-0.5" />
-                            <span className="leading-snug">{plant.careTips}</span>
-                          </div>
-                        )}
-                        {plant.wateringTips && (
-                          <div className="flex items-start text-xs text-slate-600">
-                            <Droplets className="h-3.5 w-3.5 shrink-0 mr-1.5 rtl:ml-1.5 rtl:mr-0 text-sky-500 mt-0.5" />
-                            <span className="leading-snug">{plant.wateringTips}</span>
-                          </div>
-                        )}
+                        {plant.careTips && <div className="flex items-start text-xs text-slate-600"><Info className="h-3.5 w-3.5 shrink-0 mr-1.5 text-emerald-500 mt-0.5" /><span className="leading-snug">{plant.careTips}</span></div>}
+                        {plant.wateringTips && <div className="flex items-start text-xs text-slate-600"><Droplets className="h-3.5 w-3.5 shrink-0 mr-1.5 text-sky-500 mt-0.5" /><span className="leading-snug">{plant.wateringTips}</span></div>}
                       </div>
                     )}
                   </CardContent>
@@ -520,16 +352,7 @@ export default function MyPlantsPage() {
           )}
         </div>
       </main>
-
-      {/* Plant detail/edit modal */}
-      {selectedPlant && (
-        <PlantModal
-          plant={selectedPlant}
-          onClose={() => setSelectedPlantId(null)}
-          onSave={handleSavePlant}
-          onDelete={deletePlant}
-        />
-      )}
+      {selectedPlant && <PlantModal plant={selectedPlant} onClose={() => setSelectedPlantId(null)} onSave={handleSavePlant} onDelete={deletePlant} />}
     </div>
   )
 }

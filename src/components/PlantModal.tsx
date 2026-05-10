@@ -100,15 +100,14 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     }
     setIsAnalyzing(true)
     try {
-      const apiKey = localStorage.getItem("jaliz-api-key") || localStorage.getItem("jaliz-gemini-key") || ""
       const modelName = localStorage.getItem("jaliz-model") || "gemini-1.5-pro"
       const lang = localStorage.getItem("jaliz-lang") || "en"
       const response = await fetch("/api/analyze-plant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image, name, language: lang, api_key: apiKey, model_name: modelName }),
+        body: JSON.stringify({ image, name, language: lang, model_name: modelName }),
       })
-      if (!response.ok) throw new Error("Analysis failed. Please check your API key in settings.")
+      if (!response.ok) throw new Error("Analysis failed.")
       const data = await response.json()
       if (data.name) setName(data.name)
       if (data.type) setType(data.type)

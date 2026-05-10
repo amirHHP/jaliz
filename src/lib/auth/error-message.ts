@@ -9,6 +9,7 @@ const TRANSLATION_KEY_BY_CODE: Record<AuthErrorCode, string> = {
   INVALID_EMAIL: "auth_error_invalid_email",
   EMPTY_FIELD: "auth_error_empty_field",
   FORBIDDEN: "auth_error_generic",
+  GENERIC: "auth_error_generic",
 }
 
 /** Map an unknown thrown value to the i18n key the UI should render. */

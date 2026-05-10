@@ -11,6 +11,10 @@ const translations = {
     marketplace: "Marketplace",
     my_plants: "My Plants",
     welcome_title: "Good morning, Sarah! 🪴",
+    morning_greeting: "Good morning, Sarah! 🪴",
+    afternoon_greeting: "Good afternoon, Sarah! 🪴",
+    evening_greeting: "Good evening, Sarah! 🪴",
+    night_greeting: "Good night, Sarah! 🪴",
     welcome_desc: "Here's what your garden needs today.",
     watering_title: "Watering Schedule",
     watering_desc: "3 plants need water today.",
@@ -76,6 +80,9 @@ const translations = {
     save_settings: "Save Settings",
     saved_successfully: "Settings saved successfully!",
     api_key_required: "API Key is required to generate advice.",
+    user_location_title: "Your Location",
+    user_location_label: "City, Country",
+    user_location_ph: "e.g. Tehran, Iran",
     // Auth
     sign_in: "Sign in",
     sign_up: "Sign up",
@@ -106,7 +113,7 @@ const translations = {
     auth_error_empty_field: "Please fill in all required fields.",
     auth_error_password_mismatch: "Passwords do not match.",
     auth_error_generic: "Something went wrong. Please try again.",
-    demo_admin_hint: "Default admin: admin@jaliz.local / admin123",
+
     // Admin panel
     admin_title: "User Management",
     admin_desc: "Manage registered users, roles and access.",
@@ -139,6 +146,16 @@ const translations = {
     go_home: "Go to dashboard",
     auth_required: "Please sign in to continue.",
     you_label: "(you)",
+    // Admin AI API config
+    admin_ai_title: "AI API Configuration",
+    admin_ai_desc: "Set the Gemini API key used by all users for AI-powered features.",
+    admin_ai_key_label: "Gemini API Key",
+    admin_ai_key_ph: "AIzaSy...",
+    admin_ai_fetch_models: "Verify & Fetch Models",
+    admin_ai_select_model: "Default Model",
+    admin_ai_save: "Save AI Settings",
+    admin_ai_saved: "AI settings saved for all users!",
+    admin_ai_no_key: "No API key configured yet.",
     // Landing page
     landing_hero_eyebrow: "Hyper-local AI gardening",
     landing_hero_title: "Grow happier plants, every season.",
@@ -256,6 +273,10 @@ const translations = {
     marketplace: "بازارچه",
     my_plants: "گیاهان من",
     welcome_title: "صبح بخیر، سارا! 🪴",
+    morning_greeting: "صبح بخیر، سارا! 🪴",
+    afternoon_greeting: "ظهر بخیر، سارا! 🪴",
+    evening_greeting: "عصر بخیر، سارا! 🪴",
+    night_greeting: "شب بخیر، سارا! 🪴",
     welcome_desc: "امروز باغچه شما به این موارد نیاز دارد.",
     watering_title: "برنامه آبیاری",
     watering_desc: "۳ گیاه امروز به آب نیاز دارند.",
@@ -321,6 +342,9 @@ const translations = {
     save_settings: "ذخیره تنظیمات",
     saved_successfully: "تنظیمات با موفقیت ذخیره شد!",
     api_key_required: "وارد کردن کلید API برای دریافت مشاوره الزامی است.",
+    user_location_title: "موقعیت مکانی شما",
+    user_location_label: "شهر، کشور",
+    user_location_ph: "مثال: تهران، ایران",
     // Auth
     sign_in: "ورود",
     sign_up: "ثبت‌نام",
@@ -351,7 +375,7 @@ const translations = {
     auth_error_empty_field: "لطفاً همه فیلدهای ضروری را پر کنید.",
     auth_error_password_mismatch: "رمز عبور و تکرار آن یکسان نیستند.",
     auth_error_generic: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
-    demo_admin_hint: "ادمین پیش‌فرض: admin@jaliz.local / admin123",
+
     // Admin panel
     admin_title: "مدیریت کاربران",
     admin_desc: "کاربران ثبت‌شده، نقش‌ها و دسترسی‌ها را مدیریت کنید.",
@@ -384,6 +408,16 @@ const translations = {
     go_home: "بازگشت به داشبورد",
     auth_required: "برای ادامه لطفاً وارد شوید.",
     you_label: "(شما)",
+    // Admin AI API config
+    admin_ai_title: "تنظیمات API هوش مصنوعی",
+    admin_ai_desc: "کلید API جمینای را وارد کنید تا همه کاربران بتوانند از قابلیت‌های AI استفاده کنند.",
+    admin_ai_key_label: "کلید API جمینای",
+    admin_ai_key_ph: "AIzaSy...",
+    admin_ai_fetch_models: "تایید و دریافت مدل‌ها",
+    admin_ai_select_model: "مدل پیش‌فرض",
+    admin_ai_save: "ذخیره تنظیمات AI",
+    admin_ai_saved: "تنظیمات AI برای همه کاربران ذخیره شد!",
+    admin_ai_no_key: "هنوز کلید API تنظیم نشده است.",
     // Landing page
     landing_hero_eyebrow: "باغبانی هوشمند با دقت محلی",
     landing_hero_title: "گیاهان شادتر، در هر فصل.",

@@ -146,9 +146,7 @@ function LoginForm() {
             </Link>
           </div>
 
-          <div className="mt-4 text-[11px] text-center text-slate-400 bg-slate-50 border border-dashed border-slate-200 rounded-md px-2 py-1.5">
-            {t("demo_admin_hint")}
-          </div>
+
         </div>
       </div>
     </div>
