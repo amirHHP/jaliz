@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "@/components/ui/button"
 import { CloudRain, Loader2, MapPin, Key } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
+import { getUserPlantsAction } from "@/app/actions/plants"
 
 export function WeatherAdvice() {
   const [loading, setLoading] = useState(false)
@@ -28,22 +29,17 @@ export function WeatherAdvice() {
     setError(null)
     
     try {
-      // Get current user's plants from Supabase
-      const { data: { session } } = await (await import("@/lib/supabase")).supabase.auth.getSession()
       let userPlants: unknown[] = []
-      if (session?.user) {
-        const { data } = await (await import("@/lib/supabase")).supabase
-          .from("user_plants")
-          .select("name, type, location_type, light_exposure, pot_type, has_drainage, recently_replanted")
-          .eq("user_id", session.user.id)
-        userPlants = (data ?? []).map((p) => ({
+      const data = await getUserPlantsAction()
+      if (data) {
+        userPlants = data.map((p: any) => ({
           name: p.name,
           type: p.type,
-          locationType: p.location_type,
-          lightExposure: p.light_exposure,
-          potType: p.pot_type,
-          hasDrainage: p.has_drainage,
-          recentlyReplanted: p.recently_replanted,
+          locationType: p.locationType,
+          lightExposure: p.lightExposure,
+          potType: p.potType,
+          hasDrainage: p.hasDrainage,
+          recentlyReplanted: p.recentlyReplanted,
         }))
       }
 
@@ -65,8 +61,8 @@ export function WeatherAdvice() {
         throw new Error("Failed to fetch advice")
       }
 
-      const data = await response.json()
-      setAdvice(typeof data.advice === "string" ? data.advice : JSON.stringify(data.advice))
+      const responseData = await response.json()
+      setAdvice(typeof responseData.advice === "string" ? responseData.advice : JSON.stringify(responseData.advice))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred.")
     } finally {

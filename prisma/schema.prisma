@@ -1,0 +1,110 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  salt         String
+  fullName     String   @default("")
+  role         String   @default("user") // "admin" or "user"
+  isActive     Boolean  @default(true)
+  phone        String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  plants        UserPlant[]
+  wateringLogs  WateringLog[]
+  listings      MarketplaceListing[]
+  messagesSent  MarketplaceMessage[] @relation("MessagesSent")
+  messagesRecv  MarketplaceMessage[] @relation("MessagesReceived")
+  conversations ConversationParticipant[]
+}
+
+model UserPlant {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  type               String?  @default("")
+  locationType       String?  @default("Indoor")
+  lightExposure      String?  @default("Bright Indirect")
+  potType            String?  @default("Plastic")
+  hasDrainage        Boolean? @default(true)
+  lastWatered        DateTime?
+  recentlyReplanted  Boolean? @default(false)
+  health             String?  @default("Excellent")
+  image              String?
+  careTips           String?
+  wateringTips       String?
+  createdAt          DateTime @default(now())
+}
+
+model WateringLog {
+  id       String   @id @default(uuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logDate  DateTime
+
+  @@unique([userId, logDate])
+}
+
+model MarketplaceListing {
+  id           String   @id @default(uuid())
+  ownerId      String
+  owner        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title        String
+  description  String   @default("")
+  type         String   @default("seed") // "seed", "cutting", "tool", "produce"
+  mode         String   @default("sell") // "sell", "exchange", "free"
+  price        Int?
+  exchangeFor  String?
+  location     String?
+  image        String?
+  contactPhone String?
+  status       String   @default("active") // "active", "completed"
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+
+  conversations MarketplaceConversation[]
+  messages      MarketplaceMessage[]
+}
+
+model MarketplaceConversation {
+  id              String   @id @default(uuid())
+  listingId       String
+  listing         MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  participants    ConversationParticipant[]
+  lastMessageAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+}
+
+model ConversationParticipant {
+  id             String   @id @default(uuid())
+  conversationId String
+  conversation   MarketplaceConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model MarketplaceMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  listingId      String
+  listing        MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User     @relation("MessagesSent", fields: [senderId], references: [id])
+  recipientId    String
+  recipient      User     @relation("MessagesReceived", fields: [recipientId], references: [id])
+  body           String
+  createdAt      DateTime @default(now())
+}

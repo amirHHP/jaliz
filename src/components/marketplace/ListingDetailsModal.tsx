@@ -100,20 +100,20 @@ export function ListingDetailsModal({
   }, [messages.length])
 
   // ----- Owner actions ------------------------------------------------------
-  const handleToggleCompleted = () => {
+  const handleToggleCompleted = async () => {
     if (!user) return
     try {
-      setCompleted(listing.id, user.id, listing.status !== "completed")
+      await setCompleted(listing.id, user.id, listing.status !== "completed")
     } catch (err) {
       console.error(err)
     }
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!user) return
     if (!window.confirm(t("mp_confirm_delete" as never))) return
     try {
-      remove(listing.id, user.id)
+      await remove(listing.id, user.id)
       onClose()
     } catch (err) {
       console.error(err)
@@ -121,11 +121,11 @@ export function ListingDetailsModal({
   }
 
   // ----- Chat actions -------------------------------------------------------
-  const ensureConversation = (): Conversation | null => {
+  const ensureConversation = async (): Promise<Conversation | null> => {
     if (!user || isOwner) return null
     if (conversation) return conversation
     try {
-      const conv = getOrCreateConversation(listing.id, user.id, listing.ownerId)
+      const conv = await getOrCreateConversation(listing.id, user.id, listing.ownerId)
       setConversation(conv)
       return conv
     } catch (err) {
@@ -135,15 +135,15 @@ export function ListingDetailsModal({
     }
   }
 
-  const handleSendMessage = (e: FormEvent) => {
+  const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
     const text = draft.trim()
     if (!text) return
-    const conv = ensureConversation()
+    const conv = await ensureConversation()
     if (!conv) return
     try {
-      sendMessage(conv.id, user.id, text)
+      await sendMessage(conv.id, user.id, text)
       setDraft("")
       setChatError(null)
     } catch (err) {

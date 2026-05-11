@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { supabase } from "@/lib/supabase"
 import { Check, Droplets } from "lucide-react"
+import { getUserPlantsAction, getWateringLogAction, updatePlantsLastWateredAction, markWateringDoneAction } from "@/app/actions/plants"
 
 interface Plant {
   id: string
@@ -28,32 +28,27 @@ export function WateringSchedule() {
 
   const loadData = useCallback(async () => {
     if (!user) return
-    // Load plants
-    const { data: plantData } = await supabase
-      .from("user_plants")
-      .select("id, name, location_type, light_exposure, pot_type, has_drainage, last_watered, recently_replanted, image")
-      .eq("user_id", user.id)
-    if (plantData) {
-      setPlants(plantData.map((r) => ({
-        id: r.id,
-        name: r.name,
-        locationType: r.location_type,
-        lightExposure: r.light_exposure,
-        potType: r.pot_type,
-        hasDrainage: r.has_drainage,
-        lastWatered: r.last_watered,
-        recentlyReplanted: r.recently_replanted,
-        image: r.image ?? undefined,
-      })))
+    try {
+      const plantData = await getUserPlantsAction()
+      if (plantData) {
+        setPlants(plantData.map((r) => ({
+          id: r.id,
+          name: r.name,
+          locationType: (r.locationType as any) || "Indoor",
+          lightExposure: (r.lightExposure as any) || "Bright Indirect",
+          potType: (r.potType as any) || "Plastic",
+          hasDrainage: r.hasDrainage || true,
+          lastWatered: r.lastWatered ? new Date(r.lastWatered).toISOString() : new Date().toISOString(),
+          recentlyReplanted: r.recentlyReplanted || false,
+          image: r.image ?? undefined,
+        })))
+      }
+      
+      const logData = await getWateringLogAction(today)
+      setIsDone(!!logData)
+    } catch (e) {
+      console.error(e)
     }
-    // Check watering done today
-    const { data: logData } = await supabase
-      .from("watering_log")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("log_date", today)
-      .maybeSingle()
-    setIsDone(!!logData)
   }, [user, today])
 
   useEffect(() => {
@@ -76,15 +71,17 @@ export function WateringSchedule() {
 
   const handleMarkAllDone = async () => {
     if (!user) return
-    // Update last_watered for plants that needed water
-    const ids = plantsToWater.map((p) => p.id)
-    if (ids.length > 0) {
-      await supabase.from("user_plants").update({ last_watered: today }).in("id", ids)
+    try {
+      const ids = plantsToWater.map((p) => p.id)
+      if (ids.length > 0) {
+        await updatePlantsLastWateredAction(ids, today)
+      }
+      await markWateringDoneAction(today)
+      setPlants((prev) => prev.map((p) => ids.includes(p.id) ? { ...p, lastWatered: new Date(today).toISOString() } : p))
+      setIsDone(true)
+    } catch (e) {
+      console.error(e)
     }
-    // Insert watering log
-    await supabase.from("watering_log").upsert({ user_id: user.id, log_date: today })
-    setPlants((prev) => prev.map((p) => ids.includes(p.id) ? { ...p, lastWatered: today } : p))
-    setIsDone(true)
   }
 
   const titleStr = language === "fa" ? "برنامه آبیاری" : "Watering Schedule"

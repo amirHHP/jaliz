@@ -149,8 +149,8 @@ export function ListingFormModal({
       }
 
       const saved = isEditing
-        ? update(editingListing!.id, user.id, input)
-        : create(user.id, input)
+        ? await update(editingListing!.id, user.id, input)
+        : await create(user.id, input)
 
       onSaved?.(saved)
       onClose()

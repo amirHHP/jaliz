@@ -57,8 +57,7 @@ export class AuthError extends Error {
 /**
  * Service contract for authentication and user management.
  *
- * Implementations may be swapped (e.g. swap LocalAuthService for a
- * SupabaseAuthService) without changing any UI code that depends on it.
+ * Implementations may be swapped without changing any UI code that depends on it.
  */
 export interface IAuthService {
   init(): Promise<void>

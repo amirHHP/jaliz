@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { supabase } from "@/lib/supabase"
 import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
+import { getUserPlantsAction, createUserPlantAction, updateUserPlantAction, deleteUserPlantAction } from "@/app/actions/plants"
 
 interface Plant {
   id: string
@@ -26,21 +26,21 @@ interface Plant {
   wateringTips?: string
 }
 
-function dbRowToPlant(row: Record<string, unknown>): Plant {
+function dbRowToPlant(row: any): Plant {
   return {
-    id: row.id as string,
-    name: row.name as string,
-    type: (row.type as string) ?? "",
-    locationType: (row.location_type as Plant["locationType"]) ?? "Indoor",
-    lightExposure: (row.light_exposure as Plant["lightExposure"]) ?? "Bright Indirect",
-    potType: (row.pot_type as Plant["potType"]) ?? "Plastic",
-    hasDrainage: (row.has_drainage as boolean) ?? true,
-    lastWatered: (row.last_watered as string) ?? new Date().toISOString().split("T")[0],
-    recentlyReplanted: (row.recently_replanted as boolean) ?? false,
-    health: (row.health as Plant["health"]) ?? "Excellent",
-    image: (row.image as string | undefined) ?? undefined,
-    careTips: (row.care_tips as string | undefined) ?? undefined,
-    wateringTips: (row.watering_tips as string | undefined) ?? undefined,
+    id: row.id,
+    name: row.name,
+    type: row.type ?? "",
+    locationType: row.locationType ?? "Indoor",
+    lightExposure: row.lightExposure ?? "Bright Indirect",
+    potType: row.potType ?? "Plastic",
+    hasDrainage: row.hasDrainage ?? true,
+    lastWatered: row.lastWatered ? new Date(row.lastWatered).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    recentlyReplanted: row.recentlyReplanted ?? false,
+    health: row.health ?? "Excellent",
+    image: row.image ?? undefined,
+    careTips: row.careTips ?? undefined,
+    wateringTips: row.wateringTips ?? undefined,
   }
 }
 
@@ -70,12 +70,12 @@ export default function MyPlantsPage() {
   const fetchPlants = useCallback(async () => {
     if (!user) { setLoading(false); return }
     setLoading(true)
-    const { data, error } = await supabase
-      .from("user_plants")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true })
-    if (!error && data) setPlants(data.map(dbRowToPlant))
+    try {
+      const data = await getUserPlantsAction()
+      setPlants(data.map(dbRowToPlant))
+    } catch (e) {
+      console.error(e)
+    }
     setLoading(false)
   }, [user])
 
@@ -138,56 +138,67 @@ export default function MyPlantsPage() {
   const handleAddPlant = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim() || !user) return
-    const { data, error } = await supabase.from("user_plants").insert({
-      user_id: user.id,
-      name: newName,
-      type: newType || "Unknown",
-      location_type: newLocationType,
-      light_exposure: newLightExposure,
-      pot_type: newPotType,
-      has_drainage: newHasDrainage,
-      last_watered: newLastWatered || new Date().toISOString().split("T")[0],
-      recently_replanted: newRecentlyReplanted,
-      health: newHealth,
-      image: newImage || null,
-      care_tips: newCareTips || null,
-      watering_tips: newWateringTips || null,
-    }).select().single()
-    if (!error && data) {
-      setPlants((prev) => [...prev, dbRowToPlant(data)])
-      setIsAdding(false)
-      setNewName(""); setNewType(""); setNewLocationType("Indoor")
-      setNewLightExposure("Bright Indirect"); setNewPotType("Plastic")
-      setNewHasDrainage(true); setNewLastWatered(""); setNewRecentlyReplanted(false)
-      setNewHealth("Excellent"); setNewImage(""); setNewCareTips(""); setNewWateringTips("")
+    try {
+      const data = await createUserPlantAction({
+        name: newName,
+        type: newType || "Unknown",
+        locationType: newLocationType,
+        lightExposure: newLightExposure,
+        potType: newPotType,
+        hasDrainage: newHasDrainage,
+        lastWatered: newLastWatered ? new Date(newLastWatered) : new Date(),
+        recentlyReplanted: newRecentlyReplanted,
+        health: newHealth,
+        image: newImage || null,
+        careTips: newCareTips || null,
+        wateringTips: newWateringTips || null,
+      })
+      if (data) {
+        setPlants((prev) => [...prev, dbRowToPlant(data)])
+        setIsAdding(false)
+        setNewName(""); setNewType(""); setNewLocationType("Indoor")
+        setNewLightExposure("Bright Indirect"); setNewPotType("Plastic")
+        setNewHasDrainage(true); setNewLastWatered(""); setNewRecentlyReplanted(false)
+        setNewHealth("Excellent"); setNewImage(""); setNewCareTips(""); setNewWateringTips("")
+      }
+    } catch (e) {
+      console.error(e)
     }
   }
 
   const deletePlant = async (id: string) => {
-    await supabase.from("user_plants").delete().eq("id", id)
-    setPlants((prev) => prev.filter((p) => p.id !== id))
-    setSelectedPlantId(null)
+    try {
+      await deleteUserPlantAction(id)
+      setPlants((prev) => prev.filter((p) => p.id !== id))
+      setSelectedPlantId(null)
+    } catch (e) {
+      console.error(e)
+    }
   }
 
   const handleSavePlant = async (updated: Plant) => {
-    const { data, error } = await supabase.from("user_plants").update({
-      name: updated.name,
-      type: updated.type,
-      location_type: updated.locationType,
-      light_exposure: updated.lightExposure,
-      pot_type: updated.potType,
-      has_drainage: updated.hasDrainage,
-      last_watered: updated.lastWatered,
-      recently_replanted: updated.recentlyReplanted,
-      health: updated.health,
-      image: updated.image || null,
-      care_tips: updated.careTips || null,
-      watering_tips: updated.wateringTips || null,
-    }).eq("id", updated.id).select().single()
-    if (!error && data) {
-      setPlants((prev) => prev.map((p) => p.id === updated.id ? dbRowToPlant(data) : p))
+    try {
+      const data = await updateUserPlantAction(updated.id, {
+        name: updated.name,
+        type: updated.type,
+        locationType: updated.locationType,
+        lightExposure: updated.lightExposure,
+        potType: updated.potType,
+        hasDrainage: updated.hasDrainage,
+        lastWatered: updated.lastWatered ? new Date(updated.lastWatered) : null,
+        recentlyReplanted: updated.recentlyReplanted,
+        health: updated.health,
+        image: updated.image || null,
+        careTips: updated.careTips || null,
+        wateringTips: updated.wateringTips || null,
+      })
+      if (data) {
+        setPlants((prev) => prev.map((p) => p.id === updated.id ? dbRowToPlant(data) : p))
+      }
+      setSelectedPlantId(null)
+    } catch (e) {
+      console.error(e)
     }
-    setSelectedPlantId(null)
   }
 
   const selectedPlant = plants.find((p) => p.id === selectedPlantId) ?? null
