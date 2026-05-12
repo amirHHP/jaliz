@@ -108,3 +108,8 @@ model MarketplaceMessage {
   body           String
   createdAt      DateTime @default(now())
 }
+
+model GlobalSetting {
+  key   String @id
+  value String
+}

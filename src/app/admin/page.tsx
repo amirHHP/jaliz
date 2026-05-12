@@ -19,6 +19,7 @@ import {
   UserX,
   X,
   Key,
+  Globe,
 } from "lucide-react"
 
 import { Header } from "@/components/Header"
@@ -26,6 +27,8 @@ import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { Button } from "@/components/ui/button"
 import { authErrorTranslationKey, User, UserRole } from "@/lib/auth"
+import { getAiConfig, setGlobalSetting } from "@/app/actions/settings"
+import { fetchModelsAction } from "@/app/actions/ai"
 
 interface ResetTarget {
   id: string
@@ -53,61 +56,102 @@ export default function AdminPage() {
   const [flash, setFlash] = useState<string | null>(null)
 
   // AI API key state
+  const [aiProvider, setAiProvider] = useState<"gemini" | "sotoon">("gemini")
   const [aiApiKey, setAiApiKey] = useState("")
   const [aiModels, setAiModels] = useState<{name: string; inputTokenLimit: number; outputTokenLimit: number}[]>([])
   const [aiSelectedModel, setAiSelectedModel] = useState("")
+  const [aiModelSearch, setAiModelSearch] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiSaved, setAiSaved] = useState(false)
 
   // Load existing AI settings on mount
   useEffect(() => {
-    const storedKey = localStorage.getItem("jaliz-api-key") || ""
-    const storedModel = localStorage.getItem("jaliz-model") || ""
-    const storedModels = localStorage.getItem("jaliz-models-cache")
-    setAiApiKey(storedKey)
-    setAiSelectedModel(storedModel)
-    if (storedModels) {
-      try { setAiModels(JSON.parse(storedModels)) } catch {}
+    async function loadConfig() {
+      try {
+        const config = await getAiConfig()
+        if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon")
+        if (config.apiKey) setAiApiKey(config.apiKey)
+        if (config.model) setAiSelectedModel(config.model)
+        
+        // Also check localStorage for cache
+        const storedModels = localStorage.getItem("jaliz-models-cache")
+        if (storedModels) {
+          try { setAiModels(JSON.parse(storedModels)) } catch {}
+        }
+      } catch (err) {
+        console.error("Failed to load AI config", err)
+      }
     }
+    loadConfig()
   }, [])
 
-  const fetchAiModels = async () => {
-    if (!aiApiKey.trim()) return
+  const fetchAiModels = async (keyOverride?: string, providerOverride?: string) => {
+    const key = keyOverride || aiApiKey.trim()
+    const provider = providerOverride || aiProvider
+    
+    if (!key) return
     setAiLoading(true)
     setAiError(null)
     setAiSaved(false)
     try {
-      const response = await fetch("/api/models", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: aiApiKey.trim() }),
-      })
-      if (!response.ok) throw new Error(t("api_key_required"))
-      const data = await response.json()
+      const data = await fetchModelsAction(key, provider)
       if (data.models && data.models.length > 0) {
         setAiModels(data.models)
         localStorage.setItem("jaliz-models-cache", JSON.stringify(data.models))
-        if (!aiSelectedModel || !data.models.find((m: {name:string}) => m.name === aiSelectedModel)) {
+        
+        // Update selected model if current one is invalid or not set
+        const currentModel = aiSelectedModel
+        if (!currentModel || !data.models.find((m: {name:string}) => m.name === currentModel)) {
           setAiSelectedModel(data.models[0].name)
         }
       } else {
         throw new Error("No compatible models found.")
       }
     } catch (err: unknown) {
-      setAiError(err instanceof Error ? err.message : "Error fetching models")
-      setAiModels([])
+      const msg = err instanceof Error ? err.message : "Error fetching models"
+      setAiError(msg)
+      // Don't clear models if we have cached ones, unless it's a 401
+      if (msg.includes("401") || msg.includes("key")) {
+        setAiModels([])
+      }
     } finally {
       setAiLoading(false)
     }
   }
 
-  const handleAiSave = () => {
+  // Automatic fetch when provider or key changes (debounced-ish)
+  useEffect(() => {
+    if (aiApiKey.trim() && aiApiKey.length > 10) {
+      const timer = setTimeout(() => {
+        fetchAiModels()
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiProvider])
+
+  const handleAiSave = async () => {
     if (!aiApiKey.trim()) return
-    localStorage.setItem("jaliz-api-key", aiApiKey.trim())
-    if (aiSelectedModel) localStorage.setItem("jaliz-model", aiSelectedModel)
-    setAiSaved(true)
-    setTimeout(() => setAiSaved(false), 3000)
+    setAiLoading(true)
+    try {
+      await setGlobalSetting("ai-provider", aiProvider)
+      await setGlobalSetting("ai-api-key", aiApiKey.trim())
+      if (aiSelectedModel) {
+        await setGlobalSetting("ai-model", aiSelectedModel)
+      }
+      
+      // Keep in localStorage for client-side fallback/cache if needed
+      localStorage.setItem("jaliz-api-key", aiApiKey.trim())
+      if (aiSelectedModel) localStorage.setItem("jaliz-model", aiSelectedModel)
+      
+      setAiSaved(true)
+      setTimeout(() => setAiSaved(false), 3000)
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Failed to save settings")
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   // Load users when admin is authenticated
@@ -126,6 +170,12 @@ export default function AdminPage() {
       router.replace("/login?redirect=/admin")
     }
   }, [status, router])
+
+  const filteredAiModels = useMemo(() => {
+    if (!aiModelSearch.trim()) return aiModels
+    const q = aiModelSearch.toLowerCase()
+    return aiModels.filter(m => m.name.toLowerCase().includes(q))
+  }, [aiModels, aiModelSearch])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -262,6 +312,41 @@ export default function AdminPage() {
           </div>
 
           <div className="p-5 space-y-4">
+            {/* Provider selector */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                <Globe className="h-4 w-4 text-emerald-600" />
+                {t("admin_ai_provider_label")}
+              </label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setAiProvider("gemini"); setAiModels([]); setAiSelectedModel(""); setAiSaved(false) }}
+                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                    aiProvider === "gemini"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  🔮 Google Gemini
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAiProvider("sotoon"); setAiModels([]); setAiSelectedModel(""); setAiSaved(false) }}
+                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                    aiProvider === "sotoon"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  🇮🇷 {t("admin_ai_provider_sotoon")}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                {aiProvider === "sotoon" ? t("admin_ai_provider_sotoon_hint") : t("admin_ai_provider_gemini_hint")}
+              </p>
+            </div>
+
             {/* API Key row */}
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
@@ -273,7 +358,7 @@ export default function AdminPage() {
                   type="password"
                   value={aiApiKey}
                   onChange={(e) => { setAiApiKey(e.target.value); setAiSaved(false) }}
-                  placeholder={t("admin_ai_key_ph")}
+                  placeholder={aiProvider === "sotoon" ? t("admin_ai_key_ph_sotoon") : t("admin_ai_key_ph")}
                   className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
                 <button
@@ -286,24 +371,60 @@ export default function AdminPage() {
                   {t("admin_ai_fetch_models")}
                 </button>
               </div>
-              {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+              {aiError && (
+                <p className="text-xs text-red-500 mt-1">
+                  {(() => {
+                    try {
+                      const parsed = JSON.parse(aiError);
+                      if (Array.isArray(parsed)) return parsed.map(e => e.msg || JSON.stringify(e)).join(", ");
+                      return aiError;
+                    } catch {
+                      return aiError;
+                    }
+                  })()}
+                </p>
+              )}
             </div>
 
             {/* Model selector */}
             {aiModels.length > 0 && (
               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
-                <label className="text-sm font-medium text-slate-700">{t("admin_ai_select_model")}</label>
+                <label className="text-sm font-medium text-slate-700 flex items-center justify-between">
+                  {t("admin_ai_select_model")}
+                  <span className="text-[10px] text-slate-400 font-normal">{aiModels.length} models</span>
+                </label>
+                
+                <div className="relative group">
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+                  <input
+                    type="text"
+                    value={aiModelSearch}
+                    onChange={(e) => setAiModelSearch(e.target.value)}
+                    placeholder={language === "fa" ? "جستجوی مدل..." : "Search models..."}
+                    className="flex h-9 w-full rounded-lg border border-slate-200 bg-slate-50 ps-9 pe-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition mb-2"
+                  />
+                </div>
+
                 <select
                   value={aiSelectedModel}
                   onChange={(e) => setAiSelectedModel(e.target.value)}
                   className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
                 >
-                  {aiModels.map(m => (
-                    <option key={m.name} value={m.name}>
-                      {m.name.replace("models/", "")}
-                    </option>
-                  ))}
+                  {filteredAiModels.length > 0 ? (
+                    filteredAiModels.map(m => (
+                      <option key={m.name} value={m.name}>
+                        {m.name.replace("models/", "")}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>{language === "fa" ? "مدلی یافت نشد" : "No models found"}</option>
+                  )}
                 </select>
+                {aiModelSearch && filteredAiModels.length > 0 && (
+                  <p className="text-[10px] text-emerald-600 mt-1">
+                    {language === "fa" ? `نمایش ${filteredAiModels.length} مدل فیلتر شده` : `Showing ${filteredAiModels.length} filtered models`}
+                  </p>
+                )}
               </div>
             )}
 

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
 import { getUserPlantsAction, createUserPlantAction, updateUserPlantAction, deleteUserPlantAction } from "@/app/actions/plants"
+import { analyzePlantAction } from "@/app/actions/ai"
 
 interface Plant {
   id: string
@@ -110,16 +111,7 @@ export default function MyPlantsPage() {
     if (!newName.trim() && !newImage) { alert("Please provide a plant name or image."); return }
     setIsAnalyzing(true)
     try {
-      const apiKey = localStorage.getItem("jaliz-api-key") || ""
-      const modelName = localStorage.getItem("jaliz-model") || "gemini-1.5-pro"
-      const lang = localStorage.getItem("jaliz-lang") || "en"
-      const response = await fetch("/api/analyze-plant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: newImage, name: newName, language: lang, api_key: apiKey, model_name: modelName }),
-      })
-      if (!response.ok) throw new Error("Analysis failed. Check your API key in settings.")
-      const data = await response.json()
+      const data = await analyzePlantAction({ image: newImage, name: newName, language: lang, model_name: modelName })
       if (data.name) setNewName(data.name)
       if (data.type) setNewType(data.type)
       if (data.locationType) setNewLocationType(data.locationType)

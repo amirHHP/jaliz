@@ -11,10 +11,13 @@ except ImportError:
     from .weather_agent import WeatherAgent
 # pyrefly: ignore [missing-import]
 import google.generativeai as genai
+import requests
 
 app = FastAPI()
 
 weather_agent = WeatherAgent()
+
+SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1"
 
 class PlantInfo(BaseModel):
     name: str
@@ -33,6 +36,7 @@ class WeatherAdviceRequest(BaseModel):
     plants: List[PlantInfo]
     api_key: Optional[str] = None
     model_name: Optional[str] = None
+    provider: Optional[str] = "gemini"
 
 class PlantAnalysisRequest(BaseModel):
     image: Optional[str] = None
@@ -40,9 +44,11 @@ class PlantAnalysisRequest(BaseModel):
     language: Optional[str] = "en"
     api_key: Optional[str] = None
     model_name: Optional[str] = None
+    provider: Optional[str] = "gemini"
 
 class ModelsRequest(BaseModel):
     api_key: str
+    provider: Optional[str] = "gemini"
 
 @app.get("/api/health")
 def health_check():
@@ -50,19 +56,94 @@ def health_check():
 
 @app.post("/api/models")
 def list_models(request: ModelsRequest):
-    try:
-        genai.configure(api_key=request.api_key)
-        models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                models.append({
-                    "name": m.name,
-                    "inputTokenLimit": m.input_token_limit,
-                    "outputTokenLimit": m.output_token_limit
-                })
+    if request.provider == "sotoon":
+        # Sotoon Intelligence API models (OpenAI-compatible)
+        models = [
+            {
+                "name": "ibm-granite/granite-4.0-h-micro",
+                "inputTokenLimit": 128000,
+                "outputTokenLimit": 4096
+            },
+            {
+                "name": "gpt-4o",
+                "inputTokenLimit": 128000,
+                "outputTokenLimit": 16384
+            },
+            {
+                "name": "gpt-4o-mini",
+                "inputTokenLimit": 128000,
+                "outputTokenLimit": 16384
+            },
+            {
+                "name": "gpt-4-turbo",
+                "inputTokenLimit": 128000,
+                "outputTokenLimit": 4096
+            },
+            {
+                "name": "gpt-3.5-turbo",
+                "inputTokenLimit": 16385,
+                "outputTokenLimit": 4096
+            }
+        ]
+        
+        # Try to fetch actual models from the Sotoon API
+        try:
+            resp = requests.get(
+                f"{SOTOON_BASE_URL}/models",
+                headers={"Authorization": f"Bearer {request.api_key}"},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if isinstance(data, dict) and "data" in data:
+                    fetched = []
+                    for m in data["data"]:
+                        model_id = m.get("id", "")
+                        if model_id:
+                            fetched.append({
+                                "name": model_id,
+                                "inputTokenLimit": m.get("context_length", 128000),
+                                "outputTokenLimit": m.get("max_output", 16384)
+                            })
+                    if fetched:
+                        return {"models": fetched}
+            elif resp.status_code in [401, 403]:
+                raise HTTPException(status_code=resp.status_code, detail="Invalid API key for Sotoon Intelligence")
+            else:
+                # Other API errors, fall back to static list if needed but log it
+                print(f"Sotoon API returned status {resp.status_code}: {resp.text}")
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"Network error fetching Sotoon models: {e}")
+        
+        # Fallback to static list only on network errors or unexpected responses
         return {"models": models}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    else:
+        # Gemini models (static list to avoid network issues in restricted regions)
+        models = [
+            {
+                "name": "models/gemini-1.5-pro",
+                "inputTokenLimit": 2097152,
+                "outputTokenLimit": 8192
+            },
+            {
+                "name": "models/gemini-1.5-flash",
+                "inputTokenLimit": 1048576,
+                "outputTokenLimit": 8192
+            },
+            {
+                "name": "models/gemini-1.5-flash-8b",
+                "inputTokenLimit": 1048576,
+                "outputTokenLimit": 8192
+            },
+            {
+                "name": "models/gemini-1.0-pro",
+                "inputTokenLimit": 30720,
+                "outputTokenLimit": 2048
+            }
+        ]
+        return {"models": models}
 
 @app.post("/api/advice")
 def get_weather_advice(request: WeatherAdviceRequest):
@@ -74,7 +155,8 @@ def get_weather_advice(request: WeatherAdviceRequest):
             language=request.language,
             plants=[p.dict() for p in request.plants],
             api_key=request.api_key,
-            model_name=request.model_name
+            model_name=request.model_name,
+            provider=request.provider
         )
         return {"advice": advice}
     except Exception as e:
@@ -89,10 +171,6 @@ def analyze_plant(request: PlantAnalysisRequest):
         api_key = request.api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise HTTPException(status_code=400, detail="API key is required")
-        
-        genai.configure(api_key=api_key)
-        model_name = request.model_name or "gemini-1.5-pro"
-        model = genai.GenerativeModel(model_name)
         
         language_name = "Persian (Farsi)" if request.language == "fa" else "English"
         
@@ -112,25 +190,70 @@ def analyze_plant(request: PlantAnalysisRequest):
         }}
         """
         
-        contents = [prompt]
-        
-        if request.image:
-            if "," in request.image:
-                header, encoded = request.image.split(",", 1)
-                mime_type = header.split(";")[0].split(":")[1]
-            else:
-                encoded = request.image
-                mime_type = "image/jpeg"
-                
-            image_data = base64.b64decode(encoded)
-            contents.append({
-                "mime_type": mime_type,
-                "data": image_data
-            })
+        if request.provider == "sotoon":
+            # Use OpenAI-compatible API (Sotoon)
+            import requests as req
             
-        response = model.generate_content(contents)
+            messages = [{"role": "user", "content": prompt}]
+            
+            # Note: Sotoon API may not support image input for all models
+            if request.image and not request.image.startswith("data:"):
+                pass  # Skip image for non-vision models
+            elif request.image:
+                messages = [{"role": "user", "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": request.image}}
+                ]}]
+            
+            model_name = request.model_name or "gpt-4o"
+            resp = req.post(
+                f"{SOTOON_BASE_URL}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model_name,
+                    "messages": messages,
+                    "temperature": 0.3
+                },
+                timeout=60
+            )
+            
+            if resp.status_code != 200:
+                err_text = resp.text
+                if "egress-proxy" in err_text or "OpenrouterException" in err_text:
+                    friendly_msg = "Sotoon API is currently having connectivity issues with this model. Please try a different model (e.g., ibm-granite or gpt-4o) or try again later."
+                    raise HTTPException(status_code=resp.status_code, detail=friendly_msg)
+                raise HTTPException(status_code=resp.status_code, detail=f"Sotoon API error: {err_text}")
+            
+            result_data = resp.json()
+            text = result_data["choices"][0]["message"]["content"]
+        else:
+            # Use Gemini
+            genai.configure(api_key=api_key)
+            model_name = request.model_name or "gemini-1.5-pro"
+            model = genai.GenerativeModel(model_name)
+            
+            contents = [prompt]
+            
+            if request.image:
+                if "," in request.image:
+                    header, encoded = request.image.split(",", 1)
+                    mime_type = header.split(";")[0].split(":")[1]
+                else:
+                    encoded = request.image
+                    mime_type = "image/jpeg"
+                    
+                image_data = base64.b64decode(encoded)
+                contents.append({
+                    "mime_type": mime_type,
+                    "data": image_data
+                })
+                
+            response = model.generate_content(contents)
+            text = response.text
         
-        text = response.text
         match = re.search(r'```(?:json)?\n?(.*?)\n?```', text, re.DOTALL)
         if match:
             json_str = match.group(1).strip()

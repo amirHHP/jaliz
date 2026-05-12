@@ -1,0 +1,483 @@
+
+> jaliz@0.1.0 dev
+> concurrently "npm run dev:next" "npm run dev:py"
+
+[0] 
+[0] > jaliz@0.1.0 dev:next
+[0] > next dev
+[0] 
+[1] 
+[1] > jaliz@0.1.0 dev:py
+[1] > cd api && ../.venv/bin/uvicorn index:app --reload --port 8000
+[1] 
+[1] INFO:     Will watch for changes in these directories: ['/Users/sotoon/jaliz/api']
+[1] ERROR:    [Errno 48] Address already in use
+[1] npm run dev:py exited with code 1
+[0] ▲ Next.js 16.2.4 (Turbopack)
+[0] - Local:         http://localhost:3000
+[0] - Network:       http://10.30.100.59:3000
+[0] - Environments: .env.local
+[0] ✓ Ready in 956ms
+[0] 
+[0] (node:55945) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+[0] (Use `node --trace-deprecation ...` to show where the warning was created)
+[0]  GET /admin 200 in 701ms (next.js: 420ms, application-code: 281ms)
+[0]  POST /admin 200 in 329ms (next.js: 5ms, application-code: 325ms)
+[0]   └─ ƒ getAiConfig() in 268ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 18ms (next.js: 8ms, application-code: 9ms)
+[0]   └─ ƒ getMarketplaceListingsAction() in 4ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 19ms (next.js: 1660µs, application-code: 17ms)
+[0]   └─ ƒ getMarketplaceConversationsAction() in 11ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 62ms (next.js: 1841µs, application-code: 60ms)
+[0]   └─ ƒ getMarketplaceMessagesAction() in 29ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 146ms (next.js: 96ms, application-code: 49ms)
+[0]   └─ ƒ getCurrentUser() in 16ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 19ms (next.js: 5ms, application-code: 13ms)
+[0]   └─ ƒ listUsersAction() in 5ms src/app/actions/auth.ts
+[0] AI Models Action Error: SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+[0]     at JSON.parse (<anonymous>)
+[0] ⨯ SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+[0]     at JSON.parse (<anonymous>) {
+[0]   digest: '3000648970'
+[0] }
+[0]  POST /admin 500 in 377ms (next.js: 12ms, application-code: 365ms)
+[0]   └─ ƒ fetchModelsAction("لیست مدل ها رو نمیده", "sotoon") in 347ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 2.8s (next.js: 1136ms, application-code: 1649ms)
+[0]   └─ ƒ fetchModelsAction("لیست مدل ها رو نمیده", "gemini") in 1135ms src/app/actions/ai.ts
+[0]  GET /admin 200 in 1371ms (next.js: 356ms, application-code: 1015ms)
+[0]  POST /admin 200 in 497ms (next.js: 15ms, application-code: 483ms)
+[0]   └─ ƒ getAiConfig() in 385ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 186ms (next.js: 16ms, application-code: 170ms)
+[0]   └─ ƒ getMarketplaceListingsAction() in 106ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 591ms (next.js: 28ms, application-code: 563ms)
+[0]   └─ ƒ getMarketplaceConversationsAction() in 176ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 82ms (next.js: 10ms, application-code: 72ms)
+[0]   └─ ƒ getMarketplaceMessagesAction() in 31ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 79ms (next.js: 17ms, application-code: 62ms)
+[0]   └─ ƒ getCurrentUser() in 9ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 47ms (next.js: 5ms, application-code: 41ms)
+[0]   └─ ƒ listUsersAction() in 9ms src/app/actions/auth.ts
+[0] AI Models Action Error: SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+[0]     at JSON.parse (<anonymous>)
+[0] ⨯ SyntaxError: Unexpected token 'I', "Internal S"... is not valid JSON
+[0]     at JSON.parse (<anonymous>) {
+[0]   digest: '3000648970'
+[0] }
+[0]  POST /admin 500 in 5.4s (next.js: 17ms, application-code: 5.4s)
+[0]   └─ ƒ fetchModelsAction("لیست مدل ها رو نمیده", "sotoon") in 5237ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 469ms (next.js: 183ms, application-code: 287ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 139ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 1179ms (next.js: 22ms, application-code: 1157ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "لیست مدل ها رو نمیده") in 78ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 451ms (next.js: 247ms, application-code: 204ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "gpt-4o-mini") in 36ms src/app/actions/settings.ts
+[0] AI Models Action Error: Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:86:13)
+[0]   84 |         ? JSON.stringify(err.detail) 
+[0]   85 |         : (err.detail || "Failed to fetch models");
+[0] > 86 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   87 |     }
+[0]   88 |
+[0]   89 |     return await response.json();
+[0] ⨯ Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:86:13)
+[0]   84 |         ? JSON.stringify(err.detail) 
+[0]   85 |         : (err.detail || "Failed to fetch models");
+[0] > 86 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   87 |     }
+[0]   88 |
+[0]   89 |     return await response.json(); {
+[0]   digest: '1457875300'
+[0] }
+[0]  POST /admin 500 in 4.8s (next.js: 48ms, application-code: 4.7s)
+[0]   └─ ƒ fetchModelsAction([unserializable], "sotoon") in 2441ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 845ms (next.js: 535ms, application-code: 310ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 174ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 84ms (next.js: 24ms, application-code: 59ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "لیست مدل ها رو نمیده") in 23ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 70ms (next.js: 15ms, application-code: 55ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "gpt-4o-mini") in 11ms src/app/actions/settings.ts
+[0] ✓ Compiled in 1571ms
+[0]  GET /admin 200 in 635ms (next.js: 245ms, application-code: 389ms)
+[0]  GET /admin 200 in 481ms (next.js: 12ms, application-code: 470ms)
+[0]  GET /admin 200 in 486ms (next.js: 5ms, application-code: 481ms)
+[0]  GET /admin 200 in 233ms (next.js: 7ms, application-code: 225ms)
+[0]  GET /admin 200 in 166ms (next.js: 20ms, application-code: 146ms)
+[0]  GET /admin 200 in 140ms (next.js: 8ms, application-code: 132ms)
+[0]  GET /admin 200 in 125ms (next.js: 20ms, application-code: 105ms)
+[0]  GET /admin 200 in 100ms (next.js: 5ms, application-code: 94ms)
+[0]  GET /admin 200 in 93ms (next.js: 7ms, application-code: 85ms)
+[0]  GET /admin 200 in 80ms (next.js: 2ms, application-code: 78ms)
+[0]  GET /admin 200 in 97ms (next.js: 2ms, application-code: 95ms)
+[0]  GET /admin 200 in 95ms (next.js: 4ms, application-code: 91ms)
+[0]  GET /admin 200 in 93ms (next.js: 11ms, application-code: 82ms)
+[0]  GET /admin 200 in 73ms (next.js: 4ms, application-code: 69ms)
+[0]  GET /admin 200 in 81ms (next.js: 4ms, application-code: 77ms)
+[0]  GET /admin 200 in 84ms (next.js: 4ms, application-code: 80ms)
+[0]  GET /admin 200 in 64ms (next.js: 4ms, application-code: 60ms)
+[0]  GET /admin 200 in 33ms (next.js: 5ms, application-code: 28ms)
+[0]  GET /admin 200 in 399ms (next.js: 57ms, application-code: 341ms)
+[0]  POST /admin 200 in 245ms (next.js: 34ms, application-code: 211ms)
+[0]   └─ ƒ getAiConfig() in 124ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 43ms (next.js: 6ms, application-code: 36ms)
+[0]   └─ ƒ getMarketplaceListingsAction() in 16ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 27ms (next.js: 3ms, application-code: 24ms)
+[0]   └─ ƒ getMarketplaceConversationsAction() in 12ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 38ms (next.js: 9ms, application-code: 29ms)
+[0]   └─ ƒ getMarketplaceMessagesAction() in 11ms src/app/actions/marketplace.ts
+[0]  POST /admin 200 in 217ms (next.js: 15ms, application-code: 203ms)
+[0]   └─ ƒ getCurrentUser() in 57ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 66ms (next.js: 10ms, application-code: 56ms)
+[0]   └─ ƒ listUsersAction() in 34ms src/app/actions/auth.ts
+[0] AI Models Action Error: Error: Internal Server Error
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json();
+[0] ⨯ Error: Internal Server Error
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json(); {
+[0]   digest: '3743350308'
+[0] }
+[0]  POST /admin 500 in 1601ms (next.js: 8ms, application-code: 1593ms)
+[0]   └─ ƒ fetchModelsAction("لیست مدل ها رو نمیده", "sotoon") in 1271ms src/app/actions/ai.ts
+[0] AI Models Action Error: Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json();
+[0] ⨯ Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json(); {
+[0]   digest: '4068154308'
+[0] }
+[0]  POST /admin 500 in 654ms (next.js: 11ms, application-code: 643ms)
+[0]   └─ ƒ fetchModelsAction([unserializable], "sotoon") in 340ms src/app/actions/ai.ts
+[0] AI Models Action Error: Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json();
+[0] ⨯ Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json(); {
+[0]   digest: '4068154308'
+[0] }
+[0]  POST /admin 500 in 571ms (next.js: 8ms, application-code: 563ms)
+[0]   └─ ƒ fetchModelsAction([unserializable], "sotoon") in 284ms src/app/actions/ai.ts
+[0] AI Models Action Error: Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json();
+[0] ⨯ Error: [{"type":"missing","loc":["body","api_key"],"msg":"Field required","input":{"provider":"sotoon"}}]
+[0]     at fetchModelsAction (src/app/actions/ai.ts:95:13)
+[0]   93 |       }
+[0]   94 |       
+[0] > 95 |       throw new Error(errorMessage);
+[0]      |             ^
+[0]   96 |     }
+[0]   97 |
+[0]   98 |     return await response.json(); {
+[0]   digest: '4068154308'
+[0] }
+[0]  POST /admin 500 in 492ms (next.js: 8ms, application-code: 484ms)
+[0]   └─ ƒ fetchModelsAction([unserializable], "sotoon") in 240ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 29ms (next.js: 11ms, application-code: 18ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 9ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 12ms (next.js: 1953µs, application-code: 10ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "sk-Mo3SmqAGxLAwg9OmqLlQAw") in 5ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 11ms (next.js: 1488µs, application-code: 10ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "gpt-4o-mini") in 4ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 64ms (next.js: 18ms, application-code: 46ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "gemini") in 23ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 569ms (next.js: 5ms, application-code: 564ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 549ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 53ms (next.js: 25ms, application-code: 28ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 6ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 28ms (next.js: 5ms, application-code: 23ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "sk-Mo3SmqAGxLAwg9OmqLlQAw") in 7ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 16ms (next.js: 4ms, application-code: 12ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "google/gemma-3-12b-it") in 5ms src/app/actions/settings.ts
+[0]  GET / 200 in 184ms (next.js: 139ms, application-code: 44ms)
+[0]  POST / 200 in 565ms (next.js: 61ms, application-code: 504ms)
+[0]   └─ ƒ getUserPlantsAction() in 350ms src/app/actions/plants.ts
+[0]  POST / 200 in 36ms (next.js: 12ms, application-code: 25ms)
+[0]   └─ ƒ getUserPlantsAction() in 5ms src/app/actions/plants.ts
+[0]  POST / 200 in 54ms (next.js: 11ms, application-code: 43ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 6ms src/app/actions/plants.ts
+[0]  POST / 200 in 222ms (next.js: 8ms, application-code: 215ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 116ms src/app/actions/plants.ts
+[0]  POST / 200 in 33ms (next.js: 11ms, application-code: 21ms)
+[0]   └─ ƒ getUserPlantsAction() in 4ms src/app/actions/plants.ts
+[0] AI Advice Action Error: Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3-12b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json();
+[0] ⨯ Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3-12b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json(); {
+[0]   digest: '2857964977'
+[0] }
+[0]  POST / 500 in 18.7s (next.js: 2ms, application-code: 18.7s)
+[0]   └─ ƒ getWeatherAdviceAction({"language":"fa","latitude":35.6892,"longitude":51.389,"...":"2 items not stringified"}) in 17335ms src/app/actions/ai.ts
+[0]  GET /admin 200 in 120ms (next.js: 60ms, application-code: 60ms)
+[0]  POST /admin 200 in 136ms (next.js: 13ms, application-code: 122ms)
+[0]   └─ ƒ getAiConfig() in 99ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 48ms (next.js: 9ms, application-code: 40ms)
+[0]   └─ ƒ listUsersAction() in 25ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 22ms (next.js: 10ms, application-code: 12ms)
+[0]   └─ ƒ getAiConfig() in 5ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 21ms (next.js: 1918µs, application-code: 19ms)
+[0]   └─ ƒ listUsersAction() in 7ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 298ms (next.js: 22ms, application-code: 275ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 225ms src/app/actions/ai.ts
+[0]  GET / 200 in 44ms (next.js: 15ms, application-code: 29ms)
+[0]  POST / 200 in 234ms (next.js: 17ms, application-code: 217ms)
+[0]   └─ ƒ getUserPlantsAction() in 121ms src/app/actions/plants.ts
+[0]  POST / 200 in 43ms (next.js: 11ms, application-code: 32ms)
+[0]   └─ ƒ getUserPlantsAction() in 6ms src/app/actions/plants.ts
+[0]  POST / 200 in 21ms (next.js: 6ms, application-code: 14ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 5ms src/app/actions/plants.ts
+[0]  POST / 200 in 12ms (next.js: 1780µs, application-code: 10ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts
+[0]  POST / 200 in 35ms (next.js: 8ms, application-code: 27ms)
+[0]   └─ ƒ getUserPlantsAction() in 4ms src/app/actions/plants.ts
+[0] AI Advice Action Error: Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3-12b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json();
+[0] ⨯ Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3-12b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json(); {
+[0]   digest: '2857964977'
+[0] }
+[0]  POST / 500 in 17.5s (next.js: 4ms, application-code: 17.5s)
+[0]   └─ ƒ getWeatherAdviceAction({"language":"fa","latitude":35.6892,"longitude":51.389,"...":"2 items not stringified"}) in 17226ms src/app/actions/ai.ts
+[0]  GET /admin 200 in 141ms (next.js: 63ms, application-code: 78ms)
+[0]  POST /admin 200 in 283ms (next.js: 9ms, application-code: 274ms)
+[0]   └─ ƒ getAiConfig() in 233ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 90ms (next.js: 24ms, application-code: 67ms)
+[0]   └─ ƒ listUsersAction() in 31ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 36ms (next.js: 15ms, application-code: 22ms)
+[0]   └─ ƒ getAiConfig() in 4ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 19ms (next.js: 4ms, application-code: 15ms)
+[0]   └─ ƒ listUsersAction() in 5ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 1594ms (next.js: 5ms, application-code: 1590ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 1568ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 33ms (next.js: 11ms, application-code: 22ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 9ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 14ms (next.js: 1997µs, application-code: 12ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "sk-Mo3SmqAGxLAwg9OmqLlQAw") in 4ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 17ms (next.js: 1551µs, application-code: 15ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "google/gemma-3-27b-it") in 6ms src/app/actions/settings.ts
+[0]  GET / 200 in 45ms (next.js: 11ms, application-code: 34ms)
+[0]  POST / 200 in 28ms (next.js: 8ms, application-code: 20ms)
+[0]   └─ ƒ getUserPlantsAction() in 5ms src/app/actions/plants.ts
+[0]  POST / 200 in 20ms (next.js: 5ms, application-code: 16ms)
+[0]   └─ ƒ getUserPlantsAction() in 4ms src/app/actions/plants.ts
+[0]  POST / 200 in 14ms (next.js: 3ms, application-code: 11ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 12ms (next.js: 3ms, application-code: 10ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 12ms (next.js: 4ms, application-code: 7ms)
+[0]   └─ ƒ getUserPlantsAction() in 2ms src/app/actions/plants.ts
+[0] AI Advice Action Error: Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3-27b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json();
+[0] ⨯ Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3-27b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json(); {
+[0]   digest: '1516226801'
+[0] }
+[0]  POST / 500 in 17.2s (next.js: 5ms, application-code: 17.1s)
+[0]   └─ ƒ getWeatherAdviceAction({"language":"fa","latitude":35.6892,"longitude":51.389,"...":"2 items not stringified"}) in 16876ms src/app/actions/ai.ts
+[0]  GET /admin 200 in 78ms (next.js: 15ms, application-code: 63ms)
+[0]  POST /admin 200 in 19ms (next.js: 3ms, application-code: 16ms)
+[0]   └─ ƒ getAiConfig() in 8ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 17ms (next.js: 5ms, application-code: 12ms)
+[0]   └─ ƒ listUsersAction() in 4ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 18ms (next.js: 4ms, application-code: 14ms)
+[0]   └─ ƒ getAiConfig() in 3ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 22ms (next.js: 4ms, application-code: 17ms)
+[0]   └─ ƒ listUsersAction() in 4ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 148ms (next.js: 4ms, application-code: 144ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 135ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 33ms (next.js: 11ms, application-code: 22ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 6ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 23ms (next.js: 10ms, application-code: 13ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "sk-Mo3SmqAGxLAwg9OmqLlQAw") in 3ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 13ms (next.js: 1751µs, application-code: 11ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "google/gemma-3n-e4b-it") in 5ms src/app/actions/settings.ts
+[0]  GET / 200 in 24ms (next.js: 5ms, application-code: 19ms)
+[0]  POST / 200 in 39ms (next.js: 16ms, application-code: 24ms)
+[0]   └─ ƒ getUserPlantsAction() in 6ms src/app/actions/plants.ts
+[0]  POST / 200 in 17ms (next.js: 3ms, application-code: 14ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 12ms (next.js: 2ms, application-code: 10ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts
+[0]  POST / 200 in 8ms (next.js: 2ms, application-code: 6ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 1ms src/app/actions/plants.ts
+[0]  POST / 200 in 14ms (next.js: 5ms, application-code: 9ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0] AI Advice Action Error: Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3n-e4b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json();
+[0] ⨯ Error: Error code: 500 - {'error': {'message': "litellm.APIError: APIError: OpenrouterException - Cannot connect to host egress-proxy.litellm.svc.cluster.local:3128 ssl:default [Connect call failed ('10.101.76.1', 3128)]. Received Model Group=google/gemma-3n-e4b-it\nAvailable Model Group Fallbacks=None", 'type': None, 'param': None, 'code': '500'}}
+[0]     at getWeatherAdviceAction (src/app/actions/ai.ts:63:13)
+[0]   61 |     if (!response.ok) {
+[0]   62 |       const err = await response.json();
+[0] > 63 |       throw new Error(err.detail || "Failed to fetch advice");
+[0]      |             ^
+[0]   64 |     }
+[0]   65 |
+[0]   66 |     return await response.json(); {
+[0]   digest: '549140689'
+[0] }
+[0]  POST / 500 in 16.1s (next.js: 3ms, application-code: 16.1s)
+[0]   └─ ƒ getWeatherAdviceAction({"language":"fa","latitude":35.6892,"longitude":51.389,"...":"2 items not stringified"}) in 15801ms src/app/actions/ai.ts
+[0] ✓ Compiled in 1016ms
+[0]  POST /admin 200 in 807ms (next.js: 519ms, application-code: 288ms)
+[0]   └─ ƒ getAiConfig() in 145ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 133ms (next.js: 10ms, application-code: 124ms)
+[0]   └─ ƒ getAiConfig() in 87ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 66ms (next.js: 4ms, application-code: 62ms)
+[0]   └─ ƒ listUsersAction() in 33ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 50ms (next.js: 9ms, application-code: 41ms)
+[0]   └─ ƒ listUsersAction() in 9ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 629ms (next.js: 66ms, application-code: 563ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 515ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 618ms (next.js: 127ms, application-code: 492ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 434ms src/app/actions/ai.ts
+[0]  GET /admin 200 in 115ms (next.js: 51ms, application-code: 65ms)
+[0]  POST /admin 200 in 291ms (next.js: 4ms, application-code: 287ms)
+[0]   └─ ƒ getAiConfig() in 215ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 148ms (next.js: 23ms, application-code: 125ms)
+[0]   └─ ƒ listUsersAction() in 80ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 47ms (next.js: 11ms, application-code: 37ms)
+[0]   └─ ƒ getAiConfig() in 7ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 67ms (next.js: 17ms, application-code: 50ms)
+[0]   └─ ƒ listUsersAction() in 27ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 204ms (next.js: 9ms, application-code: 195ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 169ms src/app/actions/ai.ts
+[0]  POST /admin 200 in 31ms (next.js: 10ms, application-code: 22ms)
+[0]   └─ ƒ setGlobalSetting("ai-provider", "sotoon") in 9ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 10ms (next.js: 2ms, application-code: 8ms)
+[0]   └─ ƒ setGlobalSetting("ai-api-key", "sk-Mo3SmqAGxLAwg9OmqLlQAw") in 2ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 42ms (next.js: 2ms, application-code: 39ms)
+[0]   └─ ƒ setGlobalSetting("ai-model", "google/gemma3-27b") in 4ms src/app/actions/settings.ts
+[0]  GET / 200 in 39ms (next.js: 20ms, application-code: 19ms)
+[0]  POST / 200 in 47ms (next.js: 2ms, application-code: 45ms)
+[0]   └─ ƒ getUserPlantsAction() in 12ms src/app/actions/plants.ts
+[0]  POST / 200 in 24ms (next.js: 6ms, application-code: 18ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 18ms (next.js: 1667µs, application-code: 17ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 4ms src/app/actions/plants.ts
+[0]  POST / 200 in 15ms (next.js: 2ms, application-code: 13ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 17ms (next.js: 9ms, application-code: 9ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 4.2s (next.js: 1497µs, application-code: 4.2s)
+[0]   └─ ƒ getWeatherAdviceAction({"language":"fa","latitude":35.6892,"longitude":51.389,"...":"2 items not stringified"}) in 4227ms src/app/actions/ai.ts
+[0]  GET /admin 200 in 58ms (next.js: 23ms, application-code: 35ms)
+[0]  POST /admin 200 in 60ms (next.js: 4ms, application-code: 56ms)
+[0]   └─ ƒ getAiConfig() in 32ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 31ms (next.js: 16ms, application-code: 16ms)
+[0]   └─ ƒ listUsersAction() in 4ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 12ms (next.js: 3ms, application-code: 9ms)
+[0]   └─ ƒ getAiConfig() in 4ms src/app/actions/settings.ts
+[0]  POST /admin 200 in 10ms (next.js: 1354µs, application-code: 8ms)
+[0]   └─ ƒ listUsersAction() in 3ms src/app/actions/auth.ts
+[0]  POST /admin 200 in 133ms (next.js: 6ms, application-code: 128ms)
+[0]   └─ ƒ fetchModelsAction("sk-Mo3SmqAGxLAwg9OmqLlQAw", "sotoon") in 111ms src/app/actions/ai.ts
+[0]  GET /plants 200 in 164ms (next.js: 123ms, application-code: 41ms)
+[0]  POST /plants 200 in 64ms (next.js: 2ms, application-code: 61ms)
+[0]   └─ ƒ getUserPlantsAction() in 26ms src/app/actions/plants.ts
+[0]  POST /plants 200 in 67ms (next.js: 23ms, application-code: 44ms)
+[0]   └─ ƒ getUserPlantsAction() in 14ms src/app/actions/plants.ts
+[0]  GET /marketplace 200 in 103ms (next.js: 71ms, application-code: 32ms)
+[0]  GET / 200 in 28ms (next.js: 8ms, application-code: 20ms)
+[0]  POST / 200 in 27ms (next.js: 15ms, application-code: 12ms)
+[0]   └─ ƒ getUserPlantsAction() in 4ms src/app/actions/plants.ts
+[0]  POST / 200 in 18ms (next.js: 5ms, application-code: 14ms)
+[0]   └─ ƒ getUserPlantsAction() in 6ms src/app/actions/plants.ts
+[0]  POST / 200 in 8ms (next.js: 1406µs, application-code: 7ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts
+[0]  POST / 200 in 9ms (next.js: 1466µs, application-code: 8ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts

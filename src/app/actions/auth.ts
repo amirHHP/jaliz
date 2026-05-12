@@ -31,7 +31,7 @@ export async function getCurrentUser() {
 
   if (!user || !user.isActive) {
     if (user && !user.isActive) {
-      await logout();
+      await logoutAction();
     }
     return null;
   }

@@ -1,8 +1,11 @@
 import os
 import requests
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.prompts import PromptTemplate
 from typing import List, Dict
+
+SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1"
 
 class WeatherAgent:
     def __init__(self):
@@ -26,20 +29,28 @@ class WeatherAgent:
             return response.json()
         return {"error": f"Failed to fetch weather: {response.text}"}
 
-    def get_advice(self, lat: float, lon: float, userLocation: str = None, language: str = "en", plants: List[Dict] = [], api_key: str = None, model_name: str = None) -> str:
+    def get_advice(self, lat: float, lon: float, userLocation: str = None, language: str = "en", plants: List[Dict] = [], api_key: str = None, model_name: str = None, provider: str = "gemini") -> str:
         """Analyzes weather and plant list to generate actionable advice."""
         effective_key = api_key or os.getenv("GEMINI_API_KEY")
         if not effective_key:
             if language == "fa":
-                return "🌱 توجه: لطفاً کلید API جمینای خود را در تنظیمات وارد کنید تا مشاوره تخصصی دریافت کنید."
-            return "🌱 Note: Please enter your Gemini API key in Settings to get expert advice."
+                return "🌱 توجه: لطفاً کلید API خود را در تنظیمات وارد کنید تا مشاوره تخصصی دریافت کنید."
+            return "🌱 Note: Please enter your API key in Settings to get expert advice."
 
-        # Initialize the Gemini model
-        llm = ChatGoogleGenerativeAI(
-            model=model_name or "gemini-1.5-flash",
-            google_api_key=effective_key,
-            temperature=0.7
-        )
+        # Initialize the LLM based on provider
+        if provider == "sotoon":
+            llm = ChatOpenAI(
+                model=model_name or "gpt-4o",
+                api_key=effective_key,
+                base_url=SOTOON_BASE_URL,
+                temperature=0.7
+            )
+        else:
+            llm = ChatGoogleGenerativeAI(
+                model=model_name or "gemini-1.5-flash",
+                google_api_key=effective_key,
+                temperature=0.7
+            )
 
         weather_data = self.fetch_weather(lat, lon)
         
@@ -99,10 +110,17 @@ If the weather poses no threat, provide brief positive encouragement.
 Actionable Advice:"""
         )
         
-        chain = prompt | llm
-        result = chain.invoke({"weather": weather_summary, "plants": plant_list_str, "lang_instruction": lang_instruction})
-        
-        content = result.content
+        try:
+            chain = prompt | llm
+            result = chain.invoke({"weather": weather_summary, "plants": plant_list_str, "lang_instruction": lang_instruction})
+            content = result.content
+        except Exception as e:
+            err_msg = str(e)
+            if "egress-proxy" in err_msg or "OpenrouterException" in err_msg:
+                if language == "fa":
+                    return "⚠️ سرویس هوش مصنوعی در حال حاضر برای این مدل با اختلال مواجه است. لطفاً مدل دیگری را از تنظیمات ادمین انتخاب کنید."
+                return "⚠️ The AI service is currently experiencing issues with this model. Please try selecting a different model in Admin settings."
+            raise e
         if isinstance(content, list):
             content = " ".join([b.get("text", "") for b in content if isinstance(b, dict) and "text" in b])
         elif isinstance(content, dict):

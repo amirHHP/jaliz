@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { CloudRain, Loader2, MapPin, Key } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { getUserPlantsAction } from "@/app/actions/plants"
+import { getWeatherAdviceAction } from "@/app/actions/ai"
 
 export function WeatherAdvice() {
   const [loading, setLoading] = useState(false)
@@ -45,23 +46,13 @@ export function WeatherAdvice() {
 
       const mockLocation = { latitude: 35.6892, longitude: 51.3890 }
 
-      const response = await fetch("/api/advice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          latitude: mockLocation.latitude,
-          longitude: mockLocation.longitude,
-          userLocation: userLocation,
-          language: language,
-          plants: userPlants
-        })
+      const responseData = await getWeatherAdviceAction({
+        latitude: mockLocation.latitude,
+        longitude: mockLocation.longitude,
+        userLocation: userLocation,
+        language: language,
+        plants: userPlants
       })
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch advice")
-      }
-
-      const responseData = await response.json()
       setAdvice(typeof responseData.advice === "string" ? responseData.advice : JSON.stringify(responseData.advice))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred.")

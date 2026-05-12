@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/LanguageProvider"
+import { analyzePlantAction } from "@/app/actions/ai"
 
 interface Plant {
   id: string
@@ -102,13 +103,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     try {
       const modelName = localStorage.getItem("jaliz-model") || "gemini-1.5-pro"
       const lang = localStorage.getItem("jaliz-lang") || "en"
-      const response = await fetch("/api/analyze-plant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image, name, language: lang, model_name: modelName }),
-      })
-      if (!response.ok) throw new Error("Analysis failed.")
-      const data = await response.json()
+      const data = await analyzePlantAction({ image, name, language: lang, model_name: modelName })
       if (data.name) setName(data.name)
       if (data.type) setType(data.type)
       if (data.locationType) setLocationType(data.locationType)

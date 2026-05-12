@@ -7,12 +7,12 @@ export interface User {
   fullName: string
   role: UserRole
   isActive: boolean
-  createdAt: string
+  createdAt: string | Date
   /**
    * Optional phone number (free-form). Used by the marketplace to expose
    * `tel:` and WhatsApp deep-links on a listing.
    */
-  phone?: string
+  phone?: string | null
 }
 
 /** Mutable fields a user is allowed to update on their own profile. */
