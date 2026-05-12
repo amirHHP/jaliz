@@ -111,7 +111,7 @@ export default function MyPlantsPage() {
     if (!newName.trim() && !newImage) { alert("Please provide a plant name or image."); return }
     setIsAnalyzing(true)
     try {
-      const data = await analyzePlantAction({ image: newImage, name: newName, language: lang, model_name: modelName })
+      const data = await analyzePlantAction({ image: newImage, name: newName, language })
       if (data.name) setNewName(data.name)
       if (data.type) setNewType(data.type)
       if (data.locationType) setNewLocationType(data.locationType)
