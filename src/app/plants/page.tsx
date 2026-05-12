@@ -46,7 +46,7 @@ function dbRowToPlant(row: any): Plant {
 }
 
 export default function MyPlantsPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { user, status } = useAuth()
   const [plants, setPlants] = useState<Plant[]>([])
   const [loading, setLoading] = useState(true)
