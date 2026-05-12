@@ -481,3 +481,4 @@
 [0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts
 [0]  POST / 200 in 9ms (next.js: 1466µs, application-code: 8ms)
 [0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts
+[0] ✓ Compiled in 944ms
