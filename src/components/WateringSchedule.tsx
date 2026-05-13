@@ -14,6 +14,7 @@ interface Plant {
   potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
   hasDrainage: boolean
   lastWatered: string
+  nextWateringDate?: string
   recentlyReplanted: boolean
   image?: string
 }
@@ -39,6 +40,7 @@ export function WateringSchedule() {
           potType: (r.potType as any) || "Plastic",
           hasDrainage: r.hasDrainage || true,
           lastWatered: r.lastWatered ? new Date(r.lastWatered).toISOString() : new Date().toISOString(),
+          nextWateringDate: r.nextWateringDate ? new Date(r.nextWateringDate).toISOString() : undefined,
           recentlyReplanted: r.recentlyReplanted || false,
           image: r.image ?? undefined,
         })))
@@ -56,6 +58,10 @@ export function WateringSchedule() {
   }, [status, loadData])
 
   const needsWater = (plant: Plant) => {
+    if (plant.nextWateringDate) {
+      return new Date(plant.nextWateringDate) <= new Date()
+    }
+    // Fallback to heuristic
     const daysAgo = Math.floor((Date.now() - new Date(plant.lastWatered).getTime()) / (1000 * 3600 * 24))
     let threshold = 7
     if (plant.locationType === "Outdoor") threshold -= 2
@@ -77,7 +83,7 @@ export function WateringSchedule() {
         await updatePlantsLastWateredAction(ids, today)
       }
       await markWateringDoneAction(today)
-      setPlants((prev) => prev.map((p) => ids.includes(p.id) ? { ...p, lastWatered: new Date(today).toISOString() } : p))
+      await loadData() // Refresh to get updated nextWateringDates
       setIsDone(true)
     } catch (e) {
       console.error(e)

@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Shield,
+  User,
   UserPlus,
   X,
 } from "lucide-react"
@@ -33,10 +34,6 @@ const NAV_LINKS: NavLink[] = [
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]
 
-function avatarSeed(input: string): string {
-  // Stable, fun-but-deterministic seed for the dicebear avatar.
-  return encodeURIComponent(input || "guest")
-}
 
 export function Header() {
   const { language, setLanguage, t } = useLanguage()
@@ -126,17 +123,12 @@ export function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="h-9 w-9 rounded-full bg-emerald-100 border-2 border-white shadow-sm overflow-hidden flex-shrink-0 hover:ring-2 hover:ring-emerald-300 transition"
+                className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 shadow-sm flex items-center justify-center flex-shrink-0 hover:bg-emerald-200 transition"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label={t("account")}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed(user.email)}`}
-                  alt={user.fullName}
-                  className="w-full h-full object-cover"
-                />
+                <User className="h-5 w-5 text-emerald-700" />
               </button>
               {menuOpen && (
                 <div

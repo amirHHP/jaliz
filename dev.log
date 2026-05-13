@@ -484,3 +484,482 @@
 [0] ✓ Compiled in 944ms
 [0] ✓ Compiled in 337ms
 [0] ✓ Compiled in 386ms
+[0] ✓ Compiled in 1292ms
+[0]  GET /admin 200 in 1311ms (next.js: 921ms, application-code: 390ms)
+[0]  GET /admin 200 in 65ms (next.js: 3ms, application-code: 62ms)
+[0]  GET /admin 200 in 59ms (next.js: 1533µs, application-code: 58ms)
+[0]  GET /admin 200 in 67ms (next.js: 1954µs, application-code: 65ms)
+[0]  GET /admin 200 in 61ms (next.js: 1701µs, application-code: 60ms)
+[0]  GET /admin 200 in 59ms (next.js: 2ms, application-code: 57ms)
+[0]  GET /admin 200 in 57ms (next.js: 1788µs, application-code: 55ms)
+[0]  GET /admin 200 in 65ms (next.js: 2ms, application-code: 63ms)
+[0]  GET /admin 200 in 74ms (next.js: 2ms, application-code: 72ms)
+[0]  GET /admin 200 in 70ms (next.js: 3ms, application-code: 67ms)
+[0]  GET /admin 200 in 69ms (next.js: 2ms, application-code: 66ms)
+[0]  GET /admin 200 in 66ms (next.js: 3ms, application-code: 64ms)
+[0]  GET /admin 200 in 70ms (next.js: 2ms, application-code: 68ms)
+[0]  GET /admin 200 in 71ms (next.js: 3ms, application-code: 68ms)
+[0]  GET /admin 200 in 50ms (next.js: 3ms, application-code: 47ms)
+[0]  GET /admin 200 in 28ms (next.js: 2ms, application-code: 26ms)
+[0]  GET / 200 in 482ms (next.js: 181ms, application-code: 301ms)
+[0]  POST / 200 in 129ms (next.js: 9ms, application-code: 120ms)
+[0]   └─ ƒ getMarketplaceListingsAction() in 70ms src/app/actions/marketplace.ts
+[0]  POST / 200 in 39ms (next.js: 6ms, application-code: 33ms)
+[0]   └─ ƒ getMarketplaceConversationsAction() in 15ms src/app/actions/marketplace.ts
+[0]  POST / 200 in 25ms (next.js: 3ms, application-code: 22ms)
+[0]   └─ ƒ getMarketplaceMessagesAction() in 8ms src/app/actions/marketplace.ts
+[0]  POST / 200 in 28ms (next.js: 5ms, application-code: 23ms)
+[0]   └─ ƒ getCurrentUser() in 6ms src/app/actions/auth.ts
+[0]  POST / 200 in 23ms (next.js: 8ms, application-code: 16ms)
+[0]   └─ ƒ getUserPlantsAction() in 5ms src/app/actions/plants.ts
+[0]  POST / 200 in 46ms (next.js: 18ms, application-code: 27ms)
+[0]   └─ ƒ getUserPlantsAction() in 6ms src/app/actions/plants.ts
+[0]  POST / 200 in 21ms (next.js: 6ms, application-code: 15ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 19ms (next.js: 3ms, application-code: 16ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 56ms (next.js: 8ms, application-code: 47ms)
+[0]   └─ ƒ logoutAction() in 4ms src/app/actions/auth.ts
+[0]  GET /register 200 in 104ms (next.js: 88ms, application-code: 17ms)
+[0]  POST /register 200 in 92ms (next.js: 19ms, application-code: 73ms)
+[0]   └─ ƒ registerAction({"email":"test@test.com","fullName":"test","password":"123456789"}) in 41ms src/app/actions/auth.ts
+[0]  GET / 200 in 22ms (next.js: 5ms, application-code: 16ms)
+[0]  GET / 200 in 15ms (next.js: 3ms, application-code: 12ms)
+[0]  POST / 200 in 198ms (next.js: 178ms, application-code: 20ms)
+[0]   └─ ƒ getUserPlantsAction() in 4ms src/app/actions/plants.ts
+[0]  POST / 200 in 16ms (next.js: 2ms, application-code: 13ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 36ms (next.js: 4ms, application-code: 33ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 4ms src/app/actions/plants.ts
+[0]  POST / 200 in 29ms (next.js: 4ms, application-code: 25ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 5ms src/app/actions/plants.ts
+[0]  GET / 200 in 590ms (next.js: 213ms, application-code: 377ms)
+[0]  GET /admin 200 in 676ms (next.js: 304ms, application-code: 372ms)
+[0]  GET / 200 in 289ms (next.js: 146ms, application-code: 143ms)
+[0]  GET /admin 200 in 357ms (next.js: 15ms, application-code: 343ms)
+[0]  GET / 200 in 216ms (next.js: 49ms, application-code: 167ms)
+[0]  GET /admin 200 in 227ms (next.js: 14ms, application-code: 214ms)
+[0]  GET / 200 in 186ms (next.js: 6ms, application-code: 179ms)
+[0]  GET /admin 200 in 215ms (next.js: 31ms, application-code: 184ms)
+[0]  GET / 200 in 165ms (next.js: 6ms, application-code: 159ms)
+[0]  GET /admin 200 in 167ms (next.js: 28ms, application-code: 139ms)
+[0]  GET / 200 in 145ms (next.js: 27ms, application-code: 117ms)
+[0]  GET /admin 200 in 153ms (next.js: 7ms, application-code: 146ms)
+[0]  GET / 200 in 161ms (next.js: 29ms, application-code: 132ms)
+[0]  GET /admin 200 in 170ms (next.js: 4ms, application-code: 167ms)
+[0]  GET / 200 in 181ms (next.js: 3ms, application-code: 177ms)
+[0]  GET /admin 200 in 214ms (next.js: 22ms, application-code: 192ms)
+[0]  GET / 200 in 197ms (next.js: 6ms, application-code: 191ms)
+[0]  GET /admin 200 in 226ms (next.js: 28ms, application-code: 198ms)
+[0]  GET / 200 in 210ms (next.js: 12ms, application-code: 198ms)
+[0]  GET /admin 200 in 233ms (next.js: 29ms, application-code: 205ms)
+[0]  GET / 200 in 169ms (next.js: 34ms, application-code: 135ms)
+[0]  GET /admin 200 in 175ms (next.js: 6ms, application-code: 169ms)
+[0]  GET / 200 in 134ms (next.js: 29ms, application-code: 106ms)
+[0]  GET /admin 200 in 139ms (next.js: 4ms, application-code: 135ms)
+[0]  GET /admin 200 in 87ms (next.js: 2ms, application-code: 85ms)
+[0]  GET /admin 200 in 141ms (next.js: 5ms, application-code: 136ms)
+[0]  GET /admin 200 in 151ms (next.js: 4ms, application-code: 147ms)
+[0]  GET /admin 200 in 153ms (next.js: 12ms, application-code: 141ms)
+[0]  GET /admin 200 in 106ms (next.js: 10ms, application-code: 96ms)
+[0]  GET /admin 200 in 87ms (next.js: 6ms, application-code: 81ms)
+[0]  GET /admin 200 in 91ms (next.js: 3ms, application-code: 88ms)
+[0]  GET /admin 200 in 86ms (next.js: 4ms, application-code: 82ms)
+[0]  GET /admin 200 in 79ms (next.js: 3ms, application-code: 76ms)
+[0]  GET /admin 200 in 56ms (next.js: 3ms, application-code: 53ms)
+[0]  GET /admin 200 in 37ms (next.js: 4ms, application-code: 33ms)
+[0]  GET /admin 200 in 18ms (next.js: 1980µs, application-code: 16ms)
+[0]  GET /plants 200 in 76ms (next.js: 57ms, application-code: 19ms)
+[0]  POST /plants 200 in 68ms (next.js: 30ms, application-code: 38ms)
+[0]   └─ ƒ getUserPlantsAction() in 8ms src/app/actions/plants.ts
+[0]  POST /plants 200 in 24ms (next.js: 3ms, application-code: 20ms)
+[0]   └─ ƒ getUserPlantsAction() in 6ms src/app/actions/plants.ts
+[0]  GET /marketplace 200 in 65ms (next.js: 44ms, application-code: 21ms)
+[0]  GET / 200 in 25ms (next.js: 3ms, application-code: 22ms)
+[0]  POST / 200 in 18ms (next.js: 5ms, application-code: 13ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 14ms (next.js: 2ms, application-code: 12ms)
+[0]   └─ ƒ getUserPlantsAction() in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 10ms (next.js: 1496µs, application-code: 8ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 3ms src/app/actions/plants.ts
+[0]  POST / 200 in 9ms (next.js: 1462µs, application-code: 7ms)
+[0]   └─ ƒ getWateringLogAction("2026-05-12") in 2ms src/app/actions/plants.ts
+[0]  GET /marketplace 200 in 66ms (next.js: 20ms, application-code: 46ms)
+[0] ✓ Compiled in 680ms
+[0] ✓ Compiled in 688ms
+[0]  GET /admin 200 in 501ms (next.js: 200ms, application-code: 301ms)
+[0]  GET /marketplace 200 in 499ms (next.js: 276ms, application-code: 223ms)
+[0]  GET /admin 200 in 298ms (next.js: 4ms, application-code: 294ms)
+[0]  GET /marketplace 200 in 303ms (next.js: 36ms, application-code: 268ms)
+[0]  GET /admin 200 in 261ms (next.js: 6ms, application-code: 255ms)
+[0]  GET /marketplace 200 in 261ms (next.js: 38ms, application-code: 223ms)
+[0]  GET /admin 200 in 251ms (next.js: 8ms, application-code: 242ms)
+[0]  GET /marketplace 200 in 251ms (next.js: 46ms, application-code: 205ms)
+[0]  GET /admin 200 in 202ms (next.js: 14ms, application-code: 187ms)
+[0]  GET /admin 200 in 242ms (next.js: 13ms, application-code: 229ms)
+[0]  GET /admin 200 in 183ms (next.js: 6ms, application-code: 177ms)
+[0]  GET /admin 200 in 233ms (next.js: 7ms, application-code: 227ms)
+[0] ✓ Compiled in 1109ms
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0] ✓ Compiled in 1551ms
+[0] ✓ Compiled in 20ms
+[0]  GET /admin 200 in 1502ms (next.js: 261ms, application-code: 1241ms)
+[0]  GET /admin 200 in 936ms (next.js: 388ms, application-code: 548ms)
+[0]  GET /marketplace 200 in 936ms (next.js: 541ms, application-code: 395ms)
+[0]  GET /admin 200 in 336ms (next.js: 14ms, application-code: 323ms)
+[0]  GET /marketplace 200 in 334ms (next.js: 96ms, application-code: 238ms)
+[0]  GET /admin 200 in 203ms (next.js: 10ms, application-code: 193ms)
+[0]  GET /marketplace 200 in 204ms (next.js: 43ms, application-code: 161ms)
+[0]  GET /admin 200 in 88ms (next.js: 9ms, application-code: 80ms)
+[0]  GET /admin 200 in 56ms (next.js: 7ms, application-code: 49ms)
+[0] [browser] ./src/components/PlantModal.tsx:346:16
+[0] Expected '</', got '}'
+[0]   344 |                   )}
+[0]   345 |                 </div>
+[0] > 346 |               )}
+[0]       |                ^
+[0]   347 |
+[0]   348 |               {/* ── Status Logs ────────────────────────────────────────────── */}
+[0]   349 |               <div className="pt-4 border-t border-slate-100">
+[0] 
+[0] Parsing ecmascript source code failed
+[0] 
+[0] Import traces:
+[0]   Client Component Browser:
+[0]     ./src/components/PlantModal.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Client Component Browser]
+[0]     ./src/app/plants/page.tsx [Server Component]
+[0] 
+[0]   Client Component SSR:
+[0]     ./src/components/PlantModal.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Client Component SSR]
+[0]     ./src/app/plants/page.tsx [Server Component] 
+[0]  GET /plants 200 in 281ms (next.js: 205ms, application-code: 76ms)
+[0]  POST /plants 200 in 382ms (next.js: 16ms, application-code: 367ms)
+[0]   └─ ƒ getUserPlantsAction() in 300ms src/app/actions/plants.ts
+[0]  POST /plants 200 in 65ms (next.js: 33ms, application-code: 32ms)
+[0]   └─ ƒ getUserPlantsAction() in 10ms src/app/actions/plants.ts
+[0]  POST /plants 200 in 14.6s (next.js: 19ms, application-code: 14.6s)
+[0]   └─ ƒ analyzePlantAction({"image":"","language":"fa","name":"برگ انجیری"}) in 14547ms src/app/actions/ai.ts
+[0]  POST /plants 200 in 53ms (next.js: 19ms, application-code: 34ms)
+[0]   └─ ƒ createUserPlantAction({"careTips":"درخت انجیر نیاز به نور کامل خورشید دارد و برای رشد خوب، حداقل ۶ تا ۸ ساعت نور مستقیم در روز لازم است. خاک باید خوب زهکشی شده باشد و کمی اسیدی باشد. برای رشد بهتر، از خاک غنی از مواد آلی استفاده کنید. انجیر را در فصل پاییز یا اوایل بهار هرس کنید تا شکل دلخواه را بگیرد و تولید میوه افزایش یابد. کوددهی با کود کامل در فصل رشد، باعث افزایش کیفیت و کمیت میوه می‌شود. انجیر نسبت به بیماری‌ها و آفات حساس است، بنابراین باید به‌طور منظم بررسی شود و در صورت مشاهده هرگونه علائم، اقدام به درمان کنید. در مناطق سردسیر، ممکن است نیاز باشد که درخت را در زمستان محافظت کنید.","hasDrainage":true,"health":"Excellent","...":"9 items not stringified"}) in 15ms src/app/actions/plants.ts
+[0] ⨯ TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); {
+[0]   digest: '2385648554'
+[0] }
+[0]  POST /plants 500 in 625ms (next.js: 4ms, application-code: 621ms)
+[0]   └─ ƒ getPlantLogsAction("90b65724-2a29-47db-a1a2-228a5faa48ff") in 3ms src/app/actions/plants.ts
+[0] ⨯ TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); {
+[0]   digest: '2385648554'
+[0] }
+[0]  POST /plants 500 in 359ms (next.js: 3ms, application-code: 356ms)
+[0]   └─ ƒ getPlantLogsAction("90b65724-2a29-47db-a1a2-228a5faa48ff") in 15ms src/app/actions/plants.ts
+[0] [browser] TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); (src/components/PlantModal.tsx:87:17)
+[0] [browser] TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); (src/components/PlantModal.tsx:87:17)
+[0] AI Status Advice Action Error: Error: Not Found
+[0]     at getStatusAdviceAction (src/app/actions/ai.ts:128:13)
+[0]   126 |     if (!response.ok) {
+[0]   127 |       const err = await response.json();
+[0] > 128 |       throw new Error(err.detail || "Failed to fetch status advice");
+[0]       |             ^
+[0]   129 |     }
+[0]   130 |
+[0]   131 |     return await response.json();
+[0] ⨯ Error: Not Found
+[0]     at getStatusAdviceAction (src/app/actions/ai.ts:128:13)
+[0]   126 |     if (!response.ok) {
+[0]   127 |       const err = await response.json();
+[0] > 128 |       throw new Error(err.detail || "Failed to fetch status advice");
+[0]       |             ^
+[0]   129 |     }
+[0]   130 |
+[0]   131 |     return await response.json(); {
+[0]   digest: '811066634'
+[0] }
+[0]  POST /plants 500 in 681ms (next.js: 24ms, application-code: 657ms)
+[0]   └─ ƒ getStatusAdviceAction({"health":"Excellent","language":"fa","plant_name":"Ficus carica (انجیر)","...":"2 items not stringified"}) in 358ms src/app/actions/ai.ts
+[0]  GET /plants 200 in 1361ms (next.js: 282ms, application-code: 1079ms)
+[0]  POST /plants 200 in 210ms (next.js: 12ms, application-code: 198ms)
+[0]   └─ ƒ getMarketplaceListingsAction() in 159ms src/app/actions/marketplace.ts
+[0]  POST /plants 200 in 61ms (next.js: 5ms, application-code: 56ms)
+[0]   └─ ƒ getMarketplaceConversationsAction() in 30ms src/app/actions/marketplace.ts
+[0]  POST /plants 200 in 35ms (next.js: 10ms, application-code: 25ms)
+[0]   └─ ƒ getMarketplaceMessagesAction() in 7ms src/app/actions/marketplace.ts
+[0]  POST /plants 200 in 72ms (next.js: 14ms, application-code: 58ms)
+[0]   └─ ƒ getCurrentUser() in 19ms src/app/actions/auth.ts
+[0]  POST /plants 200 in 20ms (next.js: 2ms, application-code: 18ms)
+[0]   └─ ƒ getUserPlantsAction() in 7ms src/app/actions/plants.ts
+[0] ⨯ TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); {
+[0]   digest: '2385648554'
+[0] }
+[0]  POST /plants 500 in 1091ms (next.js: 23ms, application-code: 1069ms)
+[0]   └─ ƒ getPlantLogsAction("90b65724-2a29-47db-a1a2-228a5faa48ff") in 12ms src/app/actions/plants.ts
+[0] ⨯ TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); {
+[0]   digest: '2385648554'
+[0] }
+[0]  POST /plants 500 in 860ms (next.js: 12ms, application-code: 848ms)
+[0]   └─ ƒ getPlantLogsAction("90b65724-2a29-47db-a1a2-228a5faa48ff") in 5ms src/app/actions/plants.ts
+[0] [browser] TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); (src/components/PlantModal.tsx:87:17)
+[0] [browser] TypeError: Cannot read properties of undefined (reading 'findMany')
+[0]     at getPlantLogsAction (src/app/actions/plants.ts:97:38)
+[0]    95 |   if (!userId) return [];
+[0]    96 |
+[0] >  97 |   return await prisma.plantStatusLog.findMany({
+[0]       |                                      ^
+[0]    98 |     where: { plantId, plant: { userId } },
+[0]    99 |     orderBy: { createdAt: 'desc' }
+[0]   100 |   }); (src/components/PlantModal.tsx:87:17)
+[0] AI Status Advice Action Error: Error: Not Found
+[0]     at getStatusAdviceAction (src/app/actions/ai.ts:128:13)
+[0]   126 |     if (!response.ok) {
+[0]   127 |       const err = await response.json();
+[0] > 128 |       throw new Error(err.detail || "Failed to fetch status advice");
+[0]       |             ^
+[0]   129 |     }
+[0]   130 |
+[0]   131 |     return await response.json();
+[0] ⨯ Error: Not Found
+[0]     at getStatusAdviceAction (src/app/actions/ai.ts:128:13)
+[0]   126 |     if (!response.ok) {
+[0]   127 |       const err = await response.json();
+[0] > 128 |       throw new Error(err.detail || "Failed to fetch status advice");
+[0]       |             ^
+[0]   129 |     }
+[0]   130 |
+[0]   131 |     return await response.json(); {
+[0]   digest: '811066634'
+[0] }
+[0]  POST /plants 500 in 1183ms (next.js: 34ms, application-code: 1149ms)
+[0]   └─ ƒ getStatusAdviceAction({"health":"Excellent","language":"fa","plant_name":"Ficus carica (انجیر)","...":"2 items not stringified"}) in 635ms src/app/actions/ai.ts
+[0] [?25h
+[0] npm run dev:next exited with code 0

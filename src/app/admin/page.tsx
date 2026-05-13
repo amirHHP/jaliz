@@ -13,6 +13,7 @@ import {
   ShieldOff,
   Sparkles,
   Trash2,
+  User,
   UserCheck,
   UserCog,
   Users,
@@ -512,13 +513,8 @@ export default function AdminPage() {
                       <tr key={u.id} className="border-t border-slate-100 hover:bg-slate-50/50">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-emerald-100 overflow-hidden flex-shrink-0">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.email)}`}
-                                alt={u.fullName}
-                                className="w-full h-full object-cover"
-                              />
+                            <div className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
+                              <User className="h-5 w-5 text-emerald-700" />
                             </div>
                             <div className="min-w-0">
                               <div className="font-medium text-slate-900 truncate">

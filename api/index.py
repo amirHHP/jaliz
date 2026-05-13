@@ -46,6 +46,16 @@ class PlantAnalysisRequest(BaseModel):
     model_name: Optional[str] = None
     provider: Optional[str] = "gemini"
 
+class StatusAdviceRequest(BaseModel):
+    plant_name: str
+    plant_type: Optional[str] = None
+    status: str
+    health: str
+    language: Optional[str] = "en"
+    api_key: Optional[str] = None
+    model_name: Optional[str] = None
+    provider: Optional[str] = "gemini"
+
 class ModelsRequest(BaseModel):
     api_key: str
     provider: Optional[str] = "gemini"
@@ -263,5 +273,59 @@ def analyze_plant(request: PlantAnalysisRequest):
         result = json.loads(json_str)
         return result
         
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/status-advice")
+def get_status_advice(request: StatusAdviceRequest):
+    try:
+        api_key = request.api_key or os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise HTTPException(status_code=400, detail="API key is required")
+        
+        language_name = "Persian (Farsi)" if request.language == "fa" else "English"
+        
+        prompt = f"""
+        You are an expert botanist and plant care assistant.
+        A user has reported a status change for their plant:
+        Plant Name: {request.plant_name}
+        Plant Type: {request.plant_type if request.plant_type else 'Unknown'}
+        New Status: {request.status}
+        Current Health: {request.health}
+        
+        Based on this information, provide specific advice and recommendations for the user in {language_name}.
+        Keep the advice concise but very practical. Focus on what they should do next.
+        Return ONLY the advice text without any markdown or JSON.
+        """
+        
+        if request.provider == "sotoon":
+            import requests as req
+            messages = [{"role": "user", "content": prompt}]
+            model_name = request.model_name or "gpt-4o"
+            resp = req.post(
+                f"{SOTOON_BASE_URL}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model_name,
+                    "messages": messages,
+                    "temperature": 0.5
+                },
+                timeout=60
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=resp.status_code, detail=f"Sotoon API error: {resp.text}")
+            result_data = resp.json()
+            advice = result_data["choices"][0]["message"]["content"]
+        else:
+            genai.configure(api_key=api_key)
+            model_name = request.model_name or "gemini-1.5-pro"
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            advice = response.text
+            
+        return {"advice": advice.strip()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

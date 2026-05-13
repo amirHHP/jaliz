@@ -20,6 +20,8 @@ interface Plant {
   potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
   hasDrainage: boolean
   lastWatered: string
+  nextWateringDate?: string
+  wateringInterval: number
   recentlyReplanted: boolean
   health: "Excellent" | "Good" | "Needs Attention"
   image?: string
@@ -37,6 +39,8 @@ function dbRowToPlant(row: any): Plant {
     potType: row.potType ?? "Plastic",
     hasDrainage: row.hasDrainage ?? true,
     lastWatered: row.lastWatered ? new Date(row.lastWatered).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+    nextWateringDate: row.nextWateringDate ? new Date(row.nextWateringDate).toISOString().split("T")[0] : undefined,
+    wateringInterval: row.wateringInterval ?? 7,
     recentlyReplanted: row.recentlyReplanted ?? false,
     health: row.health ?? "Excellent",
     image: row.image ?? undefined,
@@ -66,6 +70,7 @@ export default function MyPlantsPage() {
   const [newImage, setNewImage] = useState<string>("")
   const [newCareTips, setNewCareTips] = useState("")
   const [newWateringTips, setNewWateringTips] = useState("")
+  const [newWateringInterval, setNewWateringInterval] = useState(7)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const fetchPlants = useCallback(async () => {
@@ -144,6 +149,7 @@ export default function MyPlantsPage() {
         image: newImage || null,
         careTips: newCareTips || null,
         wateringTips: newWateringTips || null,
+        wateringInterval: newWateringInterval,
       })
       if (data) {
         setPlants((prev) => [...prev, dbRowToPlant(data)])
@@ -152,6 +158,7 @@ export default function MyPlantsPage() {
         setNewLightExposure("Bright Indirect"); setNewPotType("Plastic")
         setNewHasDrainage(true); setNewLastWatered(""); setNewRecentlyReplanted(false)
         setNewHealth("Excellent"); setNewImage(""); setNewCareTips(""); setNewWateringTips("")
+        setNewWateringInterval(7)
       }
     } catch (e) {
       console.error(e)
@@ -183,6 +190,7 @@ export default function MyPlantsPage() {
         image: updated.image || null,
         careTips: updated.careTips || null,
         wateringTips: updated.wateringTips || null,
+        wateringInterval: updated.wateringInterval,
       })
       if (data) {
         setPlants((prev) => prev.map((p) => p.id === updated.id ? dbRowToPlant(data) : p))
@@ -295,6 +303,10 @@ export default function MyPlantsPage() {
                   <textarea value={newCareTips} onChange={(e) => setNewCareTips(e.target.value)} placeholder={t("care_tips_ph")} dir="auto" className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 placeholder:text-slate-400" />
                 </div>
                 <div className="space-y-2 col-span-1 md:col-span-2">
+                  <label className="text-sm font-medium text-slate-700">{language === "fa" ? "فاصله آبیاری (روز)" : "Watering Interval (Days)"}</label>
+                  <input type="number" min="1" value={newWateringInterval} onChange={(e) => setNewWateringInterval(parseInt(e.target.value) || 7)} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900" />
+                </div>
+                <div className="space-y-2 col-span-1 md:col-span-2">
                   <label className="text-sm font-medium text-slate-700">{t("watering_tips")}</label>
                   <textarea value={newWateringTips} onChange={(e) => setNewWateringTips(e.target.value)} placeholder={t("watering_tips_ph")} dir="auto" className="flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-900 placeholder:text-slate-400" />
                 </div>
@@ -335,6 +347,15 @@ export default function MyPlantsPage() {
                     <div><CardTitle className="text-xl text-slate-900 leading-tight">{plant.name}</CardTitle></div>
                     <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs pt-1">
                       <div className="flex items-center text-slate-600"><Droplets className="h-4 w-4 shrink-0 mr-2 text-sky-500" /><span className="font-medium truncate">{daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`}</span></div>
+                      {plant.nextWateringDate && (
+                        <div className="flex items-center text-slate-600 col-span-2 bg-sky-50/50 p-1.5 rounded-md border border-sky-100/50 mt-1">
+                          <Droplets className="h-4 w-4 shrink-0 mr-2 text-sky-400" />
+                          <span className="font-medium text-[11px]">
+                            {language === "fa" ? "آبیاری بعدی: " : "Next Watering: "}
+                            {new Intl.DateTimeFormat(language === "fa" ? 'fa-IR-u-ca-persian' : 'en-US', { dateStyle: 'medium' }).format(new Date(plant.nextWateringDate))}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center text-slate-600"><Activity className="h-4 w-4 shrink-0 mr-2 text-emerald-500" /><span className={`font-medium truncate ${plant.health === "Excellent" ? "text-emerald-600" : plant.health === "Good" ? "text-emerald-500" : "text-amber-500"}`}>{plant.health === "Excellent" ? t("health_excellent") : plant.health === "Good" ? t("health_good") : t("health_needs_attention")}</span></div>
                       <div className="flex items-center text-slate-600"><MapPin className="h-4 w-4 shrink-0 mr-2 text-indigo-400" /><span className="font-medium truncate">{plant.locationType === "Indoor" ? t("location_indoor") : t("location_outdoor")}</span></div>
                       <div className="flex items-center text-slate-600"><Sun className="h-4 w-4 shrink-0 mr-2 text-amber-400" /><span className="font-medium truncate">{plant.lightExposure === "Low Light" ? t("light_low") : plant.lightExposure === "Partial Shade" ? t("light_partial") : plant.lightExposure === "Bright Indirect" ? t("light_bright") : t("light_full")}</span></div>

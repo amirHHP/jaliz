@@ -101,3 +101,36 @@ export async function fetchModelsAction(api_key: string, provider?: string) {
     throw error;
   }
 }
+
+export async function getStatusAdviceAction(data: { plant_name: string, plant_type?: string, status: string, health: string, language?: string }) {
+  try {
+    const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
+    const api_key = globalApiKey;
+    const model_name = globalModel || (provider === "sotoon" ? "gpt-4o" : "gemini-1.5-pro");
+
+    if (!api_key) {
+      throw new Error("API key is required. Please set it in admin settings.");
+    }
+
+    const response = await fetch(`${PYTHON_API_BASE}/api/status-advice`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...data,
+        api_key,
+        model_name,
+        provider
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || "Failed to fetch status advice");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("AI Status Advice Action Error:", error);
+    throw error;
+  }
+}

@@ -1,13 +1,21 @@
-"use client"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   X, Droplets, Activity, MapPin, Sun, Box, Sprout, CheckCircle2,
-  Leaf, Image as ImageIcon, Sparkles, Pencil, Trash2, Save, ChevronLeft
+  Leaf, Image as ImageIcon, Sparkles, Pencil, Trash2, Save, ChevronLeft,
+  History, MessageSquare, PlusCircle, Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useLanguage } from "@/components/LanguageProvider"
-import { analyzePlantAction } from "@/app/actions/ai"
+import { analyzePlantAction, getStatusAdviceAction } from "@/app/actions/ai"
+import { getPlantLogsAction, addPlantStatusLogAction } from "@/app/actions/plants"
+
+interface PlantStatusLog {
+  id: string
+  status: string
+  health: string
+  aiAdvice?: string | null
+  createdAt: Date
+}
 
 interface Plant {
   id: string
@@ -18,6 +26,8 @@ interface Plant {
   potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
   hasDrainage: boolean
   lastWatered: string
+  nextWateringDate?: string
+  wateringInterval: number
   recentlyReplanted: boolean
   health: "Excellent" | "Good" | "Needs Attention"
   image?: string
@@ -60,6 +70,61 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const [image, setImage] = useState(plant.image || "")
   const [careTips, setCareTips] = useState(plant.careTips || "")
   const [wateringTips, setWateringTips] = useState(plant.wateringTips || "")
+  const [wateringInterval, setWateringInterval] = useState(plant.wateringInterval || 7)
+
+  // Log state
+  const [logs, setLogs] = useState<PlantStatusLog[]>([])
+  const [isLogging, setIsLogging] = useState(false)
+  const [newStatus, setNewStatus] = useState("")
+  const [newLogHealth, setNewLogHealth] = useState<Plant["health"]>(plant.health)
+  const [isLoadingLogs, setIsLoadingLogs] = useState(true)
+  const [isSubmittingLog, setIsSubmittingLog] = useState(false)
+
+  useEffect(() => {
+    async function fetchLogs() {
+      setIsLoadingLogs(true)
+      try {
+        const data = await getPlantLogsAction(plant.id)
+        setLogs(data as any)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setIsLoadingLogs(false)
+      }
+    }
+    fetchLogs()
+  }, [plant.id])
+
+  const handleAddLog = async () => {
+    if (!newStatus.trim()) return
+    setIsSubmittingLog(true)
+    try {
+      // 1. Get AI advice
+      const adviceData = await getStatusAdviceAction({
+        plant_name: name,
+        plant_type: type,
+        status: newStatus,
+        health: newLogHealth,
+        language
+      })
+      
+      // 2. Save log and update plant health
+      const newLog = await addPlantStatusLogAction(plant.id, newStatus, newLogHealth, adviceData.advice)
+      
+      if (newLog) {
+        setLogs(prev => [newLog as any, ...prev])
+        setNewStatus("")
+        setIsLogging(false)
+        // Update local plant health for UI consistency
+        setHealth(newLogHealth)
+        // Also call onSave to sync with parent if needed, but the action already updated DB
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to add log")
+    } finally {
+      setIsSubmittingLog(false)
+    }
+  }
 
   const daysAgo = Math.floor(
     (Date.now() - new Date(plant.lastWatered).getTime()) / (1000 * 3600 * 24)
@@ -125,7 +190,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
       ...plant,
       name, type, locationType, lightExposure, potType,
       hasDrainage, lastWatered, recentlyReplanted, health,
-      image, careTips, wateringTips,
+      image, careTips, wateringTips, wateringInterval
     })
     setIsEditing(false)
   }
@@ -137,6 +202,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     setLastWatered(plant.lastWatered); setRecentlyReplanted(plant.recentlyReplanted)
     setHealth(plant.health); setImage(plant.image || "")
     setCareTips(plant.careTips || ""); setWateringTips(plant.wateringTips || "")
+    setWateringInterval(plant.wateringInterval || 7)
     setIsEditing(false)
   }
 
@@ -199,6 +265,12 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                     icon: <Droplets className="h-4 w-4 text-sky-500" />,
                     label: t("last_watered"),
                     value: daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`,
+                  },
+                  {
+                    icon: <Droplets className="h-4 w-4 text-sky-400" />,
+                    label: language === "fa" ? "آبیاری بعدی" : "Next Watering",
+                    value: plant.nextWateringDate ? new Intl.DateTimeFormat(language === "fa" ? 'fa-IR-u-ca-persian' : 'en-US', { dateStyle: 'medium' }).format(new Date(plant.nextWateringDate)) : "-",
+                    extra: "text-sky-600 bg-sky-50 border-sky-100",
                   },
                   {
                     icon: <Activity className="h-4 w-4 text-emerald-500" />,
@@ -280,6 +352,135 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                   )}
                 </div>
               )}
+
+              {/* ── Status Logs ────────────────────────────────────────────── */}
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-slate-800 font-bold">
+                    <History className="h-4 w-4 text-emerald-600" />
+                    {language === "fa" ? "سوابق وضعیت" : "Status History"}
+                  </div>
+                  {!isLogging && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setIsLogging(true)}
+                      className="text-xs h-8 gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                    >
+                      <PlusCircle className="h-3.5 w-3.5" />
+                      {language === "fa" ? "ثبت وضعیت جدید" : "Log Status"}
+                    </Button>
+                  )}
+                </div>
+
+                {isLogging && (
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 mb-6 space-y-4 animate-in slide-in-from-top-2">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-600 uppercase">
+                        {language === "fa" ? "توضیح وضعیت" : "Status Description"}
+                      </label>
+                      <textarea
+                        value={newStatus}
+                        onChange={e => setNewStatus(e.target.value)}
+                        placeholder={language === "fa" ? "مثلاً: برگ‌ها کمی زرد شده‌اند..." : "e.g., Leaves are turning yellow..."}
+                        className={textareaCls}
+                        dir="auto"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-slate-600 uppercase">
+                          {t("health_status")}
+                        </label>
+                        <select
+                          value={newLogHealth}
+                          onChange={e => setNewLogHealth(e.target.value as any)}
+                          className={selectCls}
+                        >
+                          <option value="Excellent">{t("health_excellent")}</option>
+                          <option value="Good">{t("health_good")}</option>
+                          <option value="Needs Attention">{t("health_needs_attention")}</option>
+                        </select>
+                      </div>
+                      <div className="flex items-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsLogging(false)}
+                          className="flex-1 text-slate-600"
+                        >
+                          {t("cancel")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!newStatus.trim() || isSubmittingLog}
+                          onClick={handleAddLog}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          {isSubmittingLog ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            language === "fa" ? "ثبت" : "Save"
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {isLoadingLogs ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-6 w-6 text-slate-300 animate-spin" />
+                    </div>
+                  ) : logs.length === 0 ? (
+                    <div className="text-center py-8 text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                      <p className="text-sm">
+                        {language === "fa" ? "هنوز هیچ سوابقی ثبت نشده است." : "No status logs yet."}
+                      </p>
+                    </div>
+                  ) : (
+                    logs.map((log) => (
+                      <div key={log.id} className="relative pl-6 pb-6 border-l-2 border-slate-100 last:pb-0 last:border-l-0">
+                        <div className="absolute left-[-9px] top-0 h-4 w-4 rounded-full bg-white border-2 border-emerald-500 shadow-sm" />
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-slate-400">
+                              {new Date(log.createdAt).toLocaleDateString(language === "fa" ? "fa-IR" : "en-US", {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                              log.health === "Excellent" ? "bg-emerald-50 text-emerald-700" :
+                              log.health === "Good" ? "bg-emerald-50 text-emerald-600" :
+                              "bg-amber-50 text-amber-700"
+                            }`}>
+                              {log.health === "Excellent" ? t("health_excellent") :
+                               log.health === "Good" ? t("health_good") : t("health_needs_attention")}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-800 font-medium leading-relaxed" dir="auto">{log.status}</p>
+                          {log.aiAdvice && (
+                            <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 mt-2">
+                              <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] uppercase mb-1">
+                                <Sparkles className="h-3 w-3" />
+                                {language === "fa" ? "پیشنهاد هوش مصنوعی" : "AI Recommendation"}
+                              </div>
+                              <p className="text-xs text-slate-700 leading-relaxed italic" dir="auto">
+                                {log.aiAdvice}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
             /* ── EDIT MODE ─────────────────────────────────────────────────── */
@@ -392,6 +593,13 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t("care_tips")}</label>
                   <textarea value={careTips} onChange={e => setCareTips(e.target.value)}
                     placeholder={t("care_tips_ph")} dir="auto" className={textareaCls} />
+                </div>
+                {/* Watering Interval */}
+                <div className="space-y-1.5 col-span-full">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    {language === "fa" ? "فاصله آبیاری (روز)" : "Watering Interval (Days)"}
+                  </label>
+                  <input type="number" min="1" value={wateringInterval} onChange={e => setWateringInterval(parseInt(e.target.value) || 7)} className={inputCls} />
                 </div>
                 {/* Watering Tips */}
                 <div className="space-y-1.5 col-span-full">

@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Send,
   Trash2,
+  User,
   X,
 } from "lucide-react"
 
@@ -235,13 +236,8 @@ export function ListingDetailsModal({
           {/* Owner row + meta ---------------------------------------- */}
           <div className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-full bg-emerald-100 overflow-hidden shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(owner?.email ?? listing.ownerId)}`}
-                  alt={ownerName}
-                  className="w-full h-full object-cover"
-                />
+              <div className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0">
+                <User className="h-5 w-5 text-emerald-700" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-slate-400">
