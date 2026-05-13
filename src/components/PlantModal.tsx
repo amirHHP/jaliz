@@ -1,19 +1,22 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
-  X, Droplets, Activity, MapPin, Sun, Box, Sprout, CheckCircle2,
+  X, Droplets, Activity, MapPin, Sun, Box, Sprout,
   Leaf, Image as ImageIcon, Sparkles, Pencil, Trash2, Save, ChevronLeft,
-  History, MessageSquare, PlusCircle, Loader2
+  History, PlusCircle, Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { AdviceMarketplaceStrip } from "@/components/marketplace/AdviceMarketplaceStrip"
 import { useLanguage } from "@/components/LanguageProvider"
 import { analyzePlantAction, getStatusAdviceAction } from "@/app/actions/ai"
 import { getPlantLogsAction, addPlantStatusLogAction } from "@/app/actions/plants"
+import { normalizePlantHealth } from "@/lib/plant-status-health"
 
 interface PlantStatusLog {
   id: string
   status: string
   health: string
   aiAdvice?: string | null
+  image?: string | null
   createdAt: Date
 }
 
@@ -77,8 +80,14 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const [isLogging, setIsLogging] = useState(false)
   const [newStatus, setNewStatus] = useState("")
   const [newLogHealth, setNewLogHealth] = useState<Plant["health"]>(plant.health)
+  /** Optional photo for this log entry (compressed data URL), used by AI and stored on the log */
+  const [logImage, setLogImage] = useState("")
+  const [isInferringHealth, setIsInferringHealth] = useState(false)
   const [isLoadingLogs, setIsLoadingLogs] = useState(true)
   const [isSubmittingLog, setIsSubmittingLog] = useState(false)
+  const healthInferGen = useRef(0)
+  const newLogHealthRef = useRef(newLogHealth)
+  newLogHealthRef.current = newLogHealth
 
   useEffect(() => {
     async function fetchLogs() {
@@ -95,29 +104,80 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     fetchLogs()
   }, [plant.id])
 
+  // Debounced AI health classification from status text (and optional log photo)
+  useEffect(() => {
+    if (!isLogging) {
+      setIsInferringHealth(false)
+      return
+    }
+    const text = newStatus.trim()
+    if (text.length < 12) {
+      setIsInferringHealth(false)
+      return
+    }
+
+    const gen = ++healthInferGen.current
+    setIsInferringHealth(true)
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await getStatusAdviceAction({
+          plant_name: name,
+          plant_type: type,
+          status: text,
+          health: newLogHealthRef.current,
+          language,
+          mode: "health_only",
+          image: logImage || undefined,
+        })
+        if (healthInferGen.current !== gen) return
+        if (res.health) {
+          setNewLogHealth(normalizePlantHealth(res.health) as Plant["health"])
+        }
+      } catch {
+        /* non-blocking; user can still pick health manually */
+      } finally {
+        if (healthInferGen.current === gen) setIsInferringHealth(false)
+      }
+    }, 850)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [isLogging, newStatus, logImage, name, type, language])
+
   const handleAddLog = async () => {
     if (!newStatus.trim()) return
     setIsSubmittingLog(true)
     try {
-      // 1. Get AI advice
       const adviceData = await getStatusAdviceAction({
         plant_name: name,
         plant_type: type,
-        status: newStatus,
+        status: newStatus.trim(),
         health: newLogHealth,
-        language
+        language,
+        mode: "full",
+        image: logImage || undefined,
       })
-      
-      // 2. Save log and update plant health
-      const newLog = await addPlantStatusLogAction(plant.id, newStatus, newLogHealth, adviceData.advice)
-      
+
+      const payload = adviceData as { advice?: string; health?: string }
+      const resolvedHealth = normalizePlantHealth(
+        payload.health ?? newLogHealth
+      ) as Plant["health"]
+
+      const newLog = await addPlantStatusLogAction(
+        plant.id,
+        newStatus.trim(),
+        resolvedHealth,
+        payload.advice,
+        logImage || null
+      )
+
       if (newLog) {
         setLogs(prev => [newLog as any, ...prev])
         setNewStatus("")
+        setLogImage("")
         setIsLogging(false)
-        // Update local plant health for UI consistency
-        setHealth(newLogHealth)
-        // Also call onSave to sync with parent if needed, but the action already updated DB
+        setHealth(resolvedHealth)
       }
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to add log")
@@ -157,6 +217,29 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
       img.src = event.target?.result as string
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleLogImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        const MAX = 560
+        let w = img.width, h = img.height
+        if (w > h ? w > MAX : h > MAX) {
+          if (w > h) { h *= MAX / w; w = MAX } else { w *= MAX / h; h = MAX }
+        }
+        canvas.width = w; canvas.height = h
+        canvas.getContext("2d")?.drawImage(img, 0, 0, w, h)
+        setLogImage(canvas.toDataURL("image/jpeg", 0.62))
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ""
   }
 
   const handleAIAnalyze = async () => {
@@ -364,7 +447,12 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setIsLogging(true)}
+                      onClick={() => {
+                        setIsLogging(true)
+                        setNewStatus("")
+                        setLogImage("")
+                        setNewLogHealth(plant.health)
+                      }}
                       className="text-xs h-8 gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                     >
                       <PlusCircle className="h-3.5 w-3.5" />
@@ -387,14 +475,51 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                         dir="auto"
                       />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-slate-600 uppercase">
+                        {language === "fa" ? "عکس اخیر گیاه (اختیاری)" : "Latest plant photo (optional)"}
+                      </label>
+                      <p className="text-[11px] text-slate-500 leading-snug">
+                        {language === "fa"
+                          ? "با آپلود عکس، پیشنهاد هوش مصنوعی هم متن و هم تصویر را در نظر می‌گیرد."
+                          : "Upload a photo so AI can combine what it sees with your notes."}
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogImageChange}
+                        className="flex w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs file:border-0 file:bg-emerald-50 file:text-emerald-700 file:font-medium file:px-2 file:py-1 file:rounded-md file:me-2 focus:outline-none text-slate-900"
+                      />
+                      {logImage ? (
+                        <div className="flex items-center gap-3 pt-1">
+                          <img src={logImage} alt="" className="h-20 w-20 rounded-lg object-cover border border-slate-200 shadow-sm shrink-0" />
+                          <Button type="button" variant="outline" size="sm" className="text-xs h-8" onClick={() => setLogImage("")}>
+                            {language === "fa" ? "حذف عکس" : "Remove photo"}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-600 uppercase">
-                          {t("health_status")}
-                        </label>
+                        <div className="flex items-center justify-between gap-2">
+                          <label className="text-xs font-semibold text-slate-600 uppercase shrink-0">
+                            {t("health_status")}
+                          </label>
+                          {isInferringHealth ? (
+                            <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium">
+                              <Loader2 className="h-3 w-3 animate-spin shrink-0" />
+                              {language === "fa" ? "تحلیل…" : "Analyzing…"}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="text-[10px] text-slate-500 leading-snug">
+                          {language === "fa"
+                            ? "پس از حدود یک جمله، سطح سلامت به‌صورت خودکار پیشنهاد می‌شود؛ می‌توانید آن را عوض کنید."
+                            : "After a short note, AI picks a health level automatically; you can still change it."}
+                        </p>
                         <select
                           value={newLogHealth}
-                          onChange={e => setNewLogHealth(e.target.value as any)}
+                          onChange={e => setNewLogHealth(e.target.value as Plant["health"])}
                           className={selectCls}
                         >
                           <option value="Excellent">{t("health_excellent")}</option>
@@ -402,12 +527,17 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                           <option value="Needs Attention">{t("health_needs_attention")}</option>
                         </select>
                       </div>
-                      <div className="flex items-end gap-2">
+                      <div className="flex items-end gap-2 sm:justify-end">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setIsLogging(false)}
-                          className="flex-1 text-slate-600"
+                          onClick={() => {
+                            setIsLogging(false)
+                            setNewStatus("")
+                            setLogImage("")
+                            setNewLogHealth(plant.health)
+                          }}
+                          className="flex-1 sm:flex-none text-slate-600"
                         >
                           {t("cancel")}
                         </Button>
@@ -415,7 +545,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                           size="sm"
                           disabled={!newStatus.trim() || isSubmittingLog}
                           onClick={handleAddLog}
-                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="flex-1 sm:flex-none min-w-[100px] bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
                           {isSubmittingLog ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -464,6 +594,15 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                             </span>
                           </div>
                           <p className="text-sm text-slate-800 font-medium leading-relaxed" dir="auto">{log.status}</p>
+                          {log.image ? (
+                            <div className="mt-1">
+                              <img
+                                src={log.image}
+                                alt=""
+                                className="max-h-40 rounded-lg border border-slate-200 object-cover shadow-sm"
+                              />
+                            </div>
+                          ) : null}
                           {log.aiAdvice && (
                             <div className="bg-emerald-50/50 border border-emerald-100 rounded-lg p-3 mt-2">
                               <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] uppercase mb-1">
@@ -474,6 +613,12 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                                 {log.aiAdvice}
                               </p>
                             </div>
+                          )}
+                          {log.aiAdvice && (
+                            <AdviceMarketplaceStrip
+                              adviceText={log.aiAdvice}
+                              contextText={log.status}
+                            />
                           )}
                         </div>
                       </div>

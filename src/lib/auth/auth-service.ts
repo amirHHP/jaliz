@@ -1,4 +1,6 @@
 import {
+  AdminCreateUserInput,
+  AdminUpdateUserInput,
   AuthError,
   IAuthService,
   RegisterInput,
@@ -122,7 +124,7 @@ export class LocalAuthService implements IAuthService {
   }
 
   async register(input: RegisterInput): Promise<User> {
-    return this.createUser(input, "user")
+    return this.createUserWithRole(input, "user")
   }
 
   async login(email: string, password: string): Promise<User> {
@@ -157,6 +159,55 @@ export class LocalAuthService implements IAuthService {
 
   listUsers(): User[] {
     return this.readUsers().map(toPublicUser)
+  }
+
+  async createUser(input: AdminCreateUserInput): Promise<User> {
+    return this.createUserWithRole(input, input.role ?? "user", input.isActive ?? true)
+  }
+
+  async updateUser(id: string, patch: AdminUpdateUserInput): Promise<User> {
+    const normalizedEmail = patch.email !== undefined ? normalizeEmail(patch.email) : undefined
+    const fullName = patch.fullName !== undefined ? patch.fullName.trim() : undefined
+    const password = patch.password?.trim()
+
+    if (patch.email !== undefined && !normalizedEmail) throw new AuthError("EMPTY_FIELD")
+    if (patch.fullName !== undefined && !fullName) throw new AuthError("EMPTY_FIELD")
+    if (normalizedEmail !== undefined && !EMAIL_REGEX.test(normalizedEmail)) {
+      throw new AuthError("INVALID_EMAIL")
+    }
+    if (patch.role !== undefined && patch.role !== "admin" && patch.role !== "user") {
+      throw new AuthError("GENERIC")
+    }
+    if (password !== undefined && password.length > 0 && password.length < MIN_PASSWORD_LENGTH) {
+      throw new AuthError("WEAK_PASSWORD")
+    }
+
+    const users = this.readUsers()
+    const idx = users.findIndex((u) => u.id === id)
+    if (idx === -1) throw new AuthError("USER_NOT_FOUND")
+    if (
+      normalizedEmail !== undefined &&
+      users.some((u) => u.id !== id && u.email === normalizedEmail)
+    ) {
+      throw new AuthError("EMAIL_EXISTS")
+    }
+
+    const next = { ...users[idx] }
+    if (normalizedEmail !== undefined) next.email = normalizedEmail
+    if (fullName !== undefined) next.fullName = fullName
+    if (patch.role !== undefined) next.role = patch.role
+    if (patch.isActive !== undefined) next.isActive = patch.isActive
+    if (password) {
+      next.salt = generateSalt()
+      next.passwordHash = await hashPassword(password, next.salt)
+    }
+
+    users[idx] = next
+    this.writeUsers(users)
+    if (this.currentUser?.id === id) {
+      this.currentUser = next.isActive ? toPublicUser(next) : null
+    }
+    return toPublicUser(next)
   }
 
   updateUserRole(id: string, role: UserRole): User {
@@ -220,7 +271,11 @@ export class LocalAuthService implements IAuthService {
   // Internals
   // ------------------------------------------------------------------
 
-  private async createUser(input: RegisterInput, role: UserRole): Promise<User> {
+  private async createUserWithRole(
+    input: RegisterInput,
+    role: UserRole,
+    isActive = true,
+  ): Promise<User> {
     const email = normalizeEmail(input.email)
     const fullName = input.fullName.trim()
     const password = input.password
@@ -245,7 +300,7 @@ export class LocalAuthService implements IAuthService {
       email,
       fullName,
       role,
-      isActive: true,
+      isActive,
       createdAt: new Date().toISOString(),
       salt,
       passwordHash,
@@ -276,7 +331,7 @@ export class LocalAuthService implements IAuthService {
     if (users.length > 0) return
     // Bootstrap a default admin so the app is usable on first run.
     // Credentials are surfaced on the login page so the user knows them.
-    await this.createUser(
+    await this.createUserWithRole(
       {
         email: "admin@jaliz.local",
         fullName: "Jaliz Admin",

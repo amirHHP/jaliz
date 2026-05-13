@@ -59,6 +59,7 @@ model PlantStatusLog {
   status      String    // The status message/description
   health      String?   // Health state at that time
   aiAdvice    String?   // AI suggestion
+  image       String?   // Optional photo attached to this log (data URL), for AI context & history
   createdAt   DateTime  @default(now())
 }
 

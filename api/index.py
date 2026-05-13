@@ -50,8 +50,10 @@ class StatusAdviceRequest(BaseModel):
     plant_name: str
     plant_type: Optional[str] = None
     status: str
-    health: str
+    health: Optional[str] = None
     language: Optional[str] = "en"
+    image: Optional[str] = None  # data URL (optional) for vision-based advice / health
+    mode: Optional[str] = "full"  # "full" -> advice + health JSON; "health_only" -> {"health": ...}
     api_key: Optional[str] = None
     model_name: Optional[str] = None
     provider: Optional[str] = "gemini"
@@ -276,56 +278,158 @@ def analyze_plant(request: PlantAnalysisRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+def _parse_json_from_model_text(text: str) -> dict:
+    import json
+    import re
+    match = re.search(r"```(?:json)?\n?(.*?)\n?```", text, re.DOTALL)
+    if match:
+        json_str = match.group(1).strip()
+    else:
+        json_str = text.strip()
+    return json.loads(json_str)
+
+
+def _normalize_status_health(raw: Optional[str]) -> str:
+    allowed = {"Excellent", "Good", "Needs Attention"}
+    h = (raw or "").strip()
+    if h in allowed:
+        return h
+    lower = h.lower()
+    if "excellent" in lower or "عالی" in h:
+        return "Excellent"
+    if "attention" in lower or "نیاز به توجه" in h or "critical" in lower:
+        return "Needs Attention"
+    if "good" in lower or "خوب" in h:
+        return "Good"
+    return "Good"
+
+
 @app.post("/api/status-advice")
 def get_status_advice(request: StatusAdviceRequest):
+    import base64
     try:
         api_key = request.api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise HTTPException(status_code=400, detail="API key is required")
-        
+
         language_name = "Persian (Farsi)" if request.language == "fa" else "English"
-        
-        prompt = f"""
-        You are an expert botanist and plant care assistant.
-        A user has reported a status change for their plant:
-        Plant Name: {request.plant_name}
-        Plant Type: {request.plant_type if request.plant_type else 'Unknown'}
-        New Status: {request.status}
-        Current Health: {request.health}
-        
-        Based on this information, provide specific advice and recommendations for the user in {language_name}.
-        Keep the advice concise but very practical. Focus on what they should do next.
-        Return ONLY the advice text without any markdown or JSON.
-        """
-        
+        mode = (request.mode or "full").strip().lower()
+        health_hint = request.health if request.health else "not yet classified"
+
+        if mode == "health_only":
+            prompt = f"""
+You are an expert botanist. A user described their plant's current situation (and may have attached a photo).
+
+Plant name: {request.plant_name}
+Plant type: {request.plant_type or "Unknown"}
+User's status note: {request.status}
+Previous health label (hint only, may be wrong): {health_hint}
+
+Classify overall plant health as EXACTLY one of these English strings:
+- "Excellent" — thriving, no serious issues mentioned
+- "Good" — minor issues or uncertainty, generally OK
+- "Needs Attention" — clear stress, pests, severe yellowing, rot, worsening after treatment, etc.
+
+Use the photo if provided to spot pests, leaf color, wilting, etc.
+
+Return ONLY valid JSON with this exact shape (no markdown):
+{{"health": "Excellent"}}
+The value for "health" must be exactly one of: Excellent, Good, Needs Attention.
+"""
+        else:
+            prompt = f"""
+You are an expert botanist and plant care assistant.
+The user reported a status update for their plant (optional photo may show current leaf/soil/pests).
+
+Plant Name: {request.plant_name}
+Plant Type: {request.plant_type or "Unknown"}
+Status description: {request.status}
+Previous health label (hint only): {health_hint}
+
+Tasks:
+1) Infer the correct health level as EXACTLY one of: Excellent, Good, Needs Attention (English).
+2) Write concise, practical next-step advice for the user in {language_name}.
+   If a photo is included, incorporate visible cues (color, spots, pests, soil wetness) together with the text.
+
+Return ONLY valid JSON (no markdown fences) with this exact shape:
+{{"health": "Good", "advice": "..."}}
+"""
+
+        def gemini_contents():
+            contents: list = [prompt]
+            if request.image:
+                if "," in request.image:
+                    header, encoded = request.image.split(",", 1)
+                    mime_type = header.split(";")[0].split(":")[1]
+                else:
+                    encoded = request.image
+                    mime_type = "image/jpeg"
+                image_data = base64.b64decode(encoded)
+                contents.append({"mime_type": mime_type, "data": image_data})
+            return contents
+
         if request.provider == "sotoon":
             import requests as req
-            messages = [{"role": "user", "content": prompt}]
+
+            messages: list = []
+            if request.image and request.image.startswith("data:"):
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": request.image}},
+                        ],
+                    }
+                ]
+            else:
+                messages = [{"role": "user", "content": prompt}]
+
             model_name = request.model_name or "gpt-4o"
             resp = req.post(
                 f"{SOTOON_BASE_URL}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 json={
                     "model": model_name,
                     "messages": messages,
-                    "temperature": 0.5
+                    "temperature": 0.35,
                 },
-                timeout=60
+                timeout=90,
             )
             if resp.status_code != 200:
-                raise HTTPException(status_code=resp.status_code, detail=f"Sotoon API error: {resp.text}")
+                raise HTTPException(
+                    status_code=resp.status_code,
+                    detail=f"Sotoon API error: {resp.text}",
+                )
             result_data = resp.json()
-            advice = result_data["choices"][0]["message"]["content"]
+            text = result_data["choices"][0]["message"]["content"]
         else:
             genai.configure(api_key=api_key)
             model_name = request.model_name or "gemini-1.5-pro"
             model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            advice = response.text
-            
-        return {"advice": advice.strip()}
+            response = model.generate_content(gemini_contents())
+            text = response.text
+
+        try:
+            data = _parse_json_from_model_text(text)
+        except Exception:
+            if mode == "health_only":
+                return {"health": "Good"}
+            return {"health": "Good", "advice": text.strip()}
+
+        health = _normalize_status_health(data.get("health"))
+
+        if mode == "health_only":
+            return {"health": health}
+
+        advice = (data.get("advice") or "").strip()
+        if not advice:
+            advice = text.strip()
+        return {"health": health, "advice": advice}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

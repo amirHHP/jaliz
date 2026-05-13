@@ -130,12 +130,23 @@ const translations = {
     admin_role_user: "User",
     admin_status_active: "Active",
     admin_status_inactive: "Disabled",
+    admin_create_user_btn: "Create user",
+    admin_action_edit: "Edit",
     admin_action_reset: "Reset password",
     admin_action_delete: "Delete",
     admin_action_deactivate: "Disable",
     admin_action_activate: "Enable",
     admin_no_users: "No users match your search.",
     admin_confirm_delete: "Delete this user permanently? This cannot be undone.",
+    admin_create_title: "Create user",
+    admin_create_desc: "Set the user's name, email and password. They can sign in with this password immediately.",
+    admin_edit_title: "Edit user",
+    admin_edit_desc: "Update the user's name, email, role or password.",
+    admin_save_user: "Save user",
+    admin_password_optional: "Leave blank to keep current password",
+    admin_user_active: "User is active",
+    admin_create_success: "User created.",
+    admin_update_success: "User updated.",
     admin_reset_title: "Reset password",
     admin_reset_desc: "Set a new password for {name}. They will need to use it on their next sign-in.",
     admin_reset_new_password: "New password",
@@ -225,6 +236,8 @@ const translations = {
     mp_mode_exchange: "Trade",
     mp_mode_free: "Free",
     mp_view_details: "View details",
+    mp_advice_recs_title: "Suggested from marketplace",
+    mp_advice_recs_view: "View in marketplace",
     // Form
     mp_form_create_title: "Post a new listing",
     mp_form_edit_title: "Edit listing",
@@ -397,12 +410,23 @@ const translations = {
     admin_role_user: "کاربر",
     admin_status_active: "فعال",
     admin_status_inactive: "غیرفعال",
+    admin_create_user_btn: "ساخت کاربر",
+    admin_action_edit: "ویرایش",
     admin_action_reset: "بازنشانی رمز",
     admin_action_delete: "حذف",
     admin_action_deactivate: "غیرفعال کردن",
     admin_action_activate: "فعال کردن",
     admin_no_users: "کاربری مطابق با جستجو یافت نشد.",
     admin_confirm_delete: "این کاربر برای همیشه حذف شود؟ این عمل قابل بازگشت نیست.",
+    admin_create_title: "ساخت کاربر جدید",
+    admin_create_desc: "نام، ایمیل و رمز عبور کاربر را تعیین کنید. کاربر بلافاصله می‌تواند با این رمز وارد شود.",
+    admin_edit_title: "ویرایش کاربر",
+    admin_edit_desc: "نام، ایمیل، نقش یا رمز عبور کاربر را تغییر دهید.",
+    admin_save_user: "ذخیره کاربر",
+    admin_password_optional: "برای حفظ رمز فعلی خالی بگذارید",
+    admin_user_active: "کاربر فعال است",
+    admin_create_success: "کاربر با موفقیت ساخته شد.",
+    admin_update_success: "اطلاعات کاربر به‌روزرسانی شد.",
     admin_reset_title: "بازنشانی رمز عبور",
     admin_reset_desc: "یک رمز عبور جدید برای {name} تعیین کنید. در ورود بعدی باید از آن استفاده کند.",
     admin_reset_new_password: "رمز عبور جدید",
@@ -492,6 +516,8 @@ const translations = {
     mp_mode_exchange: "تبادل",
     mp_mode_free: "رایگان",
     mp_view_details: "مشاهده جزئیات",
+    mp_advice_recs_title: "پیشنهاد از بازارچه",
+    mp_advice_recs_view: "مشاهده در بازارچه",
     // Form
     mp_form_create_title: "ثبت آگهی جدید",
     mp_form_edit_title: "ویرایش آگهی",
@@ -558,7 +584,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // Read from localStorage if available
     const saved = localStorage.getItem("jaliz-lang") as Language
     if (saved && (saved === "en" || saved === "fa")) {
-      setLanguage(saved)
+      const timer = window.setTimeout(() => setLanguage(saved), 0)
+      return () => window.clearTimeout(timer)
     }
   }, [])
 

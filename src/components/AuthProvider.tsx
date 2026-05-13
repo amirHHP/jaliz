@@ -8,7 +8,14 @@ import React, {
   useMemo,
   useState,
 } from "react"
-import { AuthError, RegisterInput, User, UserProfilePatch, UserRole } from "@/lib/auth/types"
+import {
+  AdminCreateUserInput,
+  AdminUpdateUserInput,
+  RegisterInput,
+  User,
+  UserProfilePatch,
+  UserRole,
+} from "@/lib/auth/types"
 import {
   getCurrentUser,
   registerAction,
@@ -16,9 +23,12 @@ import {
   logoutAction,
   updateMyProfileAction,
   listUsersAction,
+  createUserAction,
+  updateUserAction,
   updateUserRoleAction,
   setUserActiveAction,
   deleteUserAction,
+  resetPasswordAction,
 } from "@/app/actions/auth"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
@@ -35,6 +45,8 @@ interface AuthContextValue {
   logout: () => Promise<void>
   updateMyProfile: (patch: UserProfilePatch) => Promise<User>
   getUser: (id: string) => User | undefined
+  createUser: (input: AdminCreateUserInput) => Promise<User>
+  updateUser: (id: string, patch: AdminUpdateUserInput) => Promise<User>
   updateUserRole: (id: string, role: UserRole) => Promise<User>
   setUserActive: (id: string, isActive: boolean) => Promise<User>
   deleteUser: (id: string) => Promise<void>
@@ -114,6 +126,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const listUsers = useCallback(() => users, [users])
 
+  const createUser = useCallback(async (input: AdminCreateUserInput): Promise<User> => {
+    const created = await createUserAction(input)
+    setUsers((prev) => [...prev, created])
+    bump()
+    return created
+  }, [bump])
+
+  const updateUser = useCallback(async (id: string, patch: AdminUpdateUserInput): Promise<User> => {
+    const updated = await updateUserAction(id, patch)
+    setUsers((prev) => prev.map((u) => u.id === id ? updated : u))
+    if (user?.id === id) setUser(updated)
+    bump()
+    return updated
+  }, [user, bump])
+
   const updateUserRole = useCallback(async (id: string, role: UserRole): Promise<User> => {
     const updated = await updateUserRoleAction(id, role)
     setUsers((prev) => prev.map((u) => u.id === id ? updated : u))
@@ -145,9 +172,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bump()
   }, [user, bump])
 
-  const resetPassword = useCallback(async (_id: string, newPassword: string): Promise<void> => {
-    throw new AuthError("GENERIC", "Password reset not supported via custom UI yet")
-  }, [])
+  const resetPassword = useCallback(async (id: string, newPassword: string): Promise<void> => {
+    await resetPasswordAction(id, newPassword)
+    bump()
+  }, [bump])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -163,12 +191,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateMyProfile,
       getUser,
       listUsers,
+      createUser,
+      updateUser,
       updateUserRole,
       setUserActive,
       deleteUser,
       resetPassword,
     }),
-    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, updateUserRole, setUserActive, deleteUser, resetPassword],
+    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

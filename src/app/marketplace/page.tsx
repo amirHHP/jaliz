@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowLeftRight,
   Apple,
@@ -33,6 +34,30 @@ const TAB_DEFS: { id: Tab; key: string; icon: React.ComponentType<{ className?: 
   { id: "tool", key: "mp_tab_tool", icon: Wrench },
   { id: "produce", key: "mp_tab_produce", icon: Apple },
 ]
+
+function MarketplaceOpenFromQuery({
+  setSelectedId,
+}: {
+  setSelectedId: (id: string) => void
+}) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const { get, ready } = useMarketplace()
+
+  useEffect(() => {
+    const raw = searchParams.get("open")
+    if (!raw || !ready) return
+    const openId = decodeURIComponent(raw)
+    if (get(openId)) setSelectedId(openId)
+    const sp = new URLSearchParams(searchParams.toString())
+    sp.delete("open")
+    const q = sp.toString()
+    router.replace(`${pathname}${q ? `?${q}` : ""}`, { scroll: false })
+  }, [searchParams, ready, get, router, pathname, setSelectedId])
+
+  return null
+}
 
 export default function MarketplacePage() {
   const { t } = useLanguage()
@@ -93,6 +118,9 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <Suspense fallback={null}>
+        <MarketplaceOpenFromQuery setSelectedId={setSelectedId} />
+      </Suspense>
       <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">

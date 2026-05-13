@@ -102,7 +102,17 @@ export async function fetchModelsAction(api_key: string, provider?: string) {
   }
 }
 
-export async function getStatusAdviceAction(data: { plant_name: string, plant_type?: string, status: string, health: string, language?: string }) {
+export async function getStatusAdviceAction(data: {
+  plant_name: string;
+  plant_type?: string;
+  status: string;
+  health?: string;
+  language?: string;
+  /** data URL (e.g. image/jpeg;base64,...) for vision */
+  image?: string | null;
+  /** full: advice + health; health_only: quick health classification */
+  mode?: "full" | "health_only";
+}) {
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;

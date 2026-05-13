@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "concurrently \"npm run dev:next\" \"npm run dev:py\"",
     "dev:next": "next dev",
     "dev:py": "cd api && ../.venv/bin/uvicorn index:app --reload --port 8000",

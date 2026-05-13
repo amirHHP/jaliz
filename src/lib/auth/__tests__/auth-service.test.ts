@@ -147,6 +147,76 @@ describe("login", () => {
 })
 
 describe("admin operations", () => {
+  it("creates a managed user with role and active status", async () => {
+    const { service } = await freshService()
+    const u = await service.createUser({
+      email: " Managed@Example.COM ",
+      fullName: "Managed User",
+      password: "password123",
+      role: "admin",
+      isActive: false,
+    })
+
+    expect(u.email).toBe("managed@example.com")
+    expect(u.role).toBe("admin")
+    expect(u.isActive).toBe(false)
+  })
+
+  it("updates managed user profile fields without changing password when blank", async () => {
+    const { service } = await freshService()
+    const u = await service.createUser({
+      email: "u@example.com",
+      fullName: "User",
+      password: "password123",
+    })
+
+    const updated = await service.updateUser(u.id, {
+      email: "updated@example.com",
+      fullName: "Updated User",
+      password: "",
+      role: "admin",
+      isActive: true,
+    })
+
+    expect(updated.email).toBe("updated@example.com")
+    expect(updated.fullName).toBe("Updated User")
+    expect(updated.role).toBe("admin")
+    await service.login("updated@example.com", "password123")
+  })
+
+  it("updates a managed user's password", async () => {
+    const { service } = await freshService()
+    const u = await service.createUser({
+      email: "u@example.com",
+      fullName: "User",
+      password: "password123",
+    })
+
+    await service.updateUser(u.id, { password: "new-password" })
+
+    await expect(service.login("u@example.com", "password123")).rejects.toThrow()
+    const signed = await service.login("u@example.com", "new-password")
+    expect(signed.id).toBe(u.id)
+  })
+
+  it("rejects duplicate emails during managed user updates", async () => {
+    const { service } = await freshService()
+    const a = await service.createUser({
+      email: "a@example.com",
+      fullName: "A",
+      password: "password123",
+    })
+    await service.createUser({
+      email: "b@example.com",
+      fullName: "B",
+      password: "password123",
+    })
+
+    await expect(service.updateUser(a.id, { email: "B@example.com" })).rejects.toMatchObject({
+      code: "EMAIL_EXISTS",
+    })
+  })
+
   it("updates roles", async () => {
     const { service } = await freshService()
     const u = await service.register({

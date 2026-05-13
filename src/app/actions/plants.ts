@@ -1,7 +1,22 @@
 "use server";
 
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/app/actions/auth";
+
+const MAX_STATUS_LOG_ADVICE_CHARS = 80_000;
+const MAX_STATUS_LOG_IMAGE_CHARS = 550_000;
+
+function asDbString(value: unknown, maxLen: number): string | null {
+  if (value === undefined || value === null) return null;
+  const s = typeof value === "string" ? value : String(value);
+  const t = s.trim();
+  if (!t) return null;
+  return t.length > maxLen ? t.slice(0, maxLen) : t;
+}
 
 export async function getUserPlantsAction() {
   const userId = await getSessionUserId();
@@ -139,23 +154,61 @@ export async function getPlantLogsAction(plantId: string) {
   });
 }
 
-export async function addPlantStatusLogAction(plantId: string, status: string, health: string, aiAdvice?: string) {
+export async function addPlantStatusLogAction(
+  plantId: string,
+  status: string,
+  health: string,
+  aiAdvice?: string,
+  image?: string | null
+) {
   const userId = await getSessionUserId();
   if (!userId) return null;
+
+  const statusText = typeof status === "string" ? status.trim() : String(status ?? "").trim();
+  if (!statusText) return null;
+
+  const healthValue =
+    typeof health === "string" && health.trim() ? health.trim() : "Good";
 
   // Update plant health
   await prisma.userPlant.update({
     where: { id: plantId, userId },
-    data: { health }
+    data: { health: healthValue }
   });
 
-  // Create log
-  return await prisma.plantStatusLog.create({
-    data: {
-      plantId,
-      status,
-      health,
-      aiAdvice
+  const adviceDb = asDbString(aiAdvice, MAX_STATUS_LOG_ADVICE_CHARS);
+  const imageDb = asDbString(image, MAX_STATUS_LOG_IMAGE_CHARS);
+
+  const baseData = {
+    plantId,
+    status: statusText,
+    health: healthValue,
+    aiAdvice: adviceDb,
+    ...(imageDb ? { image: imageDb } : {}),
+  };
+
+  try {
+    return await prisma.plantStatusLog.create({ data: baseData });
+  } catch (e) {
+    if (
+      e instanceof PrismaClientValidationError &&
+      e.message.includes("Unknown argument") &&
+      e.message.includes("image")
+    ) {
+      return await prisma.plantStatusLog.create({
+        data: {
+          plantId,
+          status: statusText,
+          health: healthValue,
+          aiAdvice: adviceDb,
+        },
+      });
     }
-  });
+    if (e instanceof PrismaClientKnownRequestError && e.code === "P2022") {
+      throw new Error(
+        "Database schema is out of date for plant status logs. From the project root run: npx prisma db push — then restart the dev server (delete the .next folder if the error persists)."
+      );
+    }
+    throw e;
+  }
 }

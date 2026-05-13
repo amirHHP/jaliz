@@ -8,14 +8,16 @@ import {
   KeyRound,
   Loader2,
   Lock,
+  Pencil,
   Search,
   Shield,
   ShieldOff,
   Sparkles,
   Trash2,
-  User,
+  User as UserIcon,
   UserCheck,
   UserCog,
+  UserPlus,
   Users,
   UserX,
   X,
@@ -27,7 +29,8 @@ import { Header } from "@/components/Header"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { Button } from "@/components/ui/button"
-import { authErrorTranslationKey, User, UserRole } from "@/lib/auth"
+import { authErrorTranslationKey } from "@/lib/auth"
+import type { AdminCreateUserInput, AdminUpdateUserInput, User, UserRole } from "@/lib/auth/types"
 import { getAiConfig, setGlobalSetting } from "@/app/actions/settings"
 import { fetchModelsAction } from "@/app/actions/ai"
 
@@ -43,6 +46,8 @@ export default function AdminPage() {
     status,
     user: currentUser,
     isAdmin,
+    createUser,
+    updateUser,
     updateUserRole,
     setUserActive,
     deleteUser,
@@ -53,6 +58,8 @@ export default function AdminPage() {
 
   const [search, setSearch] = useState("")
   const [actionError, setActionError] = useState<string | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<User | null>(null)
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
 
@@ -457,8 +464,8 @@ export default function AdminPage() {
 
         {/* Search */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="p-4 border-b border-slate-100">
-            <div className="relative">
+          <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 value={search}
@@ -467,6 +474,14 @@ export default function AdminPage() {
                 className="w-full h-10 ps-9 pe-3 rounded-md border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               />
             </div>
+            <Button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              {t("admin_create_user_btn")}
+            </Button>
           </div>
 
           {actionError && (
@@ -514,7 +529,7 @@ export default function AdminPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
-                              <User className="h-5 w-5 text-emerald-700" />
+                              <UserIcon className="h-5 w-5 text-emerald-700" />
                             </div>
                             <div className="min-w-0">
                               <div className="font-medium text-slate-900 truncate">
@@ -566,6 +581,12 @@ export default function AdminPage() {
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-1">
                             <IconButton
+                              title={t("admin_action_edit")}
+                              onClick={() => setEditTarget(u)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </IconButton>
+                            <IconButton
                               title={t("admin_action_reset")}
                               onClick={() =>
                                 setResetTarget({ id: u.id, name: u.fullName })
@@ -614,6 +635,46 @@ export default function AdminPage() {
           </p>
         )}
       </main>
+
+      {createOpen && (
+        <UserFormModal
+          mode="create"
+          onClose={() => setCreateOpen(false)}
+          onSubmit={async (input) => {
+            try {
+              await createUser(input as AdminCreateUserInput)
+              await refreshUsers()
+              setCreateOpen(false)
+              setFlash(t("admin_create_success"))
+              setTimeout(() => setFlash(null), 3000)
+              return null
+            } catch (err) {
+              return authErrorTranslationKey(err)
+            }
+          }}
+        />
+      )}
+
+      {editTarget && (
+        <UserFormModal
+          mode="edit"
+          user={editTarget}
+          currentUserId={currentUser?.id}
+          onClose={() => setEditTarget(null)}
+          onSubmit={async (input) => {
+            try {
+              await updateUser(editTarget.id, input as AdminUpdateUserInput)
+              await refreshUsers()
+              setEditTarget(null)
+              setFlash(t("admin_update_success"))
+              setTimeout(() => setFlash(null), 3000)
+              return null
+            } catch (err) {
+              return authErrorTranslationKey(err)
+            }
+          }}
+        />
+      )}
 
       {resetTarget && (
         <ResetPasswordModal
@@ -690,11 +751,201 @@ function IconButton({
   )
 }
 
+const formControlClass =
+  "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 caret-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+
 interface ResetPasswordModalProps {
   target: ResetTarget
   onClose: () => void
   /** Returns a translation key on error, or null on success. */
   onSubmit: (newPassword: string) => Promise<string | null>
+}
+
+type UserFormInput = AdminCreateUserInput | AdminUpdateUserInput
+
+interface UserFormModalProps {
+  mode: "create" | "edit"
+  user?: User
+  currentUserId?: string
+  onClose: () => void
+  /** Returns a translation key on error, or null on success. */
+  onSubmit: (input: UserFormInput) => Promise<string | null>
+}
+
+function UserFormModal({ mode, user, currentUserId, onClose, onSubmit }: UserFormModalProps) {
+  const { t } = useLanguage()
+  const isCreate = mode === "create"
+  const isSelf = user?.id === currentUserId
+  const [fullName, setFullName] = useState(user?.fullName ?? "")
+  const [email, setEmail] = useState(user?.email ?? "")
+  const [password, setPassword] = useState("")
+  const [role, setRole] = useState<UserRole>(user?.role ?? "user")
+  const [isActive, setIsActive] = useState(user?.isActive ?? true)
+  const [submitting, setSubmitting] = useState(false)
+  const [errorKey, setErrorKey] = useState<string | null>(null)
+
+  const canSubmit =
+    fullName.trim().length > 0 &&
+    email.trim().length > 0 &&
+    (!isCreate || password.length >= 6) &&
+    (!password || password.length >= 6)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!canSubmit) return
+
+    setSubmitting(true)
+    setErrorKey(null)
+    const input: UserFormInput = isCreate
+      ? { fullName, email, password, role, isActive }
+      : {
+          fullName,
+          email,
+          ...(password ? { password } : {}),
+          ...(!isSelf ? { role, isActive } : {}),
+        }
+    const err = await onSubmit(input)
+    if (err) setErrorKey(err)
+    setSubmitting(false)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 bg-slate-50 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            {isCreate ? (
+              <UserPlus className="h-4 w-4 text-emerald-600" />
+            ) : (
+              <Pencil className="h-4 w-4 text-emerald-600" />
+            )}
+            <h2 className="text-base font-semibold text-slate-900">
+              {isCreate ? t("admin_create_title") : t("admin_edit_title")}
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-700 transition"
+            aria-label={t("cancel")}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-sm text-slate-600">
+            {isCreate ? t("admin_create_desc") : t("admin_edit_desc")}
+          </p>
+
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                {t("full_name")}
+              </label>
+              <input
+                type="text"
+                autoFocus
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder={t("full_name_ph")}
+                className={formControlClass}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                {t("email")}
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("email_ph")}
+                className={formControlClass}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                {t("password")}
+              </label>
+              <input
+                type="password"
+                required={isCreate}
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={isCreate ? t("password_ph") : t("admin_password_optional")}
+                className={formControlClass}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">
+                {t("admin_col_role")}
+              </label>
+              <select
+                value={role}
+                disabled={isSelf}
+                onChange={(e) => setRole(e.target.value as UserRole)}
+                className={formControlClass}
+              >
+                <option value="user">{t("admin_role_user")}</option>
+                <option value="admin">{t("admin_role_admin")}</option>
+              </select>
+            </div>
+            <label className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={isActive}
+                disabled={isSelf}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="h-4 w-4 accent-emerald-600 disabled:opacity-50"
+              />
+              {t("admin_user_active")}
+            </label>
+          </div>
+
+          {isSelf && (
+            <p className="text-xs text-slate-400">{t("admin_self_warning")}</p>
+          )}
+
+          {errorKey && (
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
+            >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {t(errorKey as any)}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="text-slate-600"
+            >
+              {t("cancel")}
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting || !canSubmit}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+            >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isCreate ? t("admin_create_user_btn") : t("admin_save_user")}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
 }
 
 function ResetPasswordModal({ target, onClose, onSubmit }: ResetPasswordModalProps) {
@@ -746,7 +997,7 @@ function ResetPasswordModal({ target, onClose, onSubmit }: ResetPasswordModalPro
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("password_ph")}
-              className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className={formControlClass}
             />
           </div>
           {errorKey && (

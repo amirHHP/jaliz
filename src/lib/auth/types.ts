@@ -33,6 +33,19 @@ export interface RegisterInput {
   password: string
 }
 
+export interface AdminCreateUserInput extends RegisterInput {
+  role?: UserRole
+  isActive?: boolean
+}
+
+export interface AdminUpdateUserInput {
+  email?: string
+  fullName?: string
+  password?: string
+  role?: UserRole
+  isActive?: boolean
+}
+
 export type AuthErrorCode =
   | "INVALID_CREDENTIALS"
   | "EMAIL_EXISTS"
@@ -67,6 +80,8 @@ export interface IAuthService {
   login(email: string, password: string): Promise<User>
   logout(): void
   listUsers(): User[]
+  createUser(input: AdminCreateUserInput): Promise<User>
+  updateUser(id: string, patch: AdminUpdateUserInput): Promise<User>
   updateUserRole(id: string, role: UserRole): User
   setUserActive(id: string, isActive: boolean): User
   deleteUser(id: string): void

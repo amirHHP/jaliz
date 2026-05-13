@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CloudRain, Loader2, MapPin, Key } from "lucide-react"
+import { AdviceMarketplaceStrip } from "@/components/marketplace/AdviceMarketplaceStrip"
 import { useLanguage } from "@/components/LanguageProvider"
 import { getUserPlantsAction } from "@/app/actions/plants"
 import { getWeatherAdviceAction } from "@/app/actions/ai"
@@ -84,8 +85,11 @@ export function WeatherAdvice() {
             <span className="text-sm font-medium animate-pulse">{t("analyzing")}</span>
           </div>
         ) : advice ? (
-          <div className="p-5 rounded-xl bg-slate-50 border border-slate-100 shadow-inner whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">
-            {advice}
+          <div className="space-y-3">
+            <div className="p-5 rounded-xl bg-slate-50 border border-slate-100 shadow-inner whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">
+              {advice}
+            </div>
+            <AdviceMarketplaceStrip adviceText={advice} />
           </div>
         ) : error ? (
           <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-100 text-sm flex items-center gap-2">
