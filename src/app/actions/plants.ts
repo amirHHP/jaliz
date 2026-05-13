@@ -1,5 +1,6 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import {
   PrismaClientKnownRequestError,
   PrismaClientValidationError,
@@ -9,6 +10,9 @@ import { getSessionUserId } from "@/app/actions/auth";
 
 const MAX_STATUS_LOG_ADVICE_CHARS = 80_000;
 const MAX_STATUS_LOG_IMAGE_CHARS = 550_000;
+/** Base64 plant photos in create/update must stay under Server Action / DB practical limits */
+const MAX_PLANT_IMAGE_CHARS = 750_000;
+const MAX_PLANT_TIPS_CHARS = 50_000;
 
 function asDbString(value: unknown, maxLen: number): string | null {
   if (value === undefined || value === null) return null;
@@ -97,50 +101,134 @@ export async function deleteUserPlantAction(plantId: string) {
   });
 }
 
-export async function updateUserPlantAction(plantId: string, data: any) {
+export type UpdateUserPlantInput = {
+  name?: string;
+  type?: string | null;
+  locationType?: string | null;
+  lightExposure?: string | null;
+  potType?: string | null;
+  hasDrainage?: boolean | null;
+  lastWatered?: Date | string | null;
+  recentlyReplanted?: boolean | null;
+  health?: string | null;
+  image?: string | null;
+  careTips?: string | null;
+  wateringTips?: string | null;
+  wateringInterval?: number | null;
+};
+
+export async function updateUserPlantAction(plantId: string, data: UpdateUserPlantInput) {
   const userId = await getSessionUserId();
   if (!userId) return null;
 
+  const updateData: Prisma.UserPlantUpdateInput = {};
+
+  if (data.name !== undefined) updateData.name = String(data.name).trim();
+  if (data.type !== undefined) updateData.type = data.type == null ? "" : String(data.type).trim();
+  if (data.locationType !== undefined) updateData.locationType = data.locationType ?? undefined;
+  if (data.lightExposure !== undefined) updateData.lightExposure = data.lightExposure ?? undefined;
+  if (data.potType !== undefined) updateData.potType = data.potType ?? undefined;
+  if (data.hasDrainage !== undefined) updateData.hasDrainage = data.hasDrainage;
+  if (data.recentlyReplanted !== undefined) updateData.recentlyReplanted = data.recentlyReplanted;
+  if (data.health !== undefined) updateData.health = data.health ?? undefined;
+  if (data.image !== undefined) updateData.image = asDbString(data.image, MAX_PLANT_IMAGE_CHARS);
+  if (data.careTips !== undefined) updateData.careTips = asDbString(data.careTips, MAX_PLANT_TIPS_CHARS);
+  if (data.wateringTips !== undefined) updateData.wateringTips = asDbString(data.wateringTips, MAX_PLANT_TIPS_CHARS);
+  if (data.wateringInterval !== undefined) updateData.wateringInterval = data.wateringInterval ?? undefined;
+
+  if (data.lastWatered !== undefined) {
+    updateData.lastWatered = data.lastWatered ? new Date(data.lastWatered) : null;
+  }
+
   // If lastWatered or wateringInterval is updated, recalculate nextWateringDate
-  if (data.lastWatered || data.wateringInterval) {
+  if (data.lastWatered !== undefined || data.wateringInterval !== undefined) {
     const existing = await prisma.userPlant.findUnique({
       where: { id: plantId, userId },
-      select: { lastWatered: true, wateringInterval: true }
+      select: { lastWatered: true, wateringInterval: true },
     });
 
     if (existing) {
-      const lastWatered = data.lastWatered ? new Date(data.lastWatered) : existing.lastWatered ? new Date(existing.lastWatered) : new Date();
-      const interval = data.wateringInterval !== undefined ? data.wateringInterval : existing.wateringInterval || 7;
+      const lw =
+        data.lastWatered !== undefined
+          ? data.lastWatered
+            ? new Date(data.lastWatered)
+            : null
+          : existing.lastWatered;
+      const lastWatered = lw ? new Date(lw) : new Date();
+      if (Number.isNaN(lastWatered.getTime())) {
+        throw new Error("Invalid last watered date");
+      }
+      const interval =
+        data.wateringInterval !== undefined
+          ? Number(data.wateringInterval) || 7
+          : existing.wateringInterval || 7;
 
       const nextDate = new Date(lastWatered);
-      nextDate.setDate(nextDate.getDate() + (Number(interval) || 7));
-      data.nextWateringDate = nextDate;
+      nextDate.setDate(nextDate.getDate() + interval);
+      updateData.nextWateringDate = nextDate;
     }
   }
 
   return await prisma.userPlant.update({
     where: { id: plantId, userId },
-    data
+    data: updateData,
   });
 }
 
-export async function createUserPlantAction(data: any) {
+export type CreateUserPlantInput = {
+  name: string;
+  type?: string | null;
+  locationType?: string | null;
+  lightExposure?: string | null;
+  potType?: string | null;
+  hasDrainage?: boolean | null;
+  lastWatered?: Date | string | null;
+  recentlyReplanted?: boolean | null;
+  health?: string | null;
+  image?: string | null;
+  careTips?: string | null;
+  wateringTips?: string | null;
+  wateringInterval?: number | null;
+};
+
+export async function createUserPlantAction(data: CreateUserPlantInput) {
   const userId = await getSessionUserId();
   if (!userId) return null;
 
   const lastWatered = data.lastWatered ? new Date(data.lastWatered) : new Date();
-  const interval = data.wateringInterval || 7;
+  if (Number.isNaN(lastWatered.getTime())) {
+    throw new Error("Invalid last watered date");
+  }
+
+  const interval = Number(data.wateringInterval) || 7;
   const nextWateringDate = new Date(lastWatered);
   nextWateringDate.setDate(nextWateringDate.getDate() + interval);
 
+  const name = typeof data.name === "string" ? data.name.trim() : String(data.name ?? "").trim();
+  if (!name) throw new Error("Plant name is required");
+
+  const imageDb = asDbString(data.image, MAX_PLANT_IMAGE_CHARS);
+  const careTipsDb = asDbString(data.careTips, MAX_PLANT_TIPS_CHARS);
+  const wateringTipsDb = asDbString(data.wateringTips, MAX_PLANT_TIPS_CHARS);
+
   return await prisma.userPlant.create({
     data: {
-      ...data,
       userId,
+      name,
+      type: (typeof data.type === "string" ? data.type.trim() : "") || "Unknown",
+      locationType: data.locationType ?? "Indoor",
+      lightExposure: data.lightExposure ?? "Bright Indirect",
+      potType: data.potType ?? "Plastic",
+      hasDrainage: data.hasDrainage ?? true,
       lastWatered,
       nextWateringDate,
-      wateringInterval: interval
-    }
+      wateringInterval: interval,
+      recentlyReplanted: data.recentlyReplanted ?? false,
+      health: data.health ?? "Excellent",
+      image: imageDb,
+      careTips: careTipsDb,
+      wateringTips: wateringTipsDb,
+    },
   });
 }
 

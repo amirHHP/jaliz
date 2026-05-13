@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Plant forms send base64 images via Server Actions; default ~1MB is too small.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
   rewrites: async () => {
     return [
       {
