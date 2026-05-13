@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Local npm metadata (never commit)
+.npm/
+
+# Accidental cache-like paths under the repo root
+Library/
+
+# Editor / backup artifacts
+*.bak
+
+# Local run logs
+dev.log
