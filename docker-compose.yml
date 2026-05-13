@@ -21,16 +21,19 @@ services:
       - "3000:3000"
     depends_on:
       - api
+    # Named volume: DB is writable for user nextjs (1001). Bind-mounting ./prisma broke writes (host perms).
     volumes:
-      - ./prisma:/app/prisma
+      - jaliz_data:/app/data
     environment:
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=file:/app/data/dev.db
       - API_URL=http://api:8000
       # Browsers ignore Secure cookies on http://. Use false for IP:port HTTP; set true behind HTTPS only.
       - COOKIE_SECURE=false
+    # --skip-generate avoids rewriting /app/node_modules/.prisma at startup (often root-owned from COPY).
     command: >
-      sh -c "npx prisma db push --accept-data-loss && node server.js"
+      sh -c "npx prisma db push --accept-data-loss --skip-generate && node server.js"
 
 volumes:
-  # We use bind mount for sqlite file to make it easily accessible on host
-  prisma_data:
+  jaliz_data:
+# Backup DB from the volume, e.g.:
+#   docker compose cp web:/app/data/dev.db ./dev.db.backup

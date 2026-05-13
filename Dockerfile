@@ -44,6 +44,9 @@ COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
 COPY --from=deps /app/node_modules/.bin ./node_modules/.bin
 
+# COPY leaves these owned by root; runtime `prisma db push` must not need to rewrite generated client as nextjs.
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/node_modules/.prisma /app/node_modules/@prisma /app/node_modules/prisma /app/node_modules/.bin /app/prisma /app/data
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
