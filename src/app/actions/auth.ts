@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import type { Prisma, User as PrismaUser } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { generateSalt, hashPassword, verifyPassword } from "@/lib/auth/password";
+import { useSecureSessionCookie } from "@/lib/auth/session-cookie";
 import { AdminCreateUserInput, AdminUpdateUserInput, RegisterInput, AuthError } from "@/lib/auth/types";
 import { UserRole } from "@/lib/auth/types";
 
@@ -90,7 +91,7 @@ export async function registerAction(input: RegisterInput) {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_KEY, user.id, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureSessionCookie(),
     sameSite: "lax",
     path: "/"
   });
@@ -112,7 +113,7 @@ export async function loginAction(emailInput: string, passwordInput: string) {
   const cookieStore = await cookies();
   cookieStore.set(SESSION_KEY, user.id, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: useSecureSessionCookie(),
     sameSite: "lax",
     path: "/"
   });

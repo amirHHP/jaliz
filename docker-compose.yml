@@ -26,6 +26,8 @@ services:
     environment:
       - DATABASE_URL=file:/app/prisma/dev.db
       - API_URL=http://api:8000
+      # Browsers ignore Secure cookies on http://. Use false for IP:port HTTP; set true behind HTTPS only.
+      - COOKIE_SECURE=false
     command: >
       sh -c "npx prisma db push --accept-data-loss && node server.js"
 
