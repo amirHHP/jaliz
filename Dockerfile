@@ -7,7 +7,13 @@ FROM base AS deps
 COPY package.json package-lock.json* ./
 # We need to copy prisma schema to generate client
 COPY prisma ./prisma
-RUN npm ci
+# Slow/unstable links to registry.npmjs.org often hit EIDLETIMEOUT; relax timeouts and retry.
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set fetch-retries 10 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && npm config set fetch-timeout 300000 \
+    && npm ci --no-audit --no-fund
 RUN npx prisma generate
 
 # Build Next.js
