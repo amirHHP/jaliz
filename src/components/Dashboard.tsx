@@ -20,7 +20,7 @@ export function Dashboard() {
   // welcome string for anonymous visitors (which the router shouldn't show
   // here, but we stay defensive).
   const firstName = user?.fullName?.trim().split(/\s+/)[0]
-  
+
   const [timeGreetingKey, setTimeGreetingKey] = useState<string>("morning_greeting")
 
   useEffect(() => {

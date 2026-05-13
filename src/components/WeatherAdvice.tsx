@@ -29,7 +29,7 @@ export function WeatherAdvice() {
   const fetchAdvice = async () => {
     setLoading(true)
     setError(null)
-    
+
     try {
       let userPlants: unknown[] = []
       const data = await getUserPlantsAction()
@@ -77,7 +77,7 @@ export function WeatherAdvice() {
         </div>
         <CardDescription className="text-slate-500">{t("weather_desc")}</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="pb-4 min-h-[120px] flex flex-col justify-center">
         {loading ? (
           <div className="flex flex-col items-center justify-center text-emerald-600 space-y-3 py-6">
@@ -99,11 +99,11 @@ export function WeatherAdvice() {
           <div className="h-4"></div>
         )}
       </CardContent>
-      
+
       <CardFooter className="bg-slate-50/50 pt-4 border-t border-slate-100">
-        <Button 
-          onClick={fetchAdvice} 
-          disabled={loading} 
+        <Button
+          onClick={fetchAdvice}
+          disabled={loading}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-200 shadow-sm hover:shadow active:scale-[0.98]"
         >
           {loading ? t("generating_btn") : t("generate_btn")}

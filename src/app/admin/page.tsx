@@ -81,7 +81,7 @@ export default function AdminPage() {
         if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon")
         if (config.apiKey) setAiApiKey(config.apiKey)
         if (config.model) setAiSelectedModel(config.model)
-        
+
         // Also check localStorage for cache
         const storedModels = localStorage.getItem("jaliz-models-cache")
         if (storedModels) {
@@ -97,7 +97,7 @@ export default function AdminPage() {
   const fetchAiModels = async (keyOverride?: string, providerOverride?: string) => {
     const key = keyOverride || aiApiKey.trim()
     const provider = providerOverride || aiProvider
-    
+
     if (!key) return
     setAiLoading(true)
     setAiError(null)
@@ -107,7 +107,7 @@ export default function AdminPage() {
       if (data.models && data.models.length > 0) {
         setAiModels(data.models)
         localStorage.setItem("jaliz-models-cache", JSON.stringify(data.models))
-        
+
         // Update selected model if current one is invalid or not set
         const currentModel = aiSelectedModel
         if (!currentModel || !data.models.find((m: {name:string}) => m.name === currentModel)) {
@@ -148,11 +148,11 @@ export default function AdminPage() {
       if (aiSelectedModel) {
         await setGlobalSetting("ai-model", aiSelectedModel)
       }
-      
+
       // Keep in localStorage for client-side fallback/cache if needed
       localStorage.setItem("jaliz-api-key", aiApiKey.trim())
       if (aiSelectedModel) localStorage.setItem("jaliz-model", aiSelectedModel)
-      
+
       setAiSaved(true)
       setTimeout(() => setAiSaved(false), 3000)
     } catch (err) {
@@ -401,7 +401,7 @@ export default function AdminPage() {
                   {t("admin_ai_select_model")}
                   <span className="text-[10px] text-slate-400 font-normal">{aiModels.length} models</span>
                 </label>
-                
+
                 <div className="relative group">
                   <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                   <input

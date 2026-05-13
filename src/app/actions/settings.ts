@@ -31,10 +31,10 @@ export async function getAiConfig() {
   const provider = await getGlobalSetting("ai-provider") || "gemini";
   const apiKey = await getGlobalSetting("ai-api-key");
   const model = await getGlobalSetting("ai-model");
-  
+
   // Fallback to old gemini-specific keys for backwards compatibility
   const legacyApiKey = apiKey || await getGlobalSetting("gemini-api-key");
   const legacyModel = model || await getGlobalSetting("gemini-model");
-  
+
   return { provider, apiKey: legacyApiKey, model: legacyModel };
 }

@@ -594,7 +594,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("jaliz-lang", language)
     document.documentElement.dir = language === "fa" ? "rtl" : "ltr"
     document.documentElement.lang = language
-    
+
     if (language === "fa") {
       document.body.style.fontFamily = "var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif"
       document.documentElement.style.setProperty("--font-sans", "var(--font-vazirmatn)")

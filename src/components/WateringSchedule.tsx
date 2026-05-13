@@ -45,7 +45,7 @@ export function WateringSchedule() {
           image: r.image ?? undefined,
         })))
       }
-      
+
       const logData = await getWateringLogAction(today)
       setIsDone(!!logData)
     } catch (e) {

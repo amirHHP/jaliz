@@ -61,7 +61,7 @@ export async function updatePlantsLastWateredAction(plantIds: string[], dateStr:
 
     await prisma.userPlant.update({
       where: { id: plant.id },
-      data: { 
+      data: {
         lastWatered,
         nextWateringDate
       }
@@ -111,7 +111,7 @@ export async function updateUserPlantAction(plantId: string, data: any) {
     if (existing) {
       const lastWatered = data.lastWatered ? new Date(data.lastWatered) : existing.lastWatered ? new Date(existing.lastWatered) : new Date();
       const interval = data.wateringInterval !== undefined ? data.wateringInterval : existing.wateringInterval || 7;
-      
+
       const nextDate = new Date(lastWatered);
       nextDate.setDate(nextDate.getDate() + (Number(interval) || 7));
       data.nextWateringDate = nextDate;

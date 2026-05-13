@@ -20,7 +20,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   useEffect(() => {
     if (isOpen) {
       const storedLocation = localStorage.getItem("jaliz-location") || ""
-      
+
       setLocation(storedLocation)
       setSaved(false)
     }
@@ -32,7 +32,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     } else {
       localStorage.removeItem("jaliz-location")
     }
-    
+
     setSaved(true)
     setTimeout(() => {
       onClose()
@@ -53,7 +53,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <X className="h-5 w-5" />
           </Button>
         </CardHeader>
-        
+
         <CardContent className="pt-6 space-y-5 overflow-y-auto">
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-800 mb-3">{t("user_location_title")}</h3>
@@ -61,7 +61,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <MapPin className="h-4 w-4 text-emerald-600" />
               {t("user_location_label")}
             </label>
-            <input 
+            <input
               type="text"
               value={location}
               onChange={(e) => {
@@ -73,7 +73,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             />
           </div>
         </CardContent>
-        
+
         <CardFooter className="bg-slate-50/50 border-t border-slate-100 pt-4 pb-4 flex justify-between items-center shrink-0">
           <div>
             {saved && (
@@ -83,8 +83,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </span>
             )}
           </div>
-          <Button 
-            onClick={handleSave} 
+          <Button
+            onClick={handleSave}
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {t("save_settings")}

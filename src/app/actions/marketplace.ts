@@ -45,7 +45,7 @@ export async function getMarketplaceMessagesAction() {
     where: { participants: { some: { userId } } },
     select: { id: true }
   });
-  
+
   const conversationIds = conversations.map(c => c.id);
 
   const messages = await prisma.marketplaceMessage.findMany({
@@ -54,7 +54,7 @@ export async function getMarketplaceMessagesAction() {
     },
     orderBy: { createdAt: 'asc' }
   });
-  
+
   return messages;
 }
 
@@ -187,13 +187,13 @@ export async function sendMessageAction(conversationId: string, body: string) {
   const senderId = await getSessionUserId();
   if (!senderId) throw new MarketplaceError("FORBIDDEN");
 
-  const conversation = await prisma.marketplaceConversation.findUnique({ 
+  const conversation = await prisma.marketplaceConversation.findUnique({
     where: { id: conversationId },
     include: { participants: true }
   });
-  
+
   if (!conversation) throw new MarketplaceError("NOT_FOUND");
-  
+
   const participantIds = conversation.participants.map(p => p.userId);
   if (!participantIds.includes(senderId)) throw new MarketplaceError("FORBIDDEN");
 

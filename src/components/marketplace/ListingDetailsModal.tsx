@@ -432,7 +432,7 @@ function ChatPanel({
           value={draft}
           onChange={(e) => onDraftChange(e.target.value)}
           placeholder={t("mp_chat_input_ph" as never)}
-          className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 caret-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
         <Button
           type="submit"

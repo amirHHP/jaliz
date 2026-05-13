@@ -81,17 +81,17 @@ export async function fetchModelsAction(api_key: string, provider?: string) {
     if (!response.ok) {
       let errorMessage = "Failed to fetch models";
       const contentType = response.headers.get("content-type");
-      
+
       if (contentType && contentType.includes("application/json")) {
         const err = await response.json();
-        errorMessage = typeof err.detail === 'object' 
-          ? JSON.stringify(err.detail) 
+        errorMessage = typeof err.detail === 'object'
+          ? JSON.stringify(err.detail)
           : (err.detail || errorMessage);
       } else {
         const text = await response.text();
         errorMessage = text || `Server error (${response.status})`;
       }
-      
+
       throw new Error(errorMessage);
     }
 

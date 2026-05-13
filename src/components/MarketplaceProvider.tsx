@@ -34,7 +34,7 @@ const MarketplaceContext = createContext<MarketplaceContextValue | undefined>(un
 export function MarketplaceProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false)
   const [revision, setRevision] = useState(0)
-  
+
   const [listings, setListings] = useState<Listing[]>([])
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [messages, setMessages] = useState<Message[]>([])

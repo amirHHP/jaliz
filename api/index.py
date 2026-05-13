@@ -97,7 +97,7 @@ def list_models(request: ModelsRequest):
                 "outputTokenLimit": 4096
             }
         ]
-        
+
         # Try to fetch actual models from the Sotoon API
         try:
             resp = requests.get(
@@ -128,7 +128,7 @@ def list_models(request: ModelsRequest):
             raise
         except Exception as e:
             print(f"Network error fetching Sotoon models: {e}")
-        
+
         # Fallback to static list only on network errors or unexpected responses
         return {"models": models}
     else:
@@ -183,9 +183,9 @@ def analyze_plant(request: PlantAnalysisRequest):
         api_key = request.api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise HTTPException(status_code=400, detail="API key is required")
-        
+
         language_name = "Persian (Farsi)" if request.language == "fa" else "English"
-        
+
         prompt = f"""
         You are an expert botanist and plant care assistant.
         Identify the plant provided either by its image or its name: "{request.name if request.name else 'Unknown'}".
@@ -201,13 +201,13 @@ def analyze_plant(request: PlantAnalysisRequest):
             "wateringTips": "Provide a detailed and comprehensive paragraph explaining the specific watering schedule and techniques for this plant. Must be written in {language_name}."
         }}
         """
-        
+
         if request.provider == "sotoon":
             # Use OpenAI-compatible API (Sotoon)
             import requests as req
-            
+
             messages = [{"role": "user", "content": prompt}]
-            
+
             # Note: Sotoon API may not support image input for all models
             if request.image and not request.image.startswith("data:"):
                 pass  # Skip image for non-vision models
@@ -216,7 +216,7 @@ def analyze_plant(request: PlantAnalysisRequest):
                     {"type": "text", "text": prompt},
                     {"type": "image_url", "image_url": {"url": request.image}}
                 ]}]
-            
+
             model_name = request.model_name or "gpt-4o"
             resp = req.post(
                 f"{SOTOON_BASE_URL}/chat/completions",
@@ -231,14 +231,14 @@ def analyze_plant(request: PlantAnalysisRequest):
                 },
                 timeout=60
             )
-            
+
             if resp.status_code != 200:
                 err_text = resp.text
                 if "egress-proxy" in err_text or "OpenrouterException" in err_text:
                     friendly_msg = "Sotoon API is currently having connectivity issues with this model. Please try a different model (e.g., ibm-granite or gpt-4o) or try again later."
                     raise HTTPException(status_code=resp.status_code, detail=friendly_msg)
                 raise HTTPException(status_code=resp.status_code, detail=f"Sotoon API error: {err_text}")
-            
+
             result_data = resp.json()
             text = result_data["choices"][0]["message"]["content"]
         else:
@@ -246,9 +246,9 @@ def analyze_plant(request: PlantAnalysisRequest):
             genai.configure(api_key=api_key)
             model_name = request.model_name or "gemini-1.5-pro"
             model = genai.GenerativeModel(model_name)
-            
+
             contents = [prompt]
-            
+
             if request.image:
                 if "," in request.image:
                     header, encoded = request.image.split(",", 1)
@@ -256,25 +256,25 @@ def analyze_plant(request: PlantAnalysisRequest):
                 else:
                     encoded = request.image
                     mime_type = "image/jpeg"
-                    
+
                 image_data = base64.b64decode(encoded)
                 contents.append({
                     "mime_type": mime_type,
                     "data": image_data
                 })
-                
+
             response = model.generate_content(contents)
             text = response.text
-        
+
         match = re.search(r'```(?:json)?\n?(.*?)\n?```', text, re.DOTALL)
         if match:
             json_str = match.group(1).strip()
         else:
             json_str = text.strip()
-            
+
         result = json.loads(json_str)
         return result
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

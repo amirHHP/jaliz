@@ -22,7 +22,7 @@ class WeatherAgent:
                     {"main": {"temp": 8.5}, "weather": [{"description": "clear sky"}]},
                 ]
             }
-        
+
         url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={self.weather_api_key}&units=metric"
         response = requests.get(url)
         if response.status_code == 200:
@@ -53,7 +53,7 @@ class WeatherAgent:
             )
 
         weather_data = self.fetch_weather(lat, lon)
-        
+
         if "error" in weather_data:
             weather_summary = "Weather data currently unavailable."
         else:
@@ -64,7 +64,7 @@ class WeatherAgent:
             min_temp = min(temps) if temps else "Unknown"
             max_temp = max(temps) if temps else "Unknown"
             weather_desc = forecasts[0]['weather'][0]['description'] if forecasts else "Unknown"
-            
+
             weather_summary = f"Expect {weather_desc}. Temperatures will range from {min_temp}°C to {max_temp}°C over the next 48 hours."
             if userLocation:
                 weather_summary += f" The user's location is '{userLocation}'."
@@ -80,15 +80,15 @@ class WeatherAgent:
             if p.get('recentlyReplanted', False):
                 details.append("WARNING: Recently Replanted (High Stress Risk)")
             plant_details.append(" - " + ", ".join(details))
-            
+
         plant_list_str = "\n".join(plant_details)
-        
+
         lang_instruction = "IMPORTANT: You must write the final advice entirely in Persian (Farsi)." if language == "fa" else "Write the advice in English."
 
         prompt = PromptTemplate(
             input_variables=["weather", "plants", "lang_instruction"],
             template="""You are an expert, hyper-local gardening AI agent.
-            
+
 Weather Forecast (Next 48h): {weather}
 
 User's Plants:
@@ -109,7 +109,7 @@ If the weather poses no threat, provide brief positive encouragement.
 
 Actionable Advice:"""
         )
-        
+
         try:
             chain = prompt | llm
             result = chain.invoke({"weather": weather_summary, "plants": plant_list_str, "lang_instruction": lang_instruction})
@@ -125,5 +125,5 @@ Actionable Advice:"""
             content = " ".join([b.get("text", "") for b in content if isinstance(b, dict) and "text" in b])
         elif isinstance(content, dict):
             content = content.get("text", str(content))
-            
+
         return str(content)
