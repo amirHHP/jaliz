@@ -8,6 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react"
+import { unwrapAuthResult } from "@/lib/auth/server-action"
 import {
   AdminCreateUserInput,
   AdminUpdateUserInput,
@@ -83,14 +84,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const register = useCallback(async (input: RegisterInput): Promise<User> => {
-    const u = await registerAction(input)
+    const u = unwrapAuthResult(await registerAction(input))
     setUser(u)
     setStatus("authenticated")
     return u
   }, [])
 
   const login = useCallback(async (email: string, password: string): Promise<User> => {
-    const u = await loginAction(email, password)
+    const u = unwrapAuthResult(await loginAction(email, password))
     setUser(u)
     setStatus("authenticated")
     return u
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const updateMyProfile = useCallback(async (patch: UserProfilePatch): Promise<User> => {
-    const u = await updateMyProfileAction(patch)
+    const u = unwrapAuthResult(await updateMyProfileAction(patch))
     setUser(u)
     bump()
     return u
@@ -116,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUsers = useCallback(async () => {
     if (user?.role !== "admin") return
     try {
-      const list = await listUsersAction()
+      const list = unwrapAuthResult(await listUsersAction())
       setUsers(list)
       bump()
     } catch (err) {
@@ -127,14 +128,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const listUsers = useCallback(() => users, [users])
 
   const createUser = useCallback(async (input: AdminCreateUserInput): Promise<User> => {
-    const created = await createUserAction(input)
+    const created = unwrapAuthResult(await createUserAction(input))
     setUsers((prev) => [...prev, created])
     bump()
     return created
   }, [bump])
 
   const updateUser = useCallback(async (id: string, patch: AdminUpdateUserInput): Promise<User> => {
-    const updated = await updateUserAction(id, patch)
+    const updated = unwrapAuthResult(await updateUserAction(id, patch))
     setUsers((prev) => prev.map((u) => u.id === id ? updated : u))
     if (user?.id === id) setUser(updated)
     bump()
@@ -142,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, bump])
 
   const updateUserRole = useCallback(async (id: string, role: UserRole): Promise<User> => {
-    const updated = await updateUserRoleAction(id, role)
+    const updated = unwrapAuthResult(await updateUserRoleAction(id, role))
     setUsers((prev) => prev.map((u) => u.id === id ? updated : u))
     if (user?.id === id) setUser(updated)
     bump()
@@ -150,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, bump])
 
   const setUserActive = useCallback(async (id: string, isActive: boolean): Promise<User> => {
-    const updated = await setUserActiveAction(id, isActive)
+    const updated = unwrapAuthResult(await setUserActiveAction(id, isActive))
     setUsers((prev) => prev.map((u) => u.id === id ? updated : u))
     if (user?.id === id && !isActive) {
       setUser(null)
@@ -163,7 +164,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, bump])
 
   const deleteUser = useCallback(async (id: string): Promise<void> => {
-    await deleteUserAction(id)
+    unwrapAuthResult(await deleteUserAction(id))
     setUsers((prev) => prev.filter((u) => u.id !== id))
     if (user?.id === id) {
       setUser(null)
@@ -173,7 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, bump])
 
   const resetPassword = useCallback(async (id: string, newPassword: string): Promise<void> => {
-    await resetPasswordAction(id, newPassword)
+    unwrapAuthResult(await resetPasswordAction(id, newPassword))
     bump()
   }, [bump])
 

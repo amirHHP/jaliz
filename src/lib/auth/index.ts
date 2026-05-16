@@ -1,6 +1,7 @@
 export * from "./types"
 export * from "./password"
 export * from "./error-message"
+export * from "./server-action"
 export {
   LocalAuthService,
   InMemoryStore,

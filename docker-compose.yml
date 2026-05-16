@@ -18,22 +18,38 @@ services:
     container_name: jaliz_web
     restart: always
     ports:
-      - "3000:3000"
+      - "3000:3000" # پورت داخلی برای ارتباط با Nginx (پورت‌های 80 و 443 از اینجا حذف شدند)
     depends_on:
       - api
-    # Named volume: DB is writable for user nextjs (1001). Bind-mounting ./prisma broke writes (host perms).
     volumes:
-      - jaliz_data:/app/data
+      - ./prisma:/app/prisma
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
-      - DATABASE_URL=file:/app/data/dev.db
+      - DATABASE_URL=file:/app/prisma/dev.db
       - API_URL=http://api:8000
-      # Browsers ignore Secure cookies on http://. Use false for IP:port HTTP; set true behind HTTPS only.
-      - COOKIE_SECURE=false
-    # --skip-generate avoids rewriting /app/node_modules/.prisma at startup (often root-owned from COPY).
+      # تغییر به true چون اکنون پروژه پشت HTTPS و گواهینامه امنیتی قرار دارد
+      - COOKIE_SECURE=true
     command: >
-      sh -c "npx prisma db push --accept-data-loss --skip-generate && node server.js"
+      sh -c "npx prisma db push --accept-data-loss &&
+      touch /app/prisma/dev.db &&
+      chmod 664 /app/prisma/dev.db 2>/dev/null || true &&
+      node server.js"
+
+  nginx:
+    image: nginx:alpine
+    container_name: jaliz_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # ۱. متصل کردن فایلی که در مرحله قبل ساختیم به مسیر کانفیگ پیش‌فرض Nginx در داکر
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # ۲. متصل کردن پوشه سرتیفیکیت‌های سرور لینوکس به داخل داکر
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - web
+    restart: always
 
 volumes:
-  jaliz_data:
-# Backup DB from the volume, e.g.:
-#   docker compose cp web:/app/data/dev.db ./dev.db.backup
+  # لایه ریلیشنال دیتابیس sqlite شما
+  prisma_data:

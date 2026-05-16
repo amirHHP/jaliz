@@ -14,6 +14,7 @@ RUN --mount=type=cache,target=/root/.npm \
     && npm config set fetch-retry-maxtimeout 120000 \
     && npm config set fetch-timeout 300000 \
     && npm ci --no-audit --no-fund
+ENV DATABASE_URL=file:/app/prisma/dev.db
 RUN npx prisma generate
 
 # Build Next.js
@@ -21,6 +22,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL=file:/app/prisma/dev.db
 # Supabase environment variables were needed for build in Vercel but we removed them
 # Now Prisma needs DATABASE_URL for some build checks? Usually not for `next build` if not executed at build time.
 RUN npm run build
@@ -29,6 +31,7 @@ RUN npm run build
 FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL=file:/app/prisma/dev.db
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

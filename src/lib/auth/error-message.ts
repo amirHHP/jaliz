@@ -1,3 +1,4 @@
+import { isAuthActionError } from "./server-action"
 import { AuthError, AuthErrorCode } from "./types"
 
 const TRANSLATION_KEY_BY_CODE: Record<AuthErrorCode, string> = {
@@ -16,6 +17,9 @@ const TRANSLATION_KEY_BY_CODE: Record<AuthErrorCode, string> = {
 export function authErrorTranslationKey(err: unknown): string {
   if (err instanceof AuthError) {
     return TRANSLATION_KEY_BY_CODE[err.code] ?? "auth_error_generic"
+  }
+  if (isAuthActionError(err)) {
+    return TRANSLATION_KEY_BY_CODE[err.__authError] ?? "auth_error_generic"
   }
   return "auth_error_generic"
 }
