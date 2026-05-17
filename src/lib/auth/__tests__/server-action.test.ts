@@ -26,6 +26,16 @@ describe("runAuthAction", () => {
       }),
     ).rejects.toThrow("db down")
   })
+
+  it("maps readonly sqlite errors to GENERIC", async () => {
+    const result = await runAuthAction(async () => {
+      throw new Error("attempt to write a readonly database")
+    })
+    expect(isAuthActionError(result)).toBe(true)
+    if (isAuthActionError(result)) {
+      expect(result.__authError).toBe("GENERIC")
+    }
+  })
 })
 
 describe("unwrapAuthResult", () => {

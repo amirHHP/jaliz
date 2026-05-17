@@ -19,12 +19,21 @@ export function unwrapAuthResult<T>(result: AuthActionResult<T>): T {
   return result
 }
 
+function isReadonlyDatabaseError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err)
+  return message.includes("readonly database") || message.includes("read-only database")
+}
+
 export async function runAuthAction<T>(fn: () => Promise<T>): Promise<AuthActionResult<T>> {
   try {
     return await fn()
   } catch (err) {
     if (err instanceof AuthError) {
       return { __authError: err.code }
+    }
+    if (isReadonlyDatabaseError(err)) {
+      console.error("Database is not writable:", err)
+      return { __authError: "GENERIC" }
     }
     console.error("Unexpected auth action error:", err)
     throw err

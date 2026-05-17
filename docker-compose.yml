@@ -16,24 +16,24 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: jaliz_web
+    # Entrypoint runs as root to chown /app/data, then drops to nextjs for Node.
+    user: "0:0"
     restart: always
     ports:
       - "3000:3000" # پورت داخلی برای ارتباط با Nginx (پورت‌های 80 و 443 از اینجا حذف شدند)
     depends_on:
       - api
     volumes:
-      - ./prisma:/app/prisma
+      # Writable SQLite store (owned by nextjs via entrypoint). Do NOT bind-mount ./prisma here.
+      - jaliz_data:/app/data
+      # Read-only: copy legacy dev.db into /app/data on first boot if present.
+      - ./prisma:/migration/prisma:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=file:/app/data/dev.db
       - API_URL=http://api:8000
       # تغییر به true چون اکنون پروژه پشت HTTPS و گواهینامه امنیتی قرار دارد
       - COOKIE_SECURE=true
-    command: >
-      sh -c "npx prisma db push --accept-data-loss &&
-      touch /app/prisma/dev.db &&
-      chmod 664 /app/prisma/dev.db 2>/dev/null || true &&
-      node server.js"
 
   nginx:
     image: nginx:alpine
@@ -51,5 +51,4 @@ services:
     restart: always
 
 volumes:
-  # لایه ریلیشنال دیتابیس sqlite شما
-  prisma_data:
+  jaliz_data:
