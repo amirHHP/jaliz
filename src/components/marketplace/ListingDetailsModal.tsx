@@ -158,7 +158,7 @@ export function ListingDetailsModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
         {/* Hero image with close button */}
         <div className="relative h-56 bg-slate-100">
           {listing.image ? (
@@ -234,23 +234,23 @@ export function ListingDetailsModal({
           </div>
 
           {/* Owner row + meta ---------------------------------------- */}
-          <div className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3">
+          <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100/50 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0">
-                <User className="h-5 w-5 text-emerald-700" />
+              <div className="h-10 w-10 rounded-full bg-emerald-200 border-2 border-white flex items-center justify-center shrink-0 shadow-sm">
+                <User className="h-5 w-5 text-emerald-800" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-emerald-600/70 font-medium">
                   {t("mp_details_owner" as never)}
                 </p>
-                <p className="text-sm font-semibold text-slate-900 truncate">
+                <p className="text-sm font-bold text-emerald-950 truncate">
                   {ownerName}
                 </p>
               </div>
             </div>
-            <div className="text-end text-xs text-slate-400">
-              <p>{t("mp_details_posted_at" as never)}</p>
-              <p className="font-medium text-slate-600">
+            <div className="text-end text-xs text-emerald-700/60">
+              <p className="font-medium">{t("mp_details_posted_at" as never)}</p>
+              <p className="font-bold text-emerald-800">
                 {new Date(listing.createdAt).toLocaleDateString(
                   language === "fa" ? "fa-IR" : undefined,
                   { year: "numeric", month: "short", day: "numeric" },

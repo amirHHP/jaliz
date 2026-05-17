@@ -90,48 +90,51 @@ export function WateringSchedule() {
     }
   }
 
-  const titleStr = language === "fa" ? "برنامه آبیاری" : "Watering Schedule"
-  const noPlantsStr = language === "fa" ? "هیچ گیاهی برای آبیاری در امروز وجود ندارد." : "No plants to water today."
-  const doneToday = language === "fa" ? "کار امروز انجام شد!" : "Done for today!"
-  const markDoneBtn = language === "fa" ? "انجام شد" : "Mark as Done"
+  const titleStr = language === "fa" ? "زمان آبیاری گیاهان 💧" : "Watering Schedule"
+  const noPlantsStr = language === "fa" ? "تمامی گیاهان شما شاداب و بی‌نیاز از آبیاری هستند. 🌿" : "No plants to water today."
+  const doneToday = language === "fa" ? "عالی بود! گیاهان شما امروز طراوت تازه‌ای گرفتند. ✨" : "Done for today!"
+  const markDoneBtn = language === "fa" ? "آبیاری انجام شد" : "Mark as Done"
 
   return (
-    <div className="bg-slate-900 text-white rounded-xl p-6 relative overflow-hidden shadow-lg border border-slate-800">
-      <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-600/30 blur-2xl" />
+    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-950 rounded-3xl p-6 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-100/50">
+      <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-200/40 blur-2xl" />
+      <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 rounded-full bg-teal-200/30 blur-2xl" />
       <div className="flex justify-between items-start mb-5 relative z-10">
         <div>
-          <h3 className="font-semibold text-lg text-emerald-50 flex items-center gap-2">
-            <Droplets className="w-5 h-5 text-emerald-400" />
+          <h3 className="font-bold text-xl text-emerald-800 flex items-center gap-2">
+            <div className="bg-emerald-100 p-2 rounded-2xl">
+              <Droplets className="w-6 h-6 text-emerald-600" />
+            </div>
             {titleStr}
           </h3>
-          <p className="text-slate-300 text-sm mt-1">
+          <p className="text-emerald-700/80 text-sm mt-2 font-medium">
             {isDone ? doneToday : plantsToWater.length > 0
-              ? (language === "fa" ? `${plantsToWater.length} گیاه امروز به آب نیاز دارند.` : `${plantsToWater.length} plants need water today.`)
+              ? (language === "fa" ? `امروز ${plantsToWater.length} گیاه نیاز به توجه و آبیاری دارند.` : `${plantsToWater.length} plants need water today.`)
               : noPlantsStr}
           </p>
         </div>
         {plantsToWater.length > 0 && !isDone && (
-          <button onClick={handleMarkAllDone} className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-3 py-1.5 rounded-lg transition-colors font-medium shadow-sm">
-            <Check className="w-4 h-4" />
+          <button onClick={handleMarkAllDone} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-sm px-4 py-2.5 rounded-2xl transition-all font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5">
+            <Check className="w-5 h-5" />
             {markDoneBtn}
           </button>
         )}
       </div>
-      <div className="space-y-4 relative z-10">
+      <div className="space-y-5 relative z-10">
         {!isDone && plantsToWater.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium text-emerald-300">{language === "fa" ? "نیاز به آب:" : "Needs Water:"}</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-emerald-700">{language === "fa" ? "نیازمند رسیدگی:" : "Needs Water:"}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {plantsToWater.map((p) => (
-                <div key={p.id} className="bg-slate-800/80 border border-slate-700 p-2.5 rounded-lg flex items-center gap-3">
+                <div key={p.id} className="bg-white/80 backdrop-blur-sm border border-emerald-100/50 p-3 rounded-2xl flex items-center gap-3 shadow-sm hover:shadow-md transition-shadow">
                   {p.image ? (
-                    <img src={p.image} alt={p.name} className="w-10 h-10 rounded-md object-cover" />
+                    <img src={p.image} alt={p.name} className="w-12 h-12 rounded-xl object-cover ring-2 ring-emerald-50" />
                   ) : (
-                    <div className="w-10 h-10 rounded-md bg-slate-700 flex items-center justify-center text-slate-400 text-xs font-bold uppercase">{p.name.substring(0, 2)}</div>
+                    <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-sm font-black uppercase shadow-inner">{p.name.substring(0, 2)}</div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate text-slate-100">{p.name}</div>
-                    <div className="text-xs text-slate-400 truncate">{p.locationType} • {p.potType}</div>
+                    <div className="font-bold text-sm truncate text-emerald-900">{p.name}</div>
+                    <div className="text-xs text-emerald-600/70 truncate mt-0.5 font-medium">{p.locationType} • {p.potType}</div>
                   </div>
                 </div>
               ))}
@@ -139,12 +142,12 @@ export function WateringSchedule() {
           </div>
         )}
         {plantsSkip.length > 0 && (
-          <div className="space-y-2 pt-2 border-t border-slate-800/50">
-            <h4 className="text-sm font-medium text-slate-400">{language === "fa" ? "نیاز ندارد:" : "Skip:"}</h4>
+          <div className="space-y-3 pt-4 border-t border-emerald-200/50">
+            <h4 className="text-sm font-bold text-emerald-600/70">{language === "fa" ? "شاداب و بی‌نیاز:" : "Skip:"}</h4>
             <div className="flex flex-wrap gap-2">
               {plantsSkip.map((p) => (
-                <div key={p.id} className="bg-slate-800/40 border border-slate-700/50 px-2.5 py-1.5 rounded-lg text-xs text-slate-300 flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                <div key={p.id} className="bg-white/50 border border-emerald-100 px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 flex items-center gap-2 shadow-sm">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400" />
                   {p.name}
                 </div>
               ))}

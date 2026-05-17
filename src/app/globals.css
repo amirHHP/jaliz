@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
+  --background: #fcfaf8; /* cute soft cream */
+  --foreground: #2d3748; /* softer dark grey */
 }
 
 @theme inline {
