@@ -23,14 +23,14 @@ import { Settings as SettingsIcon } from "lucide-react"
 
 interface NavLink {
   href: string
-  key: "dashboard" | "marketplace" | "my_plants" | "admin_panel"
+  key: "schedule" | "marketplace" | "my_plants" | "admin_panel"
   adminOnly?: boolean
 }
 
 const NAV_LINKS: NavLink[] = [
-  { href: "/", key: "dashboard" },
+  { href: "/", key: "my_plants" },
+  { href: "/schedule", key: "schedule" },
   { href: "/marketplace", key: "marketplace" },
-  { href: "/plants", key: "my_plants" },
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]
 

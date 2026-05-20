@@ -1,323 +1,175 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import {
-  ArrowRight,
-  CloudSun,
-  Languages,
-  Leaf,
-  LogIn,
-  ShoppingBag,
-  Sparkles,
-  Sprout,
-  UserPlus,
-} from "lucide-react"
-
-import { Header } from "@/components/Header"
+import { CloudSun, Sprout, UserPlus, LogIn, ChevronRight, ChevronLeft } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 
-/**
- * Marketing landing page shown to anonymous visitors. The dashboard at `/`
- * takes over once a user signs in.
- */
 export function LandingPage() {
   const { t, language } = useLanguage()
-  // Flip the directional arrow in RTL so it always points "forward".
-  const arrowClass = `h-4 w-4 ${language === "fa" ? "rotate-180" : ""}`
+  const [currentSlide, setCurrentSlide] = useState(0)
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-emerald-50 selection:bg-emerald-200 selection:text-emerald-900">
-      <Header />
-
-      {/* Hero ------------------------------------------------------------ */}
-      <section className="relative overflow-hidden">
-        {/* Decorative blurred blobs */}
-        <div className="pointer-events-none absolute -top-40 -end-40 h-80 w-80 rounded-full bg-emerald-200/60 blur-3xl" />
-        <div className="pointer-events-none absolute top-40 -start-32 h-72 w-72 rounded-full bg-emerald-300/40 blur-3xl" />
-
-        <div className="container relative mx-auto px-4 py-16 md:py-24 max-w-6xl">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-7 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">
-                <Sparkles className="h-3.5 w-3.5" />
-                {t("landing_hero_eyebrow")}
-              </span>
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-slate-900 leading-[1.1]">
-                {t("landing_hero_title")}
-              </h1>
-              <p className="text-lg md:text-xl text-slate-600 max-w-2xl">
-                {t("landing_hero_subtitle")}
-              </p>
-              <div className="flex flex-wrap items-center gap-3 pt-2">
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 text-sm font-semibold shadow-md hover:shadow-lg transition-all"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {t("landing_cta_primary")}
-                  <ArrowRight className={arrowClass} />
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 rounded-full bg-white hover:bg-slate-50 text-slate-800 px-5 py-3 text-sm font-semibold shadow-sm border border-slate-200 transition-colors"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {t("landing_cta_secondary")}
-                </Link>
-              </div>
-
-              <div className="pt-6">
-                <p className="text-xs font-medium uppercase tracking-wider text-slate-500 mb-3">
-                  {t("landing_trust_label")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {([
-                    "landing_trust_chip_1",
-                    "landing_trust_chip_2",
-                    "landing_trust_chip_3",
-                    "landing_trust_chip_4",
-                  ] as const).map((key) => (
-                    <span
-                      key={key}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 shadow-sm"
-                    >
-                      <Sprout className="h-3 w-3 text-emerald-600" />
-                      {t(key)}
-                    </span>
-                  ))}
-                </div>
-              </div>
+  const slides = [
+    {
+      id: "welcome",
+      content: (
+        <div className="flex flex-col items-center text-center px-6 w-full max-w-md mx-auto">
+          <img src="/hero-character.png" alt="Happy plant character" className="w-72 h-72 object-contain mb-8 drop-shadow-xl" />
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-4">{t("landing_hero_title")}</h1>
+          <p className="text-base text-slate-600 leading-relaxed">{t("landing_hero_subtitle")}</p>
+        </div>
+      )
+    },
+    {
+      id: "reminders",
+      content: (
+        <div className="flex flex-col items-center text-center px-6 w-full max-w-md mx-auto">
+          <div className="w-40 h-40 rounded-full bg-emerald-100 flex items-center justify-center mb-8 shadow-inner">
+            <CloudSun className="w-20 h-20 text-emerald-600" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-4">{t("landing_feature_1_title")}</h2>
+          <p className="text-base text-slate-600 leading-relaxed">{t("landing_feature_1_desc")}</p>
+        </div>
+      )
+    },
+    {
+      id: "progress",
+      content: (
+        <div className="flex flex-col items-center text-center px-6 w-full max-w-md mx-auto">
+          <div className="w-40 h-40 rounded-full bg-amber-100 flex items-center justify-center mb-8 shadow-inner">
+            <Sprout className="w-20 h-20 text-amber-600" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-4">{t("landing_feature_2_title")}</h2>
+          <p className="text-base text-slate-600 leading-relaxed">{t("landing_feature_2_desc")}</p>
+        </div>
+      )
+    },
+    {
+      id: "cta",
+      content: (
+        <div className="flex flex-col items-center text-center px-6 w-full max-w-md mx-auto">
+          <div className="w-full bg-white rounded-[2.5rem] border border-emerald-100 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.15)] p-8 mb-8">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 mx-auto flex items-center justify-center mb-6">
+              <Sprout className="w-8 h-8 text-emerald-600" />
             </div>
-
-            <div className="lg:col-span-5 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
-              <HeroPreviewCard />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features ------------------------------------------------------- */}
-      <section className="container mx-auto px-4 py-20 max-w-6xl">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">
-            {t("landing_features_eyebrow")}
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mt-4">
-            {t("landing_features_title")}
-          </h2>
-          <p className="text-slate-600 mt-3">
-            {t("landing_features_subtitle")}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <FeatureCard
-            icon={<CloudSun className="h-5 w-5" />}
-            tone="emerald"
-            title={t("landing_feature_1_title")}
-            desc={t("landing_feature_1_desc")}
-          />
-          <FeatureCard
-            icon={<Sprout className="h-5 w-5" />}
-            tone="lime"
-            title={t("landing_feature_2_title")}
-            desc={t("landing_feature_2_desc")}
-          />
-          <FeatureCard
-            icon={<ShoppingBag className="h-5 w-5" />}
-            tone="amber"
-            title={t("landing_feature_3_title")}
-            desc={t("landing_feature_3_desc")}
-          />
-          <FeatureCard
-            icon={<Languages className="h-5 w-5" />}
-            tone="sky"
-            title={t("landing_feature_4_title")}
-            desc={t("landing_feature_4_desc")}
-          />
-        </div>
-      </section>
-
-      {/* How it works --------------------------------------------------- */}
-      <section className="bg-slate-900 text-white relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-32 end-0 h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 start-0 h-72 w-72 rounded-full bg-emerald-700/20 blur-3xl" />
-        <div className="container relative mx-auto px-4 py-20 max-w-6xl">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-200 px-3 py-1 text-xs font-semibold">
-              {t("landing_how_eyebrow")}
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-4">
-              {t("landing_how_title")}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Step
-              number={1}
-              title={t("landing_step_1_title")}
-              desc={t("landing_step_1_desc")}
-            />
-            <Step
-              number={2}
-              title={t("landing_step_2_title")}
-              desc={t("landing_step_2_desc")}
-            />
-            <Step
-              number={3}
-              title={t("landing_step_3_title")}
-              desc={t("landing_step_3_desc")}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA ------------------------------------------------------ */}
-      <section className="container mx-auto px-4 py-20 max-w-5xl">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-10 md:p-14 shadow-xl">
-          <div className="pointer-events-none absolute -top-20 -end-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -start-20 h-64 w-64 rounded-full bg-emerald-300/20 blur-3xl" />
-          <div className="relative max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              {t("landing_final_cta_title")}
-            </h2>
-            <p className="text-emerald-50/90 text-lg mt-3">
-              {t("landing_final_cta_subtitle")}
-            </p>
-            <div className="mt-6">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 mb-3">{t("landing_final_cta_title")}</h2>
+            <p className="text-sm text-slate-600 mb-8 leading-relaxed">{t("landing_final_cta_subtitle")}</p>
+            <div className="flex flex-col gap-3">
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 rounded-full bg-white text-emerald-700 hover:bg-emerald-50 px-5 py-3 text-sm font-semibold shadow-md transition-colors"
+                className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-4 text-sm font-bold shadow-md transition-all w-full hover:scale-[1.02]"
               >
-                <UserPlus className="h-4 w-4" />
-                {t("landing_final_cta_button")}
-                <ArrowRight className={arrowClass} />
+                <UserPlus className="h-5 w-5" />
+                {t("landing_cta_primary")}
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex justify-center items-center gap-2 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 px-5 py-4 text-sm font-bold transition-all w-full hover:scale-[1.02]"
+              >
+                <LogIn className="h-5 w-5" />
+                {t("landing_cta_secondary")}
               </Link>
             </div>
           </div>
         </div>
-      </section>
+      )
+    }
+  ]
 
-      {/* Footer --------------------------------------------------------- */}
-      <footer className="border-t border-slate-200 bg-white">
-        <div className="container mx-auto px-4 py-8 max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-emerald-700">
-            <Leaf className="h-4 w-4 text-emerald-600" />
-            <span className="font-bold text-slate-900">{t("app_title")}</span>
-          </div>
-          <p className="text-xs text-slate-500">{t("landing_footer")}</p>
+  const totalSlides = slides.length
+  const isLastSlide = currentSlide === totalSlides - 1
+
+  const handleNext = () => {
+    if (!isLastSlide) setCurrentSlide(s => s + 1)
+  }
+
+  const handlePrev = () => {
+    if (currentSlide > 0) setCurrentSlide(s => s - 1)
+  }
+
+  const arrowRightIcon = language === "fa" ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />
+  const arrowLeftIcon = language === "fa" ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />
+
+  return (
+    <div className="h-[100dvh] w-full bg-gradient-to-b from-emerald-50 via-white to-emerald-50/50 overflow-hidden flex flex-col relative selection:bg-emerald-200 selection:text-emerald-900">
+      {/* Decorative blobs */}
+      <div className="pointer-events-none absolute -top-32 -end-32 h-96 w-96 rounded-full bg-lime-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 -start-32 h-96 w-96 rounded-full bg-teal-200/20 blur-3xl" />
+
+      {/* Top Header / Skip Button */}
+      <div className="flex-none p-6 flex justify-between items-center relative z-10">
+        <div className="flex items-center gap-2">
+           <div className="h-8 w-8 rounded-full bg-emerald-600 flex items-center justify-center text-white shadow-sm">
+             <Sprout className="w-4 h-4" />
+           </div>
+           <span className="font-bold text-slate-800 tracking-tight">{t("app_title")}</span>
         </div>
-      </footer>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-type FeatureTone = "emerald" | "amber" | "sky" | "lime"
-
-const TONE_CLASSES: Record<FeatureTone, { wrap: string; icon: string }> = {
-  emerald: { wrap: "bg-emerald-50", icon: "text-emerald-600" },
-  amber: { wrap: "bg-amber-50", icon: "text-amber-600" },
-  sky: { wrap: "bg-sky-50", icon: "text-sky-600" },
-  lime: { wrap: "bg-lime-50", icon: "text-lime-700" },
-}
-
-function FeatureCard({
-  icon,
-  title,
-  desc,
-  tone,
-}: {
-  icon: React.ReactNode
-  title: string
-  desc: string
-  tone: FeatureTone
-}) {
-  const palette = TONE_CLASSES[tone]
-  return (
-    <div className="group relative rounded-2xl bg-white border border-slate-200 p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-      <div
-        className={`inline-flex items-center justify-center h-10 w-10 rounded-xl ${palette.wrap} ${palette.icon}`}
-      >
-        {icon}
+        {!isLastSlide && (
+          <button 
+            onClick={() => setCurrentSlide(totalSlides - 1)}
+            className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full"
+          >
+            {language === "fa" ? "رد شدن" : "Skip"}
+          </button>
+        )}
       </div>
-      <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">{desc}</p>
-    </div>
-  )
-}
 
-function Step({
-  number,
-  title,
-  desc,
-}: {
-  number: number
-  title: string
-  desc: string
-}) {
-  return (
-    <div className="relative rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-sm">
-      <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-emerald-500 text-white font-bold text-lg shadow-lg">
-        {number}
-      </div>
-      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mt-1 text-sm text-slate-300 leading-relaxed">{desc}</p>
-    </div>
-  )
-}
-
-/**
- * Compact, decorative preview of the dashboard's signature feature
- * (AI-generated weather advice). Uses static copy from translations so the
- * preview reads naturally in both English and Persian.
- */
-function HeroPreviewCard() {
-  const { t } = useLanguage()
-  return (
-    <div className="relative">
-      <div className="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-emerald-200/60 via-emerald-100/40 to-transparent blur-2xl" />
-      <div className="relative rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
-        {/* Mock window chrome */}
-        <div className="flex items-center gap-1.5 px-4 py-3 bg-slate-50 border-b border-slate-100">
-          <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-        </div>
-
-        <div className="p-6 space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <CloudSun className="h-5 w-5 text-emerald-700" />
+      {/* Slide Content Area */}
+      <div className="flex-1 flex items-center justify-center relative z-10 w-full h-full">
+         <div className="w-full relative h-full flex items-center">
+            {slides.map((slide, idx) => (
+              <div 
+                key={slide.id} 
+                className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ease-out w-full
+                  ${idx === currentSlide ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none'}
+                  ${idx < currentSlide ? (language === 'fa' ? 'translate-x-12' : '-translate-x-12') : ''}
+                  ${idx > currentSlide ? (language === 'fa' ? '-translate-x-12' : 'translate-x-12') : ''}
+                `}
+              >
+                {slide.content}
               </div>
-              <h3 className="font-semibold text-slate-900">
-                {t("landing_hero_card_title")}
-              </h3>
-            </div>
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded">
-              <Sparkles className="h-3 w-3" />
-              {t("landing_hero_card_badge")}
-            </span>
-          </div>
+            ))}
+         </div>
+      </div>
 
-          <ul className="space-y-3">
-            <li className="flex gap-3 rounded-lg bg-slate-50 p-3">
-              <div className="mt-0.5 h-2 w-2 rounded-full bg-amber-400 shrink-0" />
-              <p className="text-sm text-slate-700 leading-relaxed">
-                {t("landing_hero_card_line1")}
-              </p>
-            </li>
-            <li className="flex gap-3 rounded-lg bg-slate-50 p-3">
-              <div className="mt-0.5 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
-              <p className="text-sm text-slate-700 leading-relaxed">
-                {t("landing_hero_card_line2")}
-              </p>
-            </li>
-          </ul>
+      {/* Bottom Controls */}
+      <div className="flex-none p-8 pb-12 flex flex-col gap-10 relative z-10">
+        {/* Pagination Dots */}
+        <div className="flex justify-center gap-2.5">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              className={`h-2.5 rounded-full transition-all duration-300 ${idx === currentSlide ? 'w-8 bg-emerald-600' : 'w-2.5 bg-emerald-200 hover:bg-emerald-300'}`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center min-h-[56px] px-2 max-w-md w-full mx-auto">
+          {currentSlide > 0 && !isLastSlide ? (
+            <button 
+              onClick={handlePrev}
+              className="w-14 h-14 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:scale-105 transition-all"
+            >
+              {arrowLeftIcon}
+            </button>
+          ) : (
+            <div className="w-14 h-14" /> // Spacer
+          )}
+
+          {!isLastSlide ? (
+            <button 
+              onClick={handleNext}
+              className="flex items-center justify-center gap-2 px-8 h-14 rounded-full bg-emerald-600 text-white font-bold text-lg shadow-lg hover:bg-emerald-700 hover:scale-105 transition-all shadow-emerald-600/20"
+            >
+              {language === "fa" ? "بعدی" : "Next"}
+              {arrowRightIcon}
+            </button>
+          ) : (
+            <div className="w-14 h-14" /> // Spacer
+          )}
         </div>
       </div>
     </div>

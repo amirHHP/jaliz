@@ -191,7 +191,7 @@ def analyze_plant(request: PlantAnalysisRequest):
         Identify the plant provided either by its image or its name: "{request.name if request.name else 'Unknown'}".
         Provide the following details in a JSON object exactly matching this structure, returning ONLY the JSON:
         {{
-            "name": "Scientific or common name of the plant",
+            "name": "Scientific or common name of the plant. IMPORTANT: If the user provided the name in a specific language (e.g., Persian), you MUST return the completed name in that EXACT same language.",
             "type": "e.g., Indoor Tropical, Outdoor Vegetable",
             "locationType": "Indoor" or "Outdoor",
             "lightExposure": "Low Light" or "Partial Shade" or "Bright Indirect" or "Full Sun",
