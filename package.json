@@ -14,7 +14,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^6.19.3",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "^2.105.4",
     "class-variance-authority": "^0.7.1",

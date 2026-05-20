@@ -2,12 +2,16 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { CloudSun, Sprout, UserPlus, LogIn, ChevronRight, ChevronLeft } from "lucide-react"
+import { CloudSun, Sprout, UserPlus, LogIn, ChevronRight, ChevronLeft, Globe } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 
 export function LandingPage() {
-  const { t, language } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const [currentSlide, setCurrentSlide] = useState(0)
+
+  const toggleLanguage = () => {
+    setLanguage(language === "en" ? "fa" : "en")
+  }
 
   const slides = [
     {
@@ -104,14 +108,23 @@ export function LandingPage() {
            </div>
            <span className="font-bold text-slate-800 tracking-tight">{t("app_title")}</span>
         </div>
-        {!isLastSlide && (
-          <button 
-            onClick={() => setCurrentSlide(totalSlides - 1)}
-            className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center justify-center h-8 w-8 rounded-full text-slate-500 hover:text-emerald-700 bg-white/30 hover:bg-white/60 backdrop-blur-sm transition-colors"
+            title={language === "en" ? "فارسی" : "English"}
           >
-            {language === "fa" ? "رد شدن" : "Skip"}
+            <Globe className="h-4 w-4" />
           </button>
-        )}
+          {!isLastSlide && (
+            <button 
+              onClick={() => setCurrentSlide(totalSlides - 1)}
+              className="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors px-3 py-1 bg-white/30 hover:bg-white/60 backdrop-blur-sm rounded-full"
+            >
+              {language === "fa" ? "رد شدن" : "Skip"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Slide Content Area */}
