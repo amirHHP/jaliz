@@ -10,7 +10,17 @@
  */
 
 import crypto from "node:crypto"
-import { PrismaClient } from "@prisma/client"
+import { execSync } from "node:child_process"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const prepareScript = path.join(__dirname, "prepare-db.js")
+
+// Run prepare-db to dynamically update schema.prisma and regenerate the Prisma client matching the environment
+execSync(`node "${prepareScript}"`, { stdio: "inherit" })
+
+const { PrismaClient } = await import("@prisma/client")
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 6
