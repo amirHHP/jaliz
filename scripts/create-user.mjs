@@ -11,14 +11,18 @@
 
 import crypto from "node:crypto"
 
-const dbUrl = (process.env.DATABASE_URL || "").trim()
+const dbUrl = (process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL || "").trim()
 let prisma
 
 if (dbUrl.startsWith("libsql://") || dbUrl.startsWith("https://")) {
   const { PrismaClient } = await import("@prisma/client")
-  const { PrismaLibSql } = await import("@prisma/adapter-libsql")
+  const { PrismaLibSQL } = await import("@prisma/adapter-libsql")
 
-  const adapter = new PrismaLibSql({
+  if (!process.env.DATABASE_URL) {
+    process.env.DATABASE_URL = dbUrl
+  }
+
+  const adapter = new PrismaLibSQL({
     url: dbUrl,
     authToken: process.env.TURSO_AUTH_TOKEN,
   })

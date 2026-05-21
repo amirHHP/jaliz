@@ -9,16 +9,16 @@
 import { execSync } from "node:child_process"
 import { createClient } from "@libsql/client"
 
-const dbUrl = (process.env.DATABASE_URL || "").trim()
+const dbUrl = (process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL || "").trim()
 const token = (process.env.TURSO_AUTH_TOKEN || "").trim()
 
 if (!dbUrl || !token) {
-  console.error("Error: DATABASE_URL and TURSO_AUTH_TOKEN environment variables must be set.")
+  console.error("Error: DATABASE_URL (or TURSO_DATABASE_URL) and TURSO_AUTH_TOKEN environment variables must be set.")
   process.exit(1)
 }
 
 if (!dbUrl.startsWith("libsql://") && !dbUrl.startsWith("https://")) {
-  console.error("Error: DATABASE_URL must start with libsql:// or https://")
+  console.error("Error: Database connection URL must start with libsql:// or https://")
   process.exit(1)
 }
 
