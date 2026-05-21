@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info, Loader2 } from "lucide-react"
@@ -8,10 +9,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
-import { getUserPlantsAction, createUserPlantAction, updateUserPlantAction, deleteUserPlantAction } from "@/app/actions/plants"
+import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction } from "@/app/actions/plants"
 import { analyzePlantAction } from "@/app/actions/ai"
 import { LandingPage } from "@/components/LandingPage"
-import { AddPlantWizard } from "@/components/AddPlantWizard"
 
 interface Plant {
   id: string
@@ -56,7 +56,6 @@ export default function MyPlantsPage() {
   const { user, status } = useAuth()
   const [plants, setPlants] = useState<Plant[]>([])
   const [loading, setLoading] = useState(true)
-  const [isAdding, setIsAdding] = useState(false)
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
 
   const fetchPlants = useCallback(async () => {
@@ -75,33 +74,6 @@ export default function MyPlantsPage() {
     if (status === "authenticated") fetchPlants()
     else if (status === "unauthenticated") setLoading(false)
   }, [status, fetchPlants])
-
-  const handleWizardSave = async (draft: any) => {
-    if (!user) return
-    try {
-      const data = await createUserPlantAction({
-        name: draft.name,
-        type: draft.type || "Unknown",
-        locationType: draft.locationType,
-        lightExposure: draft.lightExposure,
-        potType: draft.potType,
-        hasDrainage: draft.hasDrainage,
-        lastWatered: draft.lastWatered ? new Date(draft.lastWatered) : new Date(),
-        recentlyReplanted: draft.recentlyReplanted,
-        health: draft.health,
-        image: draft.image || null,
-        careTips: draft.careTips || null,
-        wateringTips: draft.wateringTips || null,
-        wateringInterval: draft.wateringInterval,
-      })
-      if (data) {
-        setPlants((prev) => [...prev, dbRowToPlant(data)])
-        setIsAdding(false)
-      }
-    } catch (e) {
-      console.error(e)
-    }
-  }
 
   const deletePlant = async (id: string) => {
     try {
@@ -162,17 +134,13 @@ export default function MyPlantsPage() {
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t("my_plants")}</h1>
             <span className="text-sm font-medium text-slate-500 bg-slate-100/80 px-2.5 py-0.5 rounded-full border border-slate-200/60">{plants.length}</span>
           </div>
-          {!isAdding && (
-            <Button onClick={() => setIsAdding(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-sm text-white">
+          <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-sm text-white">
+            <Link href="/plants/new">
               <Plus className="h-4 w-4" />
               {t("add_plant")}
-            </Button>
-          )}
+            </Link>
+          </Button>
         </div>
-
-        {isAdding && (
-          <AddPlantWizard onClose={() => setIsAdding(false)} onSave={handleWizardSave} />
-        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {loading ? (
@@ -184,9 +152,11 @@ export default function MyPlantsPage() {
               </div>
               <h3 className="text-2xl font-bold text-slate-800 mb-3">{t("no_plants_title" as any)}</h3>
               <p className="text-slate-500 max-w-md mb-8 text-lg">{t("no_plants_desc" as any)}</p>
-              <Button onClick={() => setIsAdding(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all px-6 py-6 text-base rounded-xl gap-2">
-                <Plus className="h-5 w-5" />
-                {t("no_plants_cta" as any)}
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all px-6 py-6 text-base rounded-xl gap-2">
+                <Link href="/plants/new">
+                  <Plus className="h-5 w-5" />
+                  {t("no_plants_cta" as any)}
+                </Link>
               </Button>
             </div>
           ) : (
