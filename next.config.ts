@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  serverExternalPackages: ["@prisma/adapter-libsql", "@libsql/client", "libsql"],
   // Plant forms send base64 images via Server Actions; default ~1MB is too small.
   experimental: {
     serverActions: {

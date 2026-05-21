@@ -8,7 +8,8 @@
  * abstraction lets us do that without touching the UI.
  */
 
-import crypto from "node:crypto"
+// Dynamically resolve node:crypto only on server to prevent bundler errors
+const nodeCrypto = typeof window === "undefined" ? require("crypto") : null
 
 const SUBTLE_ALGORITHM = "SHA-256"
 const SALT_BYTE_LENGTH = 16
@@ -17,8 +18,8 @@ function getSubtleCrypto(): SubtleCrypto {
   if (typeof globalThis !== "undefined" && globalThis.crypto?.subtle) {
     return globalThis.crypto.subtle
   }
-  if (crypto && crypto.webcrypto?.subtle) {
-    return crypto.webcrypto.subtle as SubtleCrypto
+  if (nodeCrypto && nodeCrypto.webcrypto?.subtle) {
+    return nodeCrypto.webcrypto.subtle as SubtleCrypto
   }
   throw new Error("WebCrypto SubtleCrypto API is not available in this environment")
 }
@@ -36,10 +37,12 @@ export function generateSalt(byteLength: number = SALT_BYTE_LENGTH): string {
   const bytes = new Uint8Array(byteLength)
   if (typeof globalThis !== "undefined" && globalThis.crypto?.getRandomValues) {
     globalThis.crypto.getRandomValues(bytes)
-  } else if (crypto && crypto.webcrypto?.getRandomValues) {
-    crypto.webcrypto.getRandomValues(bytes)
+  } else if (nodeCrypto && nodeCrypto.webcrypto?.getRandomValues) {
+    nodeCrypto.webcrypto.getRandomValues(bytes)
+  } else if (nodeCrypto) {
+    return nodeCrypto.randomBytes(byteLength).toString("hex")
   } else {
-    return crypto.randomBytes(byteLength).toString("hex")
+    throw new Error("No cryptographic source available for generateSalt")
   }
   return bytesToHex(bytes)
 }

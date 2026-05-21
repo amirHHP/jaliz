@@ -1,8 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Vazirmatn:wght@100..900&display=swap');
 @import "tailwindcss";
 
 :root {
   --background: #fcfaf8; /* cute soft cream */
   --foreground: #2d3748; /* softer dark grey */
+  --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-vazirmatn: "Vazirmatn", Tahoma, sans-serif;
 }
 
 @theme inline {

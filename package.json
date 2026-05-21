@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run dev:next\" \"npm run dev:py\"",
     "dev:next": "prisma generate && next dev",
     "dev:py": "cd api && ../.venv/bin/uvicorn index:app --reload --port 8000",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
