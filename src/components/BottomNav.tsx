@@ -11,11 +11,12 @@ export function BottomNav() {
   const { t } = useLanguage()
   const { status } = useAuth()
 
-  // Don't show bottom nav on auth pages, admin pages, or the unauthenticated landing page
+  // Don't show bottom nav on auth pages, admin pages, the new plant wizard page, or the unauthenticated landing page
   if (
     pathname === "/login" ||
     pathname === "/register" ||
     pathname?.startsWith("/admin") ||
+    pathname === "/plants/new" ||
     (pathname === "/" && status !== "authenticated")
   ) {
     return null
