@@ -1,6 +1,17 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaLibSql } from '@prisma/adapter-libsql'
 
 const prismaClientSingleton = () => {
+  const dbUrl = process.env.DATABASE_URL || ''
+
+  if (dbUrl.startsWith('libsql://') || dbUrl.startsWith('https://')) {
+    const adapter = new PrismaLibSql({
+      url: dbUrl,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    })
+    return new PrismaClient({ adapter })
+  }
+
   return new PrismaClient()
 }
 

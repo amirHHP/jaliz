@@ -10,17 +10,23 @@
  */
 
 import crypto from "node:crypto"
-import { execSync } from "node:child_process"
-import path from "node:path"
-import { fileURLToPath } from "node:url"
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const prepareScript = path.join(__dirname, "prepare-db.js")
+const dbUrl = (process.env.DATABASE_URL || "").trim()
+let prisma
 
-// Run prepare-db to dynamically update schema.prisma and regenerate the Prisma client matching the environment
-execSync(`node "${prepareScript}"`, { stdio: "inherit" })
+if (dbUrl.startsWith("libsql://") || dbUrl.startsWith("https://")) {
+  const { PrismaClient } = await import("@prisma/client")
+  const { PrismaLibSql } = await import("@prisma/adapter-libsql")
 
-const { PrismaClient } = await import("@prisma/client")
+  const adapter = new PrismaLibSql({
+    url: dbUrl,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  })
+  prisma = new PrismaClient({ adapter })
+} else {
+  const { PrismaClient } = await import("@prisma/client")
+  prisma = new PrismaClient()
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 6
@@ -57,8 +63,6 @@ if (!role) {
   console.error('Role must be "admin" or "user"')
   process.exit(1)
 }
-
-const prisma = new PrismaClient()
 
 try {
   const existing = await prisma.user.findUnique({ where: { email } })
