@@ -8,14 +8,19 @@
  * abstraction lets us do that without touching the UI.
  */
 
+import crypto from "node:crypto"
+
 const SUBTLE_ALGORITHM = "SHA-256"
 const SALT_BYTE_LENGTH = 16
 
 function getSubtleCrypto(): SubtleCrypto {
-  if (typeof globalThis === "undefined" || !globalThis.crypto?.subtle) {
-    throw new Error("WebCrypto SubtleCrypto API is not available in this environment")
+  if (typeof globalThis !== "undefined" && globalThis.crypto?.subtle) {
+    return globalThis.crypto.subtle
   }
-  return globalThis.crypto.subtle
+  if (crypto && crypto.webcrypto?.subtle) {
+    return crypto.webcrypto.subtle as SubtleCrypto
+  }
+  throw new Error("WebCrypto SubtleCrypto API is not available in this environment")
 }
 
 function bytesToHex(bytes: Uint8Array): string {
@@ -29,7 +34,13 @@ function bytesToHex(bytes: Uint8Array): string {
 /** Generate a fresh, cryptographically random salt as a hex string. */
 export function generateSalt(byteLength: number = SALT_BYTE_LENGTH): string {
   const bytes = new Uint8Array(byteLength)
-  globalThis.crypto.getRandomValues(bytes)
+  if (typeof globalThis !== "undefined" && globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes)
+  } else if (crypto && crypto.webcrypto?.getRandomValues) {
+    crypto.webcrypto.getRandomValues(bytes)
+  } else {
+    return crypto.randomBytes(byteLength).toString("hex")
+  }
   return bytesToHex(bytes)
 }
 
