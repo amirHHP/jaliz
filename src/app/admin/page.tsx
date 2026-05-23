@@ -31,7 +31,7 @@ import { useLanguage } from "@/components/LanguageProvider"
 import { Button } from "@/components/ui/button"
 import { authErrorTranslationKey } from "@/lib/auth"
 import type { AdminCreateUserInput, AdminUpdateUserInput, User, UserRole } from "@/lib/auth/types"
-import { getAiConfig, setGlobalSetting } from "@/app/actions/settings"
+import { getAiConfig, setGlobalSetting, getAllProviderKeys } from "@/app/actions/settings"
 import { fetchModelsAction } from "@/app/actions/ai"
 
 interface ResetTarget {
@@ -63,9 +63,13 @@ export default function AdminPage() {
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
 
-  // AI API key state
-  const [aiProvider, setAiProvider] = useState<"gemini" | "sotoon">("gemini")
-  const [aiApiKey, setAiApiKey] = useState("")
+  // AI API key state — separate keys per provider
+  const [aiProvider, setAiProvider] = useState<"gemini" | "sotoon" | "gapgpt">("gemini")
+  const [geminiApiKey, setGeminiApiKey] = useState("")
+  const [sotoonApiKey, setSotoonApiKey] = useState("")
+  const [gapgptApiKey, setGapgptApiKey] = useState("")
+  const aiApiKey = aiProvider === "gemini" ? geminiApiKey : aiProvider === "sotoon" ? sotoonApiKey : gapgptApiKey
+  const setAiApiKey = aiProvider === "gemini" ? setGeminiApiKey : aiProvider === "sotoon" ? setSotoonApiKey : setGapgptApiKey
   const [aiModels, setAiModels] = useState<{name: string; inputTokenLimit: number; outputTokenLimit: number}[]>([])
   const [aiSelectedModel, setAiSelectedModel] = useState("")
   const [aiModelSearch, setAiModelSearch] = useState("")
@@ -73,17 +77,32 @@ export default function AdminPage() {
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiSaved, setAiSaved] = useState(false)
 
-  // Load existing AI settings on mount
+  // Load existing AI settings on mount — per-provider keys
   useEffect(() => {
     async function loadConfig() {
       try {
         const config = await getAiConfig()
-        if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon")
-        if (config.apiKey) setAiApiKey(config.apiKey)
-        if (config.model) setAiSelectedModel(config.model)
+        const keys = await getAllProviderKeys()
+
+        if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon" | "gapgpt")
+
+        // Load each provider's key independently
+        if (keys.geminiKey) setGeminiApiKey(keys.geminiKey)
+        if (keys.sotoonKey) setSotoonApiKey(keys.sotoonKey)
+        if (keys.gapgptKey) setGapgptApiKey(keys.gapgptKey)
+
+        // Set selected model for current provider
+        if (config.provider === "sotoon" && keys.sotoonModel) {
+          setAiSelectedModel(keys.sotoonModel)
+        } else if (config.provider === "gapgpt" && keys.gapgptModel) {
+          setAiSelectedModel(keys.gapgptModel)
+        } else if (keys.geminiModel) {
+          setAiSelectedModel(keys.geminiModel)
+        }
 
         // Also check localStorage for cache
-        const storedModels = localStorage.getItem("jaliz-models-cache")
+        const cacheKey = `jaliz-models-cache-${config.provider || "gemini"}`
+        const storedModels = localStorage.getItem(cacheKey)
         if (storedModels) {
           try { setAiModels(JSON.parse(storedModels)) } catch {}
         }
@@ -106,7 +125,7 @@ export default function AdminPage() {
       const data = await fetchModelsAction(key, provider)
       if (data.models && data.models.length > 0) {
         setAiModels(data.models)
-        localStorage.setItem("jaliz-models-cache", JSON.stringify(data.models))
+        localStorage.setItem(`jaliz-models-cache-${provider}`, JSON.stringify(data.models))
 
         // Update selected model if current one is invalid or not set
         const currentModel = aiSelectedModel
@@ -128,12 +147,34 @@ export default function AdminPage() {
     }
   }
 
-  // Automatic fetch when provider or key changes (debounced-ish)
+  // When provider changes, load cached models and selected model for that provider
   useEffect(() => {
-    if (aiApiKey.trim() && aiApiKey.length > 10) {
+    const key = aiProvider === "gemini" ? geminiApiKey : aiProvider === "sotoon" ? sotoonApiKey : gapgptApiKey
+    setAiModels([])
+    setAiSelectedModel("")
+
+    // Restore cached models for this provider
+    const cacheKey = `jaliz-models-cache-${aiProvider}`
+    const storedModels = localStorage.getItem(cacheKey)
+    if (storedModels) {
+      try { setAiModels(JSON.parse(storedModels)) } catch {}
+    }
+
+    // Restore selected model for this provider
+    async function loadProviderModel() {
+      try {
+        const keys = await getAllProviderKeys()
+        const model = aiProvider === "gemini" ? keys.geminiModel : aiProvider === "sotoon" ? keys.sotoonModel : keys.gapgptModel
+        if (model) setAiSelectedModel(model)
+      } catch {}
+    }
+    loadProviderModel()
+
+    // Auto-fetch models if key is available
+    if (key && key.trim().length > 10) {
       const timer = setTimeout(() => {
-        fetchAiModels()
-      }, 1000)
+        fetchAiModels(key, aiProvider)
+      }, 500)
       return () => clearTimeout(timer)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,14 +185,11 @@ export default function AdminPage() {
     setAiLoading(true)
     try {
       await setGlobalSetting("ai-provider", aiProvider)
-      await setGlobalSetting("ai-api-key", aiApiKey.trim())
+      // Save key to provider-specific setting
+      await setGlobalSetting(`ai-api-key-${aiProvider}`, aiApiKey.trim())
       if (aiSelectedModel) {
-        await setGlobalSetting("ai-model", aiSelectedModel)
+        await setGlobalSetting(`ai-model-${aiProvider}`, aiSelectedModel)
       }
-
-      // Keep in localStorage for client-side fallback/cache if needed
-      localStorage.setItem("jaliz-api-key", aiApiKey.trim())
-      if (aiSelectedModel) localStorage.setItem("jaliz-model", aiSelectedModel)
 
       setAiSaved(true)
       setTimeout(() => setAiSaved(false), 3000)
@@ -329,18 +367,7 @@ export default function AdminPage() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => { setAiProvider("gemini"); setAiModels([]); setAiSelectedModel(""); setAiSaved(false) }}
-                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
-                    aiProvider === "gemini"
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
-                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  🔮 Google Gemini
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setAiProvider("sotoon"); setAiModels([]); setAiSelectedModel(""); setAiSaved(false) }}
+                  onClick={() => { setAiProvider("sotoon"); setAiSaved(false) }}
                   className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
                     aiProvider === "sotoon"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
@@ -349,9 +376,31 @@ export default function AdminPage() {
                 >
                   🇮🇷 {t("admin_ai_provider_sotoon")}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setAiProvider("gapgpt"); setAiSaved(false) }}
+                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                    aiProvider === "gapgpt"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  💬 {t("admin_ai_provider_gapgpt")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAiProvider("gemini"); setAiSaved(false) }}
+                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                    aiProvider === "gemini"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  🔮 Google Gemini
+                </button>
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
-                {aiProvider === "sotoon" ? t("admin_ai_provider_sotoon_hint") : t("admin_ai_provider_gemini_hint")}
+                {aiProvider === "sotoon" ? t("admin_ai_provider_sotoon_hint") : aiProvider === "gapgpt" ? t("admin_ai_provider_gapgpt_hint") : t("admin_ai_provider_gemini_hint")}
               </p>
             </div>
 
@@ -363,11 +412,12 @@ export default function AdminPage() {
               </label>
               <div className="flex gap-2">
                 <input
-                  type="password"
+                  type="text"
+                  dir="ltr"
                   value={aiApiKey}
                   onChange={(e) => { setAiApiKey(e.target.value); setAiSaved(false) }}
-                  placeholder={aiProvider === "sotoon" ? t("admin_ai_key_ph_sotoon") : t("admin_ai_key_ph")}
-                  className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                  placeholder={aiProvider === "gemini" ? t("admin_ai_key_ph") : aiProvider === "sotoon" ? t("admin_ai_key_ph_sotoon") : t("admin_ai_key_ph_gapgpt")}
+                  className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
                 <button
                   type="button"

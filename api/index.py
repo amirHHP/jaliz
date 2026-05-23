@@ -18,6 +18,7 @@ app = FastAPI()
 weather_agent = WeatherAgent()
 
 SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1"
+GAPGPT_BASE_URL = "https://api.gapgpt.app/v1"
 
 class PlantInfo(BaseModel):
     name: str
@@ -68,8 +69,10 @@ def health_check():
 
 @app.post("/api/models")
 def list_models(request: ModelsRequest):
-    if request.provider == "sotoon":
-        # Sotoon Intelligence API models (OpenAI-compatible)
+    if request.provider in ("sotoon", "gapgpt"):
+        base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
+        provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon Intelligence"
+        # OpenAI-compatible provider models
         models = [
             {
                 "name": "ibm-granite/granite-4.0-h-micro",
@@ -101,7 +104,7 @@ def list_models(request: ModelsRequest):
         # Try to fetch actual models from the Sotoon API
         try:
             resp = requests.get(
-                f"{SOTOON_BASE_URL}/models",
+                f"{base_url}/models",
                 headers={"Authorization": f"Bearer {request.api_key}"},
                 timeout=10
             )
@@ -120,20 +123,56 @@ def list_models(request: ModelsRequest):
                     if fetched:
                         return {"models": fetched}
             elif resp.status_code in [401, 403]:
-                raise HTTPException(status_code=resp.status_code, detail="Invalid API key for Sotoon Intelligence")
+                raise HTTPException(status_code=resp.status_code, detail=f"Invalid API key for {provider_label}")
             else:
                 # Other API errors, fall back to static list if needed but log it
                 print(f"Sotoon API returned status {resp.status_code}: {resp.text}")
         except HTTPException:
             raise
         except Exception as e:
-            print(f"Network error fetching Sotoon models: {e}")
+            print(f"Network error fetching {provider_label} models: {e}")
 
         # Fallback to static list only on network errors or unexpected responses
         return {"models": models}
     else:
-        # Gemini models (static list to avoid network issues in restricted regions)
+        # Gemini models — try dynamic fetch first, fall back to static list
+        try:
+            genai.configure(api_key=request.api_key)
+            models = []
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    models.append({
+                        "name": m.name,
+                        "inputTokenLimit": getattr(m, 'input_token_limit', 0),
+                        "outputTokenLimit": getattr(m, 'output_token_limit', 0)
+                    })
+            if models:
+                return {"models": models}
+        except Exception as e:
+            print(f"Failed to fetch Gemini models dynamically: {e}")
+
+        # Fallback: modern static list (updated 2025)
         models = [
+            {
+                "name": "models/gemini-2.5-pro-preview-05-06",
+                "inputTokenLimit": 1048576,
+                "outputTokenLimit": 65536
+            },
+            {
+                "name": "models/gemini-2.5-flash-preview-05-20",
+                "inputTokenLimit": 1048576,
+                "outputTokenLimit": 65536
+            },
+            {
+                "name": "models/gemini-2.0-flash",
+                "inputTokenLimit": 1048576,
+                "outputTokenLimit": 8192
+            },
+            {
+                "name": "models/gemini-2.0-flash-lite",
+                "inputTokenLimit": 1048576,
+                "outputTokenLimit": 8192
+            },
             {
                 "name": "models/gemini-1.5-pro",
                 "inputTokenLimit": 2097152,
@@ -143,16 +182,6 @@ def list_models(request: ModelsRequest):
                 "name": "models/gemini-1.5-flash",
                 "inputTokenLimit": 1048576,
                 "outputTokenLimit": 8192
-            },
-            {
-                "name": "models/gemini-1.5-flash-8b",
-                "inputTokenLimit": 1048576,
-                "outputTokenLimit": 8192
-            },
-            {
-                "name": "models/gemini-1.0-pro",
-                "inputTokenLimit": 30720,
-                "outputTokenLimit": 2048
             }
         ]
         return {"models": models}
@@ -202,13 +231,14 @@ def analyze_plant(request: PlantAnalysisRequest):
         }}
         """
 
-        if request.provider == "sotoon":
-            # Use OpenAI-compatible API (Sotoon)
+        if request.provider in ("sotoon", "gapgpt"):
+            # Use OpenAI-compatible API
             import requests as req
+            base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
+            provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon"
 
             messages = [{"role": "user", "content": prompt}]
 
-            # Note: Sotoon API may not support image input for all models
             if request.image and not request.image.startswith("data:"):
                 pass  # Skip image for non-vision models
             elif request.image:
@@ -219,7 +249,7 @@ def analyze_plant(request: PlantAnalysisRequest):
 
             model_name = request.model_name or "gpt-4o"
             resp = req.post(
-                f"{SOTOON_BASE_URL}/chat/completions",
+                f"{base_url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
@@ -235,9 +265,9 @@ def analyze_plant(request: PlantAnalysisRequest):
             if resp.status_code != 200:
                 err_text = resp.text
                 if "egress-proxy" in err_text or "OpenrouterException" in err_text:
-                    friendly_msg = "Sotoon API is currently having connectivity issues with this model. Please try a different model (e.g., ibm-granite or gpt-4o) or try again later."
+                    friendly_msg = f"{provider_label} API is currently having connectivity issues with this model. Please try a different model or try again later."
                     raise HTTPException(status_code=resp.status_code, detail=friendly_msg)
-                raise HTTPException(status_code=resp.status_code, detail=f"Sotoon API error: {err_text}")
+                raise HTTPException(status_code=resp.status_code, detail=f"{provider_label} API error: {err_text}")
 
             result_data = resp.json()
             text = result_data["choices"][0]["message"]["content"]
@@ -368,8 +398,9 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
                 contents.append({"mime_type": mime_type, "data": image_data})
             return contents
 
-        if request.provider == "sotoon":
+        if request.provider in ("sotoon", "gapgpt"):
             import requests as req
+            base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
 
             messages: list = []
             if request.image and request.image.startswith("data:"):
@@ -387,7 +418,7 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
 
             model_name = request.model_name or "gpt-4o"
             resp = req.post(
-                f"{SOTOON_BASE_URL}/chat/completions",
+                f"{base_url}/chat/completions",
                 headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
@@ -400,9 +431,10 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
                 timeout=90,
             )
             if resp.status_code != 200:
+                provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon"
                 raise HTTPException(
                     status_code=resp.status_code,
-                    detail=f"Sotoon API error: {resp.text}",
+                    detail=f"{provider_label} API error: {resp.text}",
                 )
             result_data = resp.json()
             text = result_data["choices"][0]["message"]["content"]

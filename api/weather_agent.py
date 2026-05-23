@@ -6,6 +6,7 @@ from langchain_core.prompts import PromptTemplate
 from typing import List, Dict
 
 SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1"
+GAPGPT_BASE_URL = "https://api.gapgpt.app/v1"
 
 class WeatherAgent:
     def __init__(self):
@@ -38,11 +39,12 @@ class WeatherAgent:
             return "🌱 Note: Please enter your API key in Settings to get expert advice."
 
         # Initialize the LLM based on provider
-        if provider == "sotoon":
+        if provider in ("sotoon", "gapgpt"):
+            base_url = GAPGPT_BASE_URL if provider == "gapgpt" else SOTOON_BASE_URL
             llm = ChatOpenAI(
                 model=model_name or "gpt-4o",
                 api_key=effective_key,
-                base_url=SOTOON_BASE_URL,
+                base_url=base_url,
                 temperature=0.7
             )
         else:

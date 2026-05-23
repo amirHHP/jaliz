@@ -10,7 +10,7 @@ services:
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
-
+      - HTTP_PROXY=${HTTP_PROXY}
   web:
     build:
       context: .

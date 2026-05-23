@@ -8,7 +8,7 @@ export async function analyzePlantAction(formData: { image?: string, name?: stri
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = formData.model_name || globalModel || (provider === "sotoon" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = formData.model_name || globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       throw new Error("API key is required. Please set it in admin settings.");
@@ -41,7 +41,7 @@ export async function getWeatherAdviceAction(data: { latitude: number, longitude
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = globalModel || (provider === "sotoon" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       throw new Error("API key is required. Please set it in admin settings.");
@@ -116,7 +116,7 @@ export async function getStatusAdviceAction(data: {
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = globalModel || (provider === "sotoon" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       throw new Error("API key is required. Please set it in admin settings.");
