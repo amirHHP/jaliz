@@ -139,19 +139,26 @@ def list_models(request: ModelsRequest):
         try:
             genai.configure(api_key=request.api_key)
             models = []
+            all_models_count = 0
             for m in genai.list_models():
-                if 'generateContent' in m.supported_generation_methods:
+                all_models_count += 1
+                methods = getattr(m, 'supported_generation_methods', [])
+                if 'generateContent' in methods:
                     models.append({
                         "name": m.name,
                         "inputTokenLimit": getattr(m, 'input_token_limit', 0),
                         "outputTokenLimit": getattr(m, 'output_token_limit', 0)
                     })
+            print(f"Gemini API returned {all_models_count} total models, {len(models)} with generateContent support")
             if models:
                 return {"models": models}
+            else:
+                print("No models with generateContent found, falling back to static list")
         except Exception as e:
             print(f"Failed to fetch Gemini models dynamically: {e}")
 
         # Fallback: modern static list (updated 2025)
+        print("Using static Gemini model list as fallback")
         models = [
             {
                 "name": "models/gemini-2.5-pro-preview-05-06",

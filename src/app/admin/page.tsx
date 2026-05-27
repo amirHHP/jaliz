@@ -123,6 +123,7 @@ export default function AdminPage() {
     setAiSaved(false)
     try {
       const data = await fetchModelsAction(key, provider)
+      console.log("[Admin] fetchModelsAction response:", JSON.stringify(data).slice(0, 500))
 
       if (data.error) {
         setAiError(data.error)
@@ -142,7 +143,8 @@ export default function AdminPage() {
           setAiSelectedModel(data.models[0].name)
         }
       } else {
-        setAiError("No compatible models found.")
+        console.warn("[Admin] No models in response. Keys present:", Object.keys(data))
+        setAiError(`No compatible models found. (Response keys: ${Object.keys(data).join(", ") || "none"})`)
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching models"
