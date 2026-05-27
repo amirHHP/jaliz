@@ -54,6 +54,9 @@ export function WeatherAdvice() {
         language: language,
         plants: userPlants
       })
+      if (responseData && responseData.error) {
+        throw new Error(responseData.error)
+      }
       setAdvice(typeof responseData.advice === "string" ? responseData.advice : JSON.stringify(responseData.advice))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred.")

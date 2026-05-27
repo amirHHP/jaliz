@@ -159,6 +159,10 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
         image: logImage || undefined,
       })
 
+      if (adviceData && adviceData.error) {
+        throw new Error(adviceData.error)
+      }
+
       const payload = adviceData as { advice?: string; health?: string }
       const resolvedHealth = normalizePlantHealth(
         payload.health ?? newLogHealth
@@ -252,6 +256,9 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
       const modelName = localStorage.getItem("jaliz-model") || "gemini-1.5-pro"
       const lang = localStorage.getItem("jaliz-lang") || "en"
       const data = await analyzePlantAction({ image, name, language: lang, model_name: modelName })
+      if (data && data.error) {
+        throw new Error(data.error)
+      }
       if (data.name) setName(data.name)
       if (data.type) setType(data.type)
       if (data.locationType) setLocationType(data.locationType)

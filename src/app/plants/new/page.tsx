@@ -93,6 +93,9 @@ export default function NewPlantPage() {
     setIsAnalyzing(true)
     try {
       const data = await analyzePlantAction({ image: draft.image, name: draft.name, language })
+      if (data && data.error) {
+        throw new Error(data.error)
+      }
       setDraft(prev => ({
         ...prev,
         name: data.name || prev.name,
@@ -106,7 +109,7 @@ export default function NewPlantPage() {
       }))
     } catch (error) {
       console.error("AI Error", error)
-      alert(language === "fa" ? "خطا در تحلیل هوش مصنوعی." : "Failed to analyze plant.")
+      alert(error instanceof Error ? error.message : (language === "fa" ? "خطا در تحلیل هوش مصنوعی." : "Failed to analyze plant."))
     } finally {
       setIsAnalyzing(false)
     }
