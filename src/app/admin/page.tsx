@@ -123,6 +123,15 @@ export default function AdminPage() {
     setAiSaved(false)
     try {
       const data = await fetchModelsAction(key, provider)
+
+      if (data.error) {
+        setAiError(data.error)
+        if (data.error.includes("401") || data.error.includes("key")) {
+          setAiModels([])
+        }
+        return
+      }
+
       if (data.models && data.models.length > 0) {
         setAiModels(data.models)
         localStorage.setItem(`jaliz-models-cache-${provider}`, JSON.stringify(data.models))
@@ -133,15 +142,11 @@ export default function AdminPage() {
           setAiSelectedModel(data.models[0].name)
         }
       } else {
-        throw new Error("No compatible models found.")
+        setAiError("No compatible models found.")
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error fetching models"
       setAiError(msg)
-      // Don't clear models if we have cached ones, unless it's a 401
-      if (msg.includes("401") || msg.includes("key")) {
-        setAiModels([])
-      }
     } finally {
       setAiLoading(false)
     }

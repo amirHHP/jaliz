@@ -70,7 +70,7 @@ export async function getWeatherAdviceAction(data: { latitude: number, longitude
   }
 }
 
-export async function fetchModelsAction(api_key: string, provider?: string) {
+export async function fetchModelsAction(api_key: string, provider?: string): Promise<{ models?: { name: string; inputTokenLimit: number; outputTokenLimit: number }[]; error?: string }> {
   try {
     const response = await fetch(`${PYTHON_API_BASE}/api/models`, {
       method: "POST",
@@ -92,13 +92,14 @@ export async function fetchModelsAction(api_key: string, provider?: string) {
         errorMessage = text || `Server error (${response.status})`;
       }
 
-      throw new Error(errorMessage);
+      return { error: errorMessage };
     }
 
     return await response.json();
   } catch (error) {
     console.error("AI Models Action Error:", error);
-    throw error;
+    const msg = error instanceof Error ? error.message : "Failed to connect to API server";
+    return { error: msg };
   }
 }
 
