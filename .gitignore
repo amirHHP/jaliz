@@ -55,3 +55,10 @@ Library/
 
 # Local run logs
 dev.log
+
+# SQLite local database and journal files
+/prisma/dev.db
+/prisma/dev.db-journal
+/prisma/dev.db-shm
+/prisma/dev.db-wal
+
