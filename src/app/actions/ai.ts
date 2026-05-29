@@ -2,6 +2,9 @@
 
 import { getAiConfig } from "./settings";
 
+// Allow Vercel serverless functions up to 120s (requires Pro plan; Hobby caps at 60s)
+export const maxDuration = 120;
+
 // Read at runtime (not build time) so Docker's API_URL env var is picked up correctly
 function getApiBase() {
   return process.env.API_URL || "http://127.0.0.1:8000";
@@ -73,7 +76,7 @@ async function callLlmDirect({
         messages,
         temperature
       }),
-      signal: AbortSignal.timeout(60000)
+      signal: AbortSignal.timeout(120000)
     });
 
     if (!response.ok) {
@@ -122,7 +125,7 @@ async function callLlmDirect({
         "Content-Type": "application/json"
       },
       body: JSON.stringify({ contents: [{ parts }] }),
-      signal: AbortSignal.timeout(60000)
+      signal: AbortSignal.timeout(120000)
     });
 
     if (!response.ok) {
@@ -132,7 +135,13 @@ async function callLlmDirect({
     }
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    // Thinking models (Gemma 4, Gemini 2.5) return multiple parts:
+    // parts with `thought: true` are internal reasoning — skip them.
+    const responseParts = data.candidates?.[0]?.content?.parts || [];
+    const answerParts = responseParts.filter((p: any) => !p.thought && p.text);
+    const text = answerParts.length > 0
+      ? answerParts.map((p: any) => p.text).join("")
+      : responseParts[0]?.text;  // fallback to first part if no non-thought parts
     if (!text) {
       throw new Error("Empty response from Gemini API");
     }
@@ -322,29 +331,33 @@ export async function getWeatherAdviceAction(data: { latitude: number, longitude
     }
     const plantListStr = plantDetails.join("\n");
 
-    const langInstruction = data.language === "fa"
-      ? "IMPORTANT: You must write the final advice entirely in Persian (Farsi)."
+    const isFarsi = data.language === "fa";
+    const langInstruction = isFarsi
+      ? `CRITICAL LANGUAGE RULE: Your ENTIRE response MUST be written in Persian (Farsi). Do NOT use any English words. Use right-to-left Persian script only.`
       : "Write the advice in English.";
 
     const prompt = `You are an expert, hyper-local gardening AI agent.
+You provide short, actionable plant care advice based on weather conditions.
+
+${langInstruction}
 
 Weather Forecast (Next 48h): ${weatherSummary}
 
 User's Plants:
 ${plantListStr}
 
-Based on the weather forecast and the specific plant characteristics, provide a short, personalized 'Actionable Advice' card.
-Follow these rules strictly:
-1. Location: Only apply outdoor weather risks (like frost/rain) heavily to "Outdoor" plants.
-2. Light Exposure: Warn about UV/heatwaves if a plant is in "Full Sun" or "Bright Indirect".
-3. Pot Type: Mention evaporation rates based on the pot (Terracotta dries fast, Plastic retains water).
-4. Drainage: If 'hasDrainage' is No and heavy rain is expected, warn about root rot for Outdoor plants.
-5. Recently Replanted: If this is True, trigger a "Stress Warning" and advise against exposing the plant to sudden temperature changes or harsh conditions.
+Rules:
+1. Only apply outdoor weather risks (frost/rain) to "Outdoor" plants.
+2. Warn about UV/heatwaves for "Full Sun" or "Bright Indirect" plants.
+3. Mention pot evaporation: Terracotta dries fast, Plastic retains water.
+4. If hasDrainage is No and heavy rain is expected, warn about root rot for Outdoor plants.
+5. If Recently Replanted is True, add a stress warning.
 
-Keep the advice concise and highly specific.
-If the weather poses no threat, provide brief positive encouragement.
-
-${langInstruction}
+IMPORTANT OUTPUT FORMAT:
+- Output ONLY the final advice text. No analysis, no reasoning, no bullet points of constraints.
+- Keep it short (2-4 sentences per plant).
+- Use a warm, friendly tone.
+${isFarsi ? "- پاسخ باید کاملاً به فارسی باشد. هیچ کلمه انگلیسی استفاده نکن." : ""}
 
 Actionable Advice:`;
 
@@ -359,6 +372,13 @@ Actionable Advice:`;
     return { advice };
   } catch (error) {
     console.error("AI Advice Action Error:", error);
+    const isTimeout = error instanceof Error && (error.name === "TimeoutError" || error.message.includes("timeout") || error.message.includes("aborted"));
+    if (isTimeout) {
+      if (data.language === "fa") {
+        return { error: "⏱️ پاسخ هوش مصنوعی بیش از حد طول کشید. لطفاً یک مدل سریع‌تر مثل gemini-2.0-flash را در تنظیمات انتخاب کنید." };
+      }
+      return { error: "⏱️ The AI response took too long. Please try a faster model like gemini-2.0-flash in Settings." };
+    }
     if (data.language === "fa") {
       return { error: "⚠️ سرویس هوش مصنوعی در حال حاضر با اختلال مواجه است. لطفاً دوباره تلاش کنید." };
     }
