@@ -32,6 +32,7 @@ interface Plant {
   nextWateringDate?: string
   wateringInterval: number
   recentlyReplanted: boolean
+  lastSoilChange?: string
   health: "Excellent" | "Good" | "Needs Attention"
   image?: string
   careTips?: string
@@ -74,6 +75,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const [careTips, setCareTips] = useState(plant.careTips || "")
   const [wateringTips, setWateringTips] = useState(plant.wateringTips || "")
   const [wateringInterval, setWateringInterval] = useState(plant.wateringInterval || 7)
+  const [lastSoilChange, setLastSoilChange] = useState(plant.lastSoilChange || "")
 
   // Log state
   const [logs, setLogs] = useState<PlantStatusLog[]>([])
@@ -265,7 +267,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
       if (data.lightExposure) setLightExposure(data.lightExposure)
       if (data.potType) setPotType(data.potType)
       if (data.hasDrainage !== undefined) setHasDrainage(data.hasDrainage)
-      if (data.careTips) setCareTips(data.careTips)
+      if (data.careTips || data.soilChangeTips) setCareTips([data.careTips, data.soilChangeTips].filter(Boolean).join("\n\n"))
       if (data.wateringTips) setWateringTips(data.wateringTips)
     } catch (error) {
       alert(error instanceof Error ? error.message : "Failed to analyze plant")
@@ -279,7 +281,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     onSave({
       ...plant,
       name, type, locationType, lightExposure, potType,
-      hasDrainage, lastWatered, recentlyReplanted, health,
+      hasDrainage, lastWatered, recentlyReplanted, lastSoilChange, health,
       image, careTips, wateringTips, wateringInterval
     })
     setIsEditing(false)
@@ -290,6 +292,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     setLocationType(plant.locationType); setLightExposure(plant.lightExposure)
     setPotType(plant.potType); setHasDrainage(plant.hasDrainage)
     setLastWatered(plant.lastWatered); setRecentlyReplanted(plant.recentlyReplanted)
+    setLastSoilChange(plant.lastSoilChange || "")
     setHealth(plant.health); setImage(plant.image || "")
     setCareTips(plant.careTips || ""); setWateringTips(plant.wateringTips || "")
     setWateringInterval(plant.wateringInterval || 7)
@@ -397,6 +400,23 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                     label: t("has_drainage"),
                     value: plant.hasDrainage ? "✓" : "✗",
                     extra: plant.hasDrainage ? "text-emerald-600" : "text-red-500",
+                  },
+                  {
+                    icon: <Sprout className="h-4 w-4 text-amber-600" />,
+                    label: t("last_soil_change"),
+                    value: plant.lastSoilChange
+                      ? (() => {
+                          const months = Math.floor((Date.now() - new Date(plant.lastSoilChange!).getTime()) / (1000 * 3600 * 24 * 30));
+                          return months === 0
+                            ? (language === "fa" ? "همین ماه" : "This month")
+                            : `${months} ${t("soil_change_months_ago")}`;
+                        })()
+                      : t("soil_change_unknown"),
+                    extra: plant.lastSoilChange
+                      ? (Math.floor((Date.now() - new Date(plant.lastSoilChange!).getTime()) / (1000 * 3600 * 24 * 30)) > 12
+                          ? "text-amber-600 bg-amber-50 border-amber-200"
+                          : "text-emerald-600")
+                      : "text-slate-400",
                   },
                 ].map((item, i) => (
                   <div key={i} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
@@ -715,6 +735,11 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t("last_watered")}</label>
                   <input type="date" value={lastWatered} onChange={e => setLastWatered(e.target.value)} className={inputCls} />
+                </div>
+                {/* Last Soil Change */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t("last_soil_change")}</label>
+                  <input type="date" value={lastSoilChange} onChange={e => setLastSoilChange(e.target.value)} className={inputCls} />
                 </div>
                 {/* Checkboxes */}
                 <div className="space-y-3 pt-1">

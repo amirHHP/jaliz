@@ -22,6 +22,7 @@ interface PlantDraft {
   hasDrainage: boolean
   lastWatered: string
   recentlyReplanted: boolean
+  lastSoilChange: string
   health: "Excellent" | "Good" | "Needs Attention"
   image?: string
   careTips?: string
@@ -49,6 +50,7 @@ export default function NewPlantPage() {
     hasDrainage: true,
     lastWatered: new Date().toISOString().split("T")[0],
     recentlyReplanted: false,
+    lastSoilChange: "",
     health: "Excellent",
     image: "",
     careTips: "",
@@ -104,7 +106,7 @@ export default function NewPlantPage() {
         lightExposure: data.lightExposure as any || prev.lightExposure,
         potType: data.potType as any || prev.potType,
         hasDrainage: data.hasDrainage !== undefined ? data.hasDrainage : prev.hasDrainage,
-        careTips: data.careTips || prev.careTips,
+        careTips: [data.careTips, data.soilChangeTips].filter(Boolean).join("\n\n") || prev.careTips,
         wateringTips: data.wateringTips || prev.wateringTips,
       }))
     } catch (error) {
@@ -128,6 +130,7 @@ export default function NewPlantPage() {
         hasDrainage: draft.hasDrainage,
         lastWatered: draft.lastWatered ? new Date(draft.lastWatered) : new Date(),
         recentlyReplanted: draft.recentlyReplanted,
+        lastSoilChange: draft.lastSoilChange ? new Date(draft.lastSoilChange) : null,
         health: draft.health,
         image: draft.image || null,
         careTips: draft.careTips || null,
@@ -428,6 +431,25 @@ export default function NewPlantPage() {
                     {language === "fa" ? "تازگی گلدونش رو عوض کردم 🌱" : "I recently repotted it 🌱"}
                   </span>
                 </label>
+
+                {/* Last Soil Change */}
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mt-1">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mb-1.5">
+                    <Sprout className="h-3.5 w-3.5 text-amber-600" />
+                    {language === "fa" ? "آخرین بار کی خاکش رو عوض کردی؟" : "When did you last change the soil?"}
+                  </label>
+                  <p className="text-[10px] text-slate-500 mb-2 leading-relaxed">
+                    {language === "fa"
+                      ? "اگه یادت نیست، خالی بذار — ما برات یادآوری تعویض خاک میگذاریم."
+                      : "If you don't remember, leave it empty — we'll remind you when it's time."}
+                  </p>
+                  <input
+                    type="date"
+                    value={draft.lastSoilChange}
+                    onChange={(e) => updateDraft("lastSoilChange", e.target.value)}
+                    className="flex h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 text-slate-700 shadow-sm"
+                  />
+                </div>
               </div>
             </div>
           )}

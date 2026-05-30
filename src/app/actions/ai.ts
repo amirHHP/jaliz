@@ -247,7 +247,8 @@ Provide the following details in a JSON object exactly matching this structure, 
     "potType": "Terracotta" or "Plastic" or "Ceramic" or "Metal" or "Other",
     "hasDrainage": true or false,
     "careTips": "Provide a detailed and comprehensive paragraph explaining the best general care practices for this plant. Must be written in ${languageName}.",
-    "wateringTips": "Provide a detailed and comprehensive paragraph explaining the specific watering schedule and techniques for this plant. Must be written in ${languageName}."
+    "wateringTips": "Provide a detailed and comprehensive paragraph explaining the specific watering schedule and techniques for this plant. Must be written in ${languageName}.",
+    "soilChangeTips": "Provide a concise paragraph explaining when and how to change the soil for this plant, including recommended soil mix and frequency (e.g., every 12-18 months). Must be written in ${languageName}."
 }
 `;
 
@@ -327,6 +328,12 @@ export async function getWeatherAdviceAction(data: { latitude: number, longitude
       if (p.recentlyReplanted) {
         details.push("WARNING: Recently Replanted (High Stress Risk)");
       }
+      if (p.lastSoilChange) {
+        const soilMonths = Math.floor((Date.now() - new Date(p.lastSoilChange).getTime()) / (1000 * 3600 * 24 * 30));
+        details.push(`Last Soil Change: ${soilMonths} months ago`);
+      } else {
+        details.push("Last Soil Change: Unknown / Never recorded");
+      }
       plantDetails.push(" - " + details.join(", "));
     }
     const plantListStr = plantDetails.join("\n");
@@ -352,6 +359,7 @@ Rules:
 3. Mention pot evaporation: Terracotta dries fast, Plastic retains water.
 4. If hasDrainage is No and heavy rain is expected, warn about root rot for Outdoor plants.
 5. If Recently Replanted is True, add a stress warning.
+6. If Last Soil Change is older than 12 months (or unknown), recommend a soil change soon with a brief reason (nutrient depletion, compaction, salt buildup). If soil is recently changed (< 6 months), skip soil advice.
 
 IMPORTANT OUTPUT FORMAT:
 - Output ONLY the final advice text. No analysis, no reasoning, no bullet points of constraints.

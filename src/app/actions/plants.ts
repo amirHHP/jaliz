@@ -110,6 +110,7 @@ export type UpdateUserPlantInput = {
   hasDrainage?: boolean | null;
   lastWatered?: Date | string | null;
   recentlyReplanted?: boolean | null;
+  lastSoilChange?: Date | string | null;
   health?: string | null;
   image?: string | null;
   careTips?: string | null;
@@ -130,6 +131,9 @@ export async function updateUserPlantAction(plantId: string, data: UpdateUserPla
   if (data.potType !== undefined) updateData.potType = data.potType ?? undefined;
   if (data.hasDrainage !== undefined) updateData.hasDrainage = data.hasDrainage;
   if (data.recentlyReplanted !== undefined) updateData.recentlyReplanted = data.recentlyReplanted;
+  if (data.lastSoilChange !== undefined) {
+    updateData.lastSoilChange = data.lastSoilChange ? new Date(data.lastSoilChange) : null;
+  }
   if (data.health !== undefined) updateData.health = data.health ?? undefined;
   if (data.image !== undefined) updateData.image = asDbString(data.image, MAX_PLANT_IMAGE_CHARS);
   if (data.careTips !== undefined) updateData.careTips = asDbString(data.careTips, MAX_PLANT_TIPS_CHARS);
@@ -184,6 +188,7 @@ export type CreateUserPlantInput = {
   hasDrainage?: boolean | null;
   lastWatered?: Date | string | null;
   recentlyReplanted?: boolean | null;
+  lastSoilChange?: Date | string | null;
   health?: string | null;
   image?: string | null;
   careTips?: string | null;
@@ -224,6 +229,7 @@ export async function createUserPlantAction(data: CreateUserPlantInput) {
       nextWateringDate,
       wateringInterval: interval,
       recentlyReplanted: data.recentlyReplanted ?? false,
+      lastSoilChange: data.lastSoilChange ? new Date(data.lastSoilChange) : null,
       health: data.health ?? "Excellent",
       image: imageDb,
       careTips: careTipsDb,

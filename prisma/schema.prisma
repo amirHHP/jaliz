@@ -42,6 +42,7 @@ model UserPlant {
   nextWateringDate   DateTime?
   wateringInterval   Int?     @default(7)
   recentlyReplanted  Boolean? @default(false)
+  lastSoilChange     DateTime?
   health             String?  @default("Excellent")
   image              String?
   careTips           String?

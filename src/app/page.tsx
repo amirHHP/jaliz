@@ -25,6 +25,7 @@ interface Plant {
   nextWateringDate?: string
   wateringInterval: number
   recentlyReplanted: boolean
+  lastSoilChange?: string
   health: "Excellent" | "Good" | "Needs Attention"
   image?: string
   careTips?: string
@@ -44,6 +45,7 @@ function dbRowToPlant(row: any): Plant {
     nextWateringDate: row.nextWateringDate ? new Date(row.nextWateringDate).toISOString().split("T")[0] : undefined,
     wateringInterval: row.wateringInterval ?? 7,
     recentlyReplanted: row.recentlyReplanted ?? false,
+    lastSoilChange: row.lastSoilChange ? new Date(row.lastSoilChange).toISOString().split("T")[0] : undefined,
     health: row.health ?? "Excellent",
     image: row.image ?? undefined,
     careTips: row.careTips ?? undefined,
@@ -96,6 +98,7 @@ export default function MyPlantsPage() {
         hasDrainage: updated.hasDrainage,
         lastWatered: updated.lastWatered ? new Date(updated.lastWatered) : null,
         recentlyReplanted: updated.recentlyReplanted,
+        lastSoilChange: updated.lastSoilChange ? new Date(updated.lastSoilChange) : null,
         health: updated.health,
         image: updated.image || null,
         careTips: updated.careTips || null,
