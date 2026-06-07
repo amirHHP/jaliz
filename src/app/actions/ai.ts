@@ -2,9 +2,6 @@
 
 import { getAiConfig } from "./settings";
 
-// Allow Vercel serverless functions up to 120s (requires Pro plan; Hobby caps at 60s)
-export const maxDuration = 120;
-
 // Read at runtime (not build time) so Docker's API_URL env var is picked up correctly
 function getApiBase() {
   return process.env.API_URL || "http://127.0.0.1:8000";
