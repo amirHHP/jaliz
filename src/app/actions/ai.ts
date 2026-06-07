@@ -65,17 +65,23 @@ async function callLlmDirect({
       messages.push({ role: "user", content: prompt });
     }
 
+    const requestBody: any = {
+      model: modelName,
+      messages,
+      temperature
+    };
+    // Request JSON output when the prompt expects it
+    if (prompt.includes("JSON") || prompt.includes("json")) {
+      requestBody.response_format = { type: "json_object" };
+    }
+
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: modelName,
-        messages,
-        temperature
-      }),
+      body: JSON.stringify(requestBody),
       signal: AbortSignal.timeout(120000)
     });
 
@@ -119,12 +125,18 @@ async function callLlmDirect({
       });
     }
 
+    // Build request body; ask Gemini for JSON output when the prompt expects it
+    const requestBody: any = { contents: [{ parts }] };
+    if (prompt.includes("JSON") || prompt.includes("json")) {
+      requestBody.generationConfig = { responseMimeType: "application/json" };
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ contents: [{ parts }] }),
+      body: JSON.stringify(requestBody),
       signal: AbortSignal.timeout(120000)
     });
 
@@ -151,11 +163,35 @@ async function callLlmDirect({
 
 /**
  * Parses JSON content from the raw model response.
+ * Tries multiple strategies: fenced code block, raw JSON.parse, and
+ * extracting the first `{...}` object from mixed markdown/text.
  */
 function parseJsonFromModelText(text: string): any {
-  const match = /```(?:json)?\n?([\s\S]*?)\n?```/.exec(text);
-  const jsonStr = match ? match[1].trim() : text.trim();
-  return JSON.parse(jsonStr);
+  // Strategy 1: Extract from ```json ... ``` fenced code block
+  const fenceMatch = /```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/.exec(text);
+  if (fenceMatch) {
+    try {
+      return JSON.parse(fenceMatch[1].trim());
+    } catch { /* fall through */ }
+  }
+
+  // Strategy 2: Try parsing the raw text directly
+  try {
+    return JSON.parse(text.trim());
+  } catch { /* fall through */ }
+
+  // Strategy 3: Find the first `{` and last `}` and try to parse the substring
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    try {
+      return JSON.parse(text.substring(firstBrace, lastBrace + 1));
+    } catch { /* fall through */ }
+  }
+
+  throw new Error(
+    `Could not extract valid JSON from AI response. Response starts with: "${text.substring(0, 120)}..."`
+  );
 }
 
 /**
