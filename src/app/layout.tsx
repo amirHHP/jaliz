@@ -5,6 +5,8 @@ import { AuthProvider } from "@/components/AuthProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
 import { BottomNav } from "@/components/BottomNav";
 
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
   title: {
     default: "جالیز | فروشگاه گیاه، بذر و ابزار باغبانی",
