@@ -25,11 +25,12 @@ interface NavLink {
   href: string
   key: "schedule" | "marketplace" | "my_plants" | "admin_panel"
   adminOnly?: boolean
+  authRequired?: boolean
 }
 
 const NAV_LINKS: NavLink[] = [
-  { href: "/", key: "my_plants" },
-  { href: "/schedule", key: "schedule" },
+  { href: "/", key: "my_plants", authRequired: true },
+  { href: "/schedule", key: "schedule", authRequired: true },
   { href: "/marketplace", key: "marketplace" },
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]
@@ -74,7 +75,12 @@ export function Header() {
     setLanguage(language === "en" ? "fa" : "en")
   }
 
-  const visibleLinks = NAV_LINKS.filter((l) => !l.adminOnly || isAdmin)
+  const isAuthenticated = status === "authenticated"
+  const visibleLinks = NAV_LINKS.filter((l) => {
+    if (l.adminOnly && !isAdmin) return false
+    if (l.authRequired && !isAuthenticated) return false
+    return true
+  })
 
   return (
     <>

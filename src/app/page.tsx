@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info, Loader2 } from "lucide-react"
+import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info, Loader2, LogIn, UserPlus, Store, ArrowRight } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
+import { MarketplaceGrid } from "@/components/MarketplaceGrid"
 import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction } from "@/app/actions/plants"
 import { analyzePlantAction } from "@/app/actions/ai"
-import { LandingPage } from "@/components/LandingPage"
 
 interface Plant {
   id: string
@@ -125,7 +125,7 @@ export default function MyPlantsPage() {
   }
 
   if (status === "unauthenticated") {
-    return <LandingPage />
+    return <PublicHomePage />
   }
 
   return (
@@ -207,6 +207,128 @@ export default function MyPlantsPage() {
         </div>
       </main>
       {selectedPlant && <PlantModal plant={selectedPlant} onClose={() => setSelectedPlantId(null)} onSave={handleSavePlant} onDelete={deletePlant} />}
+    </div>
+  )
+}
+
+/** Public homepage for unauthenticated users: hero + marketplace */
+function PublicHomePage() {
+  const { t, language } = useLanguage()
+
+  return (
+    <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
+      <Header />
+
+      {/* Hero section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-b border-emerald-100/50">
+        {/* Decorative blobs */}
+        <div className="pointer-events-none absolute -top-24 -end-24 h-72 w-72 rounded-full bg-lime-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 -start-24 h-72 w-72 rounded-full bg-teal-200/20 blur-3xl" />
+
+        <div className="container mx-auto px-4 py-12 md:py-16 max-w-6xl relative z-10">
+          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+            {/* Text */}
+            <div className="flex-1 text-center md:text-start space-y-5">
+              <div className="inline-flex items-center gap-2 bg-emerald-100/60 backdrop-blur-sm text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-200/50">
+                <Sprout className="h-3.5 w-3.5" />
+                {t("app_title")}
+              </div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+                {t("landing_hero_title")}
+              </h1>
+              <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-lg">
+                {t("landing_hero_subtitle")}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                <Link
+                  href="/register"
+                  className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  {t("landing_cta_primary")}
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex justify-center items-center gap-2 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 px-6 py-3.5 text-sm font-bold shadow-sm transition-all hover:scale-[1.02]"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t("landing_cta_secondary")}
+                </Link>
+              </div>
+            </div>
+
+            {/* Feature cards */}
+            <div className="flex-1 grid grid-cols-2 gap-3 max-w-sm">
+              {[
+                { icon: Droplets, color: "text-sky-500 bg-sky-50", title: language === "fa" ? "یادآور آبیاری" : "Watering Reminders" },
+                { icon: Sprout, color: "text-emerald-500 bg-emerald-50", title: language === "fa" ? "ثبت گیاهان" : "Plant Tracking" },
+                { icon: Sparkles, color: "text-amber-500 bg-amber-50", title: language === "fa" ? "مشاوره هوشمند" : "AI Advice" },
+                { icon: Store, color: "text-indigo-500 bg-indigo-50", title: language === "fa" ? "فروشگاه" : "Marketplace" },
+              ].map((feat, i) => (
+                <div
+                  key={i}
+                  className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-100 p-4 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${feat.color}`}>
+                    <feat.icon className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs font-semibold text-slate-700 text-center">{feat.title}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Marketplace section — public, SEO-friendly */}
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Store className="h-5 w-5 text-emerald-600" />
+            <h2 className="text-xl font-bold text-slate-900">{t("mp_title" as never)}</h2>
+          </div>
+          <Link
+            href="/marketplace"
+            className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
+          >
+            {t("mp_view_all" as never)}
+            <ArrowRight className={`h-3.5 w-3.5 ${language === "fa" ? "rotate-180" : ""}`} />
+          </Link>
+        </div>
+        <MarketplaceGrid />
+      </main>
+
+      {/* Login prompt footer */}
+      <section className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-10">
+        <div className="container mx-auto px-4 max-w-4xl text-center space-y-4">
+          <h2 className="text-xl md:text-2xl font-bold">
+            {language === "fa"
+              ? "برای ثبت گیاه، یادآور آبیاری و مشاوره هوشمند ثبت‌نام کنید"
+              : "Sign up for plant tracking, watering reminders & AI advice"}
+          </h2>
+          <p className="text-emerald-100 text-sm max-w-xl mx-auto">
+            {language === "fa"
+              ? "فروشگاه رو بدون ثبت‌نام ببینید، ولی برای استفاده از امکانات حرفه‌ای وارد شوید."
+              : "Browse the marketplace freely, but sign in to unlock all features."}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              href="/register"
+              className="inline-flex justify-center items-center gap-2 rounded-full bg-white text-emerald-700 hover:bg-emerald-50 px-6 py-3 text-sm font-bold shadow-md transition-all hover:scale-[1.02]"
+            >
+              <UserPlus className="h-4 w-4" />
+              {t("landing_cta_primary")}
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-700/50 hover:bg-emerald-700/70 text-white border border-emerald-400/30 px-6 py-3 text-sm font-bold transition-all hover:scale-[1.02]"
+            >
+              <LogIn className="h-4 w-4" />
+              {t("landing_cta_secondary")}
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   )
 }

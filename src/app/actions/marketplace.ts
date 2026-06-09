@@ -14,6 +14,31 @@ export async function getMarketplaceListingsAction() {
   return listings;
 }
 
+/** Public: fetch a single listing by id — no auth required (for SSR product pages). */
+export async function getListingByIdAction(id: string) {
+  const listing = await prisma.marketplaceListing.findUnique({ where: { id } });
+  return listing;
+}
+
+/** Public: fetch owner name for a listing — no auth required (for SSR product pages). */
+export async function getListingOwnerNameAction(ownerId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { fullName: true, phone: true },
+  });
+  return user;
+}
+
+/** Public: fetch all active listing IDs for sitemap generation. */
+export async function getAllListingIdsAction() {
+  const listings = await prisma.marketplaceListing.findMany({
+    where: { status: "active" },
+    select: { id: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  return listings;
+}
+
 export async function getMarketplaceConversationsAction() {
   const userId = await getSessionUserId();
   if (!userId) return [];

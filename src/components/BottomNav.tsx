@@ -11,41 +11,52 @@ export function BottomNav() {
   const { t } = useLanguage()
   const { status } = useAuth()
 
-  // Don't show bottom nav on auth pages, admin pages, the new plant wizard page, or the unauthenticated landing page
+  const isAuthenticated = status === "authenticated"
+
+  // Don't show bottom nav on auth pages, admin pages, or the new plant wizard page
   if (
     pathname === "/login" ||
     pathname === "/register" ||
     pathname?.startsWith("/admin") ||
-    pathname === "/plants/new" ||
-    (pathname === "/" && status !== "authenticated")
+    pathname === "/plants/new"
   ) {
     return null
   }
 
+  // Build tabs: always include marketplace, add plant-specific tabs only for authenticated users
   const tabs = [
-    {
-      name: t("my_plants"),
-      href: "/",
-      icon: Leaf,
-      active: pathname === "/",
-    },
-    {
-      name: (t as any)("schedule"),
-      href: "/schedule",
-      icon: CalendarDays,
-      active: pathname?.startsWith("/schedule"),
-    },
+    ...(isAuthenticated
+      ? [
+          {
+            name: t("my_plants"),
+            href: "/",
+            icon: Leaf,
+            active: pathname === "/",
+          },
+          {
+            name: (t as any)("schedule"),
+            href: "/schedule",
+            icon: CalendarDays,
+            active: pathname?.startsWith("/schedule"),
+          },
+        ]
+      : []),
     {
       name: t("marketplace"),
-      href: "/marketplace",
+      href: isAuthenticated ? "/marketplace" : "/",
       icon: Store,
-      active: pathname?.startsWith("/marketplace"),
+      active: isAuthenticated
+        ? pathname?.startsWith("/marketplace")
+        : pathname === "/" || pathname?.startsWith("/marketplace"),
     },
   ]
 
+  // For unauthenticated: show full-width marketplace tab
+  const gridCols = isAuthenticated ? "grid-cols-3" : "grid-cols-1"
+
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-slate-200 md:hidden pb-safe">
-      <div className="grid h-full max-w-lg grid-cols-3 mx-auto font-medium">
+      <div className={`grid h-full max-w-lg ${gridCols} mx-auto font-medium`}>
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = tab.active
@@ -70,3 +81,4 @@ export function BottomNav() {
     </div>
   )
 }
+

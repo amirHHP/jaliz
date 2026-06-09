@@ -6,8 +6,33 @@ import { MarketplaceProvider } from "@/components/MarketplaceProvider";
 import { BottomNav } from "@/components/BottomNav";
 
 export const metadata: Metadata = {
-  title: "jaliz MVP",
-  description: "Hyper-local gardening advice and marketplace",
+  title: {
+    default: "جالیز | فروشگاه گیاه، بذر و ابزار باغبانی",
+    template: "%s | جالیز",
+  },
+  description:
+    "خرید و فروش بذر، قلمه، ابزار و محصولات باغبانی. یادآور آبیاری، ثبت گیاه و مشاوره هوشمند باغبانی.",
+  keywords: [
+    "فروشگاه گیاه",
+    "بذر",
+    "قلمه",
+    "ابزار باغبانی",
+    "یادآور آبیاری",
+    "مشاوره باغبانی",
+    "jaliz",
+    "جالیز",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "fa_IR",
+    siteName: "جالیز",
+    title: "جالیز | فروشگاه گیاه، بذر و ابزار باغبانی",
+    description:
+      "خرید و فروش بذر، قلمه، ابزار و محصولات باغبانی. یادآور آبیاری، ثبت گیاه و مشاوره هوشمند باغبانی.",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
