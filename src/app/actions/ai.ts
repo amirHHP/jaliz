@@ -279,6 +279,7 @@ Provide the following details in a JSON object exactly matching this structure, 
     "lightExposure": "Low Light" or "Partial Shade" or "Bright Indirect" or "Full Sun",
     "potType": "Terracotta" or "Plastic" or "Ceramic" or "Metal" or "Other",
     "hasDrainage": true or false,
+    "wateringInterval": an integer representing the recommended watering interval in days (e.g. 7),
     "careTips": "Provide a detailed and comprehensive paragraph explaining the best general care practices for this plant. Must be written in ${languageName}.",
     "wateringTips": "Provide a detailed and comprehensive paragraph explaining the specific watering schedule and techniques for this plant. Must be written in ${languageName}.",
     "soilChangeTips": "Provide a concise paragraph explaining when and how to change the soil for this plant, including recommended soil mix and frequency (e.g., every 12-18 months). Must be written in ${languageName}."
