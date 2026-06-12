@@ -14,6 +14,13 @@ export const metadata: Metadata = {
   },
   description:
     "خرید و فروش بذر، قلمه، ابزار و محصولات باغبانی. یادآور آبیاری، ثبت گیاه و مشاوره هوشمند باغبانی.",
+  manifest: "/manifest.json",
+  themeColor: "#4a7c59",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "جالیز",
+  },
   keywords: [
     "فروشگاه گیاه",
     "بذر",
@@ -48,6 +55,9 @@ export default function RootLayout({
       dir="rtl"
       className="h-full antialiased"
     >
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <LanguageProvider>
           <AuthProvider>
@@ -57,6 +67,19 @@ export default function RootLayout({
             </MarketplaceProvider>
           </AuthProvider>
         </LanguageProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(reg) { console.log('SW registered:', reg.scope); })
+                    .catch(function(err) { console.log('SW registration failed:', err); });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );

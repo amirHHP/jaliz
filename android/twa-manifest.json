@@ -1,0 +1,64 @@
+{
+  "packageId": "ir.jaliz.app",
+  "host": "jaliz.ir",
+  "name": "جالیز | باغبانی هوشمند",
+  "launcherName": "جالیز",
+  "display": "standalone",
+  "themeColor": "#4a7c59",
+  "themeColorDark": "#2d4d35",
+  "navigationColor": "#f5f0e8",
+  "navigationColorDark": "#1a1a1a",
+  "navigationDividerColor": "#e0d8cc",
+  "navigationDividerColorDark": "#333333",
+  "backgroundColor": "#f5f0e8",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://jaliz.ir/icons/icon-512x512.png",
+  "maskableIconUrl": "https://jaliz.ir/icons/icon-maskable-512x512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./jaliz-keystore.jks",
+    "alias": "jaliz"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "shortcuts": [
+    {
+      "name": "گیاهان من",
+      "shortName": "گیاهان",
+      "url": "/plants",
+      "chosenIconUrl": "https://jaliz.ir/icons/icon-192x192.png"
+    },
+    {
+      "name": "فروشگاه",
+      "shortName": "فروشگاه",
+      "url": "/marketplace",
+      "chosenIconUrl": "https://jaliz.ir/icons/icon-192x192.png"
+    },
+    {
+      "name": "برنامه آبیاری",
+      "shortName": "آبیاری",
+      "url": "/schedule",
+      "chosenIconUrl": "https://jaliz.ir/icons/icon-192x192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://jaliz.ir/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "orientation": "portrait",
+  "fingerprints": []
+}

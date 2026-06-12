@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head><title>Jaliz Icon Generator</title></head>
+<body>
+<h2>Click each button to download the icon</h2>
+<div id="previews"></div>
+<script>
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6ba368"/>
+      <stop offset="100%" style="stop-color:#4a7c59"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" style="stop-color:#f5e6c8;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#f5e6c8;stop-opacity:0"/>
+    </linearGradient>
+    <linearGradient id="soil" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b3a2a"/>
+      <stop offset="100%" style="stop-color:#4a2518"/>
+    </linearGradient>
+    <linearGradient id="leaf1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7cc576"/>
+      <stop offset="100%" style="stop-color:#4a8c44"/>
+    </linearGradient>
+    <linearGradient id="leaf2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8fd488"/>
+      <stop offset="100%" style="stop-color:#5a9c54"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="80" ry="80" fill="url(#bg)"/>
+  <rect x="40" y="40" width="432" height="432" rx="60" ry="60" fill="#d4e8cf" opacity="0.35"/>
+  <ellipse cx="256" cy="310" rx="140" ry="160" fill="url(#glow)"/>
+  <path d="M120,370 Q150,340 200,355 Q240,330 280,350 Q320,335 360,355 Q390,340 392,370 Q400,400 380,415 Q340,435 256,435 Q170,435 135,415 Q115,400 120,370Z" fill="url(#soil)"/>
+  <path d="M256,360 Q258,310 252,260" stroke="#4a8c44" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M252,260 Q210,210 180,200 Q170,230 200,270 Q220,290 252,280" fill="url(#leaf1)"/>
+  <path d="M252,265 Q215,225 190,215" stroke="#3d7a38" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <path d="M254,240 Q300,190 330,185 Q335,215 310,250 Q290,270 255,260" fill="url(#leaf2)"/>
+  <path d="M256,245 Q298,205 320,195" stroke="#3d7a38" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+  <ellipse cx="253" cy="248" rx="6" ry="8" fill="#a8dca0" opacity="0.7"/>
+</svg>`;
+
+const sizes = [
+  { name: 'icon-192x192.png', size: 192 },
+  { name: 'icon-512x512.png', size: 512 },
+  { name: 'icon-maskable-192x192.png', size: 192 },
+  { name: 'icon-maskable-512x512.png', size: 512 },
+];
+
+const container = document.getElementById('previews');
+
+sizes.forEach(({name, size}) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  const blob = new Blob([svgContent], {type: 'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, size, size);
+    URL.revokeObjectURL(url);
+    
+    const div = document.createElement('div');
+    div.style.margin = '10px';
+    div.style.display = 'inline-block';
+    
+    const preview = document.createElement('img');
+    preview.src = canvas.toDataURL('image/png');
+    preview.style.width = Math.min(size, 200) + 'px';
+    preview.style.border = '1px solid #ccc';
+    
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = name;
+    link.textContent = `Download ${name} (${size}x${size})`;
+    link.style.display = 'block';
+    link.style.marginTop = '5px';
+    
+    div.appendChild(preview);
+    div.appendChild(link);
+    container.appendChild(div);
+  };
+  img.src = url;
+});
+</script>
+</body>
+</html>

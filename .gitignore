@@ -62,3 +62,17 @@ dev.log
 /prisma/dev.db-shm
 /prisma/dev.db-wal
 
+# Android TWA build artifacts
+/android/app/
+/android/build/
+/android/gradle/
+/android/.gradle/
+/android/gradlew
+/android/gradlew.bat
+/android/settings.gradle
+/android/build.gradle
+/android/local.properties
+*.jks
+*.keystore
+*.aab
+*.apk
