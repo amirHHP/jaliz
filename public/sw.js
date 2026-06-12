@@ -62,3 +62,27 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Background Sync
+self.addEventListener('sync', (event) => {
+  console.log('Background sync event fired:', event.tag);
+});
+
+// Periodic Background Sync
+self.addEventListener('periodicsync', (event) => {
+  console.log('Periodic background sync event fired:', event.tag);
+});
+
+// Push Notifications
+self.addEventListener('push', (event) => {
+  const title = 'جالیز';
+  const options = {
+    body: event.data ? event.data.text() : 'یادآور آبیاری گیاهان شما',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-192x192.png'
+  };
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+

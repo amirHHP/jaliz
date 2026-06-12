@@ -37,8 +37,8 @@
   ],
   "scope": "/",
   "display_override": [
-    "window-controls-overlay",
     "tabbed",
+    "window-controls-overlay",
     "standalone",
     "minimal-ui"
   ],
@@ -52,7 +52,10 @@
   "iarc_rating_id": "e58d4a67-cd34-4536-a1ff-860824b27c3e",
   "scope_extensions": [
     {
-      "origin": "https://jaliz.noxte.ir"
+      "origin": "*.noxte.ir"
+    },
+    {
+      "origin": "*.jaliz.ir"
     }
   ],
   "shortcuts": [
@@ -143,5 +146,21 @@
   "note_taking": {
     "new_note_url": "/plants/new"
   },
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "داشبورد جالیز - مدیریت گیاهان"
+    },
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "داشبورد جالیز - نسخه دسکتاپ"
+    }
+  ],
   "prefer_related_applications": false
 }
