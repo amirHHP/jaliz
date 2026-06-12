@@ -4,6 +4,7 @@ const CACHE_NAME = 'jaliz-v1';
 // Assets to pre-cache for offline shell
 const PRECACHE_URLS = [
   '/',
+  '/offline.html',
   '/manifest.json',
   '/icons/icon.svg',
   '/icons/icon-192x192.png',
@@ -36,7 +37,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: Network-first strategy with cache fallback
+// Fetch: Network-first strategy with cache fallback (offline page fallback for page navigation)
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
@@ -44,10 +45,33 @@ self.addEventListener('fetch', (event) => {
   // Skip API requests (always go to network)
   if (event.request.url.includes('/api/')) return;
 
+  // For HTML navigation requests, try the network first.
+  // If the network is offline, show the cached offline fallback page.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.open(CACHE_NAME).then((cache) => {
+            return cache.match('/offline.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // For non-navigation requests, use Network-First with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone the response and cache it
         if (response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -57,7 +81,6 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Fallback to cache when offline
         return caches.match(event.request);
       })
   );

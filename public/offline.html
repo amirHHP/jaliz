@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ارتباط قطع شد | جالیز</title>
+  <style>
+    body {
+      background-color: #f5f0e8;
+      color: #15382e;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .container {
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 24px;
+      box-shadow: 0 8px 30px rgba(74, 124, 89, 0.1);
+      max-width: 400px;
+      border: 1px solid #e0d8cc;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+      fill: #4a7c59;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 0 0 12px 0;
+      font-weight: 700;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #556b5c;
+      margin: 0 0 24px 0;
+    }
+    .btn {
+      background-color: #4a7c59;
+      color: #ffffff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover {
+      background-color: #3d664a;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3c-1.2 0-2.4.3-3.5.9-.3.2-.4.5-.2.8l1.4 2.5c.2.3.5.4.8.2.5-.2 1-.3 1.5-.3 2.8 0 5 2.2 5 5 0 .5-.1 1-.3 1.5-.2.3-.1.7.2.8l2.5 1.4c.3.2.7.1.8-.2.6-1.1.9-2.3.9-3.5 0-4.4-3.6-8-8-8zm-5 5.9c-.3-.2-.7-.1-.8.2-1.1 2-1.7 4.2-1.7 6.4 0 5 4 9 9 9 2.2 0 4.4-.6 6.4-1.7.3-.2.4-.6.2-.8l-2.5-1.4c-.3-.2-.7-.1-.8.2-.9.5-2 .8-3.3.8-3.9 0-7-3.1-7-7 0-1.3.3-2.4.8-3.3.2-.3.1-.7-.2-.8L7 8.9z"/>
+    </svg>
+    <h1>ارتباط با اینترنت قطع شد</h1>
+    <p>به نظر می‌رسد اتصال شما به اینترنت برقرار نیست. لطفاً شبکه خود را بررسی کرده و مجدداً تلاش کنید.</p>
+    <a href="/" class="btn" onclick="window.location.reload(); return false;">تلاش مجدد</a>
+  </div>
+</body>
+</html>
