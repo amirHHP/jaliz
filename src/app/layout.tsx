@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description:
     "خرید و فروش بذر، قلمه، ابزار و محصولات باغبانی. یادآور آبیاری، ثبت گیاه و مشاوره هوشمند باغبانی.",
   manifest: "/manifest.json",
-  themeColor: "#4a7c59",
+  themeColor: "#12382e",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

@@ -14,6 +14,35 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom forest-green palette based on #12382E */
+  --color-emerald-50:  #edf3f1;
+  --color-emerald-100: #d2e4df;
+  --color-emerald-200: #a7cabb;
+  --color-emerald-300: #74ad99;
+  --color-emerald-400: #4a917c;
+  --color-emerald-500: #2e7462;
+  --color-emerald-600: #1f5f4e;
+  --color-emerald-700: #184b3d;
+  --color-emerald-800: #12382e;
+  --color-emerald-900: #0c2a22;
+  --color-emerald-950: #071c16;
+
+  /* Teal shades (slightly cooler variant for gradients) */
+  --color-teal-50:  #ecf3f2;
+  --color-teal-100: #d0e3e0;
+  --color-teal-200: #a3c9c3;
+  --color-teal-300: #70aba2;
+  --color-teal-400: #468e84;
+  --color-teal-500: #2b7268;
+  --color-teal-600: #1d5b52;
+  --color-teal-700: #164841;
+  --color-teal-800: #103631;
+  --color-teal-900: #0a2824;
+  --color-teal-950: #061a18;
+
+  /* Lime for decorative blobs — muted sage tones */
+  --color-lime-200: #b5d4c8;
 }
 
 @media (prefers-color-scheme: dark) {
