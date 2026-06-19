@@ -162,7 +162,7 @@ export class LocalAuthService implements IAuthService {
   }
 
   async createUser(input: AdminCreateUserInput): Promise<User> {
-    return this.createUserWithRole(input, input.role ?? "user", input.isActive ?? true)
+    return this.createUserWithRole(input, input.role ?? "user", input.isActive ?? true, input.avatar)
   }
 
   async updateUser(id: string, patch: AdminUpdateUserInput): Promise<User> {
@@ -197,6 +197,7 @@ export class LocalAuthService implements IAuthService {
     if (fullName !== undefined) next.fullName = fullName
     if (patch.role !== undefined) next.role = patch.role
     if (patch.isActive !== undefined) next.isActive = patch.isActive
+    if (patch.avatar !== undefined) next.avatar = patch.avatar
     if (password) {
       next.salt = generateSalt()
       next.passwordHash = await hashPassword(password, next.salt)
@@ -248,6 +249,9 @@ export class LocalAuthService implements IAuthService {
         // Allow clearing the phone by passing an empty string.
         next.phone = trimmed || undefined
       }
+      if (patch.avatar !== undefined) {
+        next.avatar = patch.avatar
+      }
       return next
     })
   }
@@ -272,9 +276,10 @@ export class LocalAuthService implements IAuthService {
   // ------------------------------------------------------------------
 
   private async createUserWithRole(
-    input: RegisterInput,
+    input: RegisterInput & { avatar?: string | null },
     role: UserRole,
     isActive = true,
+    avatar: string | null = null,
   ): Promise<User> {
     const email = normalizeEmail(input.email)
     const fullName = input.fullName.trim()
@@ -301,6 +306,7 @@ export class LocalAuthService implements IAuthService {
       fullName,
       role,
       isActive,
+      avatar: input.avatar ?? avatar ?? null,
       createdAt: new Date().toISOString(),
       salt,
       passwordHash,

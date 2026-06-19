@@ -130,18 +130,19 @@ export async function logoutAction() {
   cookieStore.delete(SESSION_KEY);
 }
 
-export async function updateMyProfileAction(patch: { fullName?: string, phone?: string }): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
+export async function updateMyProfileAction(patch: { fullName?: string, phone?: string, avatar?: string | null }): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
   return runAuthAction(async () => {
     const userId = await getSessionUserId();
     if (!userId) throw new AuthError("GENERIC");
 
-    const data: Prisma.UserUpdateInput = {};
+    const data: any = {};
     if (patch.fullName !== undefined) data.fullName = patch.fullName.trim();
     if (patch.phone !== undefined) data.phone = patch.phone.trim() || null;
+    if (patch.avatar !== undefined) data.avatar = patch.avatar;
 
     const user = await prisma.user.update({
       where: { id: userId },
-      data
+      data: data as any
     });
 
     return toPublicUser(user);
@@ -187,7 +188,8 @@ export async function createUserAction(input: AdminCreateUserInput): Promise<Aut
         salt,
         role,
         isActive: input.isActive ?? true,
-      }
+        avatar: (input as any).avatar ?? null,
+      } as any
     });
 
     return toPublicUser(user);
@@ -198,7 +200,7 @@ export async function updateUserAction(id: string, patch: AdminUpdateUserInput):
   return runAuthAction(async () => {
     const currentUser = await requireAdmin();
 
-    const data: Prisma.UserUpdateInput = {};
+    const data: any = {};
     if (patch.email !== undefined) {
       const email = normalizeEmail(patch.email);
       if (!email) throw new AuthError("EMPTY_FIELD");
@@ -232,9 +234,13 @@ export async function updateUserAction(id: string, patch: AdminUpdateUserInput):
       data.passwordHash = await hashPassword(password, salt);
     }
 
+    if (patch.avatar !== undefined) {
+      data.avatar = patch.avatar;
+    }
+
     const user = await prisma.user.update({
       where: { id },
-      data
+      data: data as any
     });
 
     return toPublicUser(user);

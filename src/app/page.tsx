@@ -226,15 +226,15 @@ export default function MyPlantsPage() {
                       </CardTitle>
                     </div>
                     <div className="space-y-2 text-[10px] sm:text-xs pt-1">
-                      <div className="flex items-center text-slate-600">
-                        <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 me-1.5 sm:me-2 text-indigo-400" />
-                        <span className="font-medium truncate">
+                      <div className="flex items-start text-slate-600">
+                        <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 me-1.5 sm:me-2 mt-0.5 text-indigo-400" />
+                        <span className="font-medium">
                           {plant.locationType === "Indoor" ? t("location_indoor") : t("location_outdoor")}
                         </span>
                       </div>
-                      <div className="flex items-center text-slate-600">
-                        <Droplets className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 me-1.5 sm:me-2 text-sky-500" />
-                        <span className="font-medium truncate">{wateringText}</span>
+                      <div className="flex items-start text-slate-600">
+                        <Droplets className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 me-1.5 sm:me-2 mt-0.5 text-sky-500" />
+                        <span className="font-medium">{wateringText}</span>
                       </div>
                     </div>
                   </CardContent>

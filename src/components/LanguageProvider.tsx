@@ -297,6 +297,14 @@ const translations = {
     mp_chat_sign_in_required: "Sign in to send messages.",
     // Smart detect
     smart_detect: "Smart Detect",
+    // Profile Edit
+    edit_profile: "Edit Profile",
+    profile_photo: "Profile Photo",
+    phone_number: "Phone Number",
+    phone_number_ph: "e.g., 0912XXXXXXX",
+    profile_update_success: "Profile updated successfully!",
+    change_photo: "Change Photo",
+    remove_photo: "Remove Photo",
   },
   fa: {
     app_title: "جالیز",
@@ -590,6 +598,14 @@ const translations = {
     mp_chat_sign_in_required: "برای ارسال پیام وارد شوید.",
     // Smart detect
     smart_detect: "تشخیص هوشمند",
+    // Profile Edit
+    edit_profile: "ویرایش پروفایل",
+    profile_photo: "عکس پروفایل",
+    phone_number: "شماره تماس",
+    phone_number_ph: "مثال: ۰۹۱۲XXXXXXX",
+    profile_update_success: "پروفایل شما با موفقیت به‌روزرسانی شد!",
+    change_photo: "تغییر عکس",
+    remove_photo: "حذف عکس",
   }
 }
 

@@ -142,12 +142,20 @@ export function Header() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 shadow-sm flex items-center justify-center flex-shrink-0 hover:bg-emerald-200 transition"
+                className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 shadow-sm flex items-center justify-center flex-shrink-0 hover:bg-emerald-200 transition overflow-hidden"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
                 aria-label={t("account")}
               >
-                <User className="h-5 w-5 text-emerald-700" />
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.fullName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-5 w-5 text-emerald-700" />
+                )}
               </button>
               {menuOpen && (
                 <div

@@ -13,12 +13,15 @@ export interface User {
    * `tel:` and WhatsApp deep-links on a listing.
    */
   phone?: string | null
+  /** Base64 profile photo data URL */
+  avatar?: string | null
 }
 
 /** Mutable fields a user is allowed to update on their own profile. */
 export type UserProfilePatch = {
   fullName?: string
   phone?: string
+  avatar?: string | null
 }
 
 /** Internal user shape persisted to storage. Includes credential material. */
@@ -36,6 +39,7 @@ export interface RegisterInput {
 export interface AdminCreateUserInput extends RegisterInput {
   role?: UserRole
   isActive?: boolean
+  avatar?: string | null
 }
 
 export interface AdminUpdateUserInput {
@@ -44,6 +48,7 @@ export interface AdminUpdateUserInput {
   password?: string
   role?: UserRole
   isActive?: boolean
+  avatar?: string | null
 }
 
 export type AuthErrorCode =
