@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { CalendarDays, Leaf, Store } from "lucide-react"
+import { CalendarDays, Leaf, Sparkles, Store } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 
@@ -51,8 +51,17 @@ export function BottomNav() {
     },
   ]
 
+  // Smart detect tab (separate for special styling)
+  const smartDetectTab = isAuthenticated
+    ? {
+        name: (t as any)("smart_detect"),
+        href: "/plants/new",
+        icon: Sparkles,
+      }
+    : null
+
   // For unauthenticated: show full-width marketplace tab
-  const gridCols = isAuthenticated ? "grid-cols-3" : "grid-cols-1"
+  const gridCols = isAuthenticated ? "grid-cols-4" : "grid-cols-1"
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-slate-200 md:hidden pb-safe">
@@ -77,6 +86,19 @@ export function BottomNav() {
             </Link>
           )
         })}
+        {smartDetectTab && (
+          <Link
+            key="smart-detect"
+            href={smartDetectTab.href}
+            id="smart-detect-bottom"
+            className="inline-flex flex-col items-center justify-center px-2 group"
+          >
+            <div className="w-9 h-9 -mt-5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg ring-2 ring-white group-hover:scale-110 transition-transform">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-[9px] mt-0.5 text-emerald-600 font-bold">{smartDetectTab.name}</span>
+          </Link>
+        )}
       </div>
     </div>
   )

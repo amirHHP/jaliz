@@ -294,7 +294,9 @@ const translations = {
     mp_chat_no_messages: "Say hello — your message starts the conversation.",
     mp_chat_send: "Send",
     mp_chat_input_ph: "Write a message…",
-    mp_chat_sign_in_required: "Sign in to send messages."
+    mp_chat_sign_in_required: "Sign in to send messages.",
+    // Smart detect
+    smart_detect: "Smart Detect",
   },
   fa: {
     app_title: "جالیز",
@@ -585,7 +587,9 @@ const translations = {
     mp_chat_no_messages: "اولین پیام شما آغازگر گفتگو خواهد بود.",
     mp_chat_send: "ارسال",
     mp_chat_input_ph: "پیام خود را بنویسید…",
-    mp_chat_sign_in_required: "برای ارسال پیام وارد شوید."
+    mp_chat_sign_in_required: "برای ارسال پیام وارد شوید.",
+    // Smart detect
+    smart_detect: "تشخیص هوشمند",
   }
 }
 

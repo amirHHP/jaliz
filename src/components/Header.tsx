@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   Shield,
+  Sparkles,
   User,
   UserPlus,
   X,
@@ -117,6 +118,18 @@ export function Header() {
             )
           })}
         </nav>
+
+        {/* Desktop Smart Detect CTA */}
+        {isAuthenticated && (
+          <Link
+            href="/plants/new"
+            id="smart-detect-desktop"
+            className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+          >
+            <Sparkles className="h-4 w-4" />
+            {t("smart_detect")}
+          </Link>
+        )}
 
         <div className="flex items-center gap-3">
 
@@ -267,6 +280,21 @@ export function Header() {
               </Link>
             )
           })}
+
+          {/* Mobile Smart Detect CTA */}
+          {isAuthenticated && (
+            <div className="border-t border-slate-100 pt-2 mt-2">
+              <Link
+                href="/plants/new"
+                id="smart-detect-mobile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md transition-all hover:shadow-lg"
+              >
+                <Sparkles className="h-4 w-4" />
+                {t("smart_detect")}
+              </Link>
+            </div>
+          )}
 
           {/* Mobile auth actions */}
           {status !== "loading" && status !== "authenticated" && (
