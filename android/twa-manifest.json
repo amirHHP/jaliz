@@ -1,5 +1,5 @@
 {
-  "packageId": "ir.noxte.jaliz",
+  "packageId": "ir.noxte.jaliz.twa",
   "host": "jaliz.noxte.ir",
   "name": "جالیز | باغبانی هوشمند",
   "launcherName": "jaliz",
@@ -13,8 +13,8 @@
   "backgroundColor": "#f5f0e8",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://jaliz.ir/icons/icon-512x512.png",
-  "maskableIconUrl": "https://jaliz.ir/icons/icon-maskable-512x512.png",
+  "iconUrl": "https://jaliz.noxte.ir/icons/icon-512x512.png",
+  "maskableIconUrl": "https://jaliz.noxte.ir/icons/icon-maskable-512x512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./jaliz-keystore.jks",
@@ -27,23 +27,23 @@
       "name": "گیاهان من",
       "shortName": "گیاهان",
       "url": "/plants",
-      "chosenIconUrl": "https://jaliz.ir/icons/icon-192x192.png"
+      "chosenIconUrl": "https://jaliz.noxte.ir/icons/icon-192x192.png"
     },
     {
       "name": "فروشگاه",
       "shortName": "فروشگاه",
       "url": "/marketplace",
-      "chosenIconUrl": "https://jaliz.ir/icons/icon-192x192.png"
+      "chosenIconUrl": "https://jaliz.noxte.ir/icons/icon-192x192.png"
     },
     {
       "name": "برنامه آبیاری",
       "shortName": "آبیاری",
       "url": "/schedule",
-      "chosenIconUrl": "https://jaliz.ir/icons/icon-192x192.png"
+      "chosenIconUrl": "https://jaliz.noxte.ir/icons/icon-192x192.png"
     }
   ],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://jaliz.ir/manifest.json",
+  "webManifestUrl": "https://jaliz.noxte.ir/manifest.json",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": {

@@ -45,8 +45,13 @@
   "related_applications": [
     {
       "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=ir.jaliz.app",
-      "id": "ir.jaliz.app"
+      "url": "https://play.google.com/store/apps/details?id=ir.noxte.jaliz.twa",
+      "id": "ir.noxte.jaliz.twa"
+    },
+    {
+      "platform": "webapp",
+      "url": "https://cafebazaar.ir/app/ir.noxte.jaliz.twa",
+      "id": "ir.noxte.jaliz.twa"
     }
   ],
   "iarc_rating_id": "e58d4a67-cd34-4536-a1ff-860824b27c3e",
