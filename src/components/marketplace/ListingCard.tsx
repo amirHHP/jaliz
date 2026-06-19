@@ -46,7 +46,7 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
         isCompleted ? "opacity-75" : ""
       }`}
     >
-      <div className="relative w-full h-44 bg-slate-100 overflow-hidden">
+      <div className="relative w-full aspect-[4/5] bg-slate-100 overflow-hidden">
         {listing.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -86,15 +86,15 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
         )}
       </div>
 
-      <div className="p-4 grow flex flex-col">
-        <h3 className="font-semibold text-slate-900 line-clamp-1">
+      <div className="p-3 sm:p-4 grow flex flex-col">
+        <h3 className="font-semibold text-xs sm:text-sm md:text-base text-slate-900 line-clamp-1">
           {listing.title}
         </h3>
-        <p className="mt-1 text-sm text-slate-600 line-clamp-2 leading-relaxed">
+        <p className="mt-1 text-[11px] sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
           {listing.description}
         </p>
 
-        <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-xs text-slate-500 gap-1.5 sm:gap-2">
           <div className="flex items-center gap-1 truncate">
             {listing.location && (
               <>
@@ -106,7 +106,7 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
           <span
             className={`font-semibold ${
               listing.mode === "sell" ? "text-emerald-700" : "text-slate-700"
-            } shrink-0 ms-2`}
+            } shrink-0 sm:ms-2`}
           >
             {priceLine}
           </span>

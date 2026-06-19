@@ -301,10 +301,10 @@ const translations = {
   fa: {
     app_title: "جالیز",
     home: "خانه",
-    schedule: "برنامه آبیاری و مراقبت",
+    schedule: " آبیاری و مراقبت",
     dashboard: "باغچه من",
     marketplace: "بازارچه",
-    my_plants: "مجموعه گیاهان من",
+    my_plants: " گیاهان من",
     welcome_title: "روزت سرشار از طراوت 🌿",
     morning_greeting: "صبح بخیر! روزت سرشار از طراوت 🌿",
     afternoon_greeting: "ظهر بخیر! وقت رسیدگی به آرامش سبز شماست 🍃",
