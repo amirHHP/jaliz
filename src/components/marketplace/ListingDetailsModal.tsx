@@ -160,7 +160,7 @@ export function ListingDetailsModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
         {/* Hero image with close button */}
-        <div className="relative h-56 bg-slate-100">
+        <div className="relative h-64 sm:h-80 md:h-[350px] bg-slate-100">
           {listing.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

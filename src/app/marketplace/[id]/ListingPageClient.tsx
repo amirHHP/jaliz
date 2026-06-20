@@ -95,7 +95,7 @@ export function ListingPageClient({
 
         <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
           {/* Hero image */}
-          <div className="relative w-full h-64 md:h-80 bg-slate-100">
+          <div className="relative w-full h-72 sm:h-96 md:h-[420px] bg-slate-100">
             {listing.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

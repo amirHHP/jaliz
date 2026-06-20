@@ -310,7 +310,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
         dir={isRtl ? "rtl" : "ltr"}
       >
         {/* ── Hero image ────────────────────────────────────────────────────── */}
-        <div className="relative h-56 bg-slate-100 shrink-0 overflow-hidden">
+        <div className="relative h-64 sm:h-80 md:h-[350px] bg-slate-100 shrink-0 overflow-hidden">
           {image ? (
             <img src={image} alt={plant.name} className="w-full h-full object-cover" />
           ) : (
