@@ -15,6 +15,7 @@ interface Plant {
   hasDrainage: boolean
   lastWatered: string
   nextWateringDate?: string
+  growingMedium: "Soil" | "Water"
   recentlyReplanted: boolean
   image?: string
 }
@@ -41,6 +42,7 @@ export function WateringSchedule() {
           hasDrainage: r.hasDrainage || true,
           lastWatered: r.lastWatered ? new Date(r.lastWatered).toISOString() : new Date().toISOString(),
           nextWateringDate: r.nextWateringDate ? new Date(r.nextWateringDate).toISOString() : undefined,
+          growingMedium: (r.growingMedium as any) || "Soil",
           recentlyReplanted: r.recentlyReplanted || false,
           image: r.image ?? undefined,
         })))
@@ -134,7 +136,17 @@ export function WateringSchedule() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-sm truncate text-emerald-900">{p.name}</div>
-                    <div className="text-xs text-emerald-600/70 truncate mt-0.5 font-medium">{p.locationType} • {p.potType}</div>
+                    <div className="text-xs text-emerald-600/70 truncate mt-0.5 font-medium">
+                      {p.locationType === "Indoor" ? (language === "fa" ? "داخل خانه" : "Indoor") : (language === "fa" ? "خارج خانه" : "Outdoor")} • {
+                        p.potType === "Terracotta" ? (language === "fa" ? "سفالی" : "Terracotta") :
+                        p.potType === "Plastic" ? (language === "fa" ? "پلاستیکی" : "Plastic") :
+                        p.potType === "Ceramic" ? (language === "fa" ? "سرامیکی" : "Ceramic") :
+                        p.potType === "Metal" ? (language === "fa" ? "فلزی" : "Metal") : 
+                        (language === "fa" ? "سایر" : "Other")
+                      } • {
+                        p.growingMedium === "Water" ? (language === "fa" ? "آب (هیدروپونیک)" : "Water (Hydroponic)") : (language === "fa" ? "خاک" : "Soil")
+                      }
+                    </div>
                   </div>
                 </div>
               ))}
