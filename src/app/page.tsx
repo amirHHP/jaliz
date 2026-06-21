@@ -264,53 +264,95 @@ function PublicHomePage() {
         <div className="pointer-events-none absolute bottom-0 -start-24 h-72 w-72 rounded-full bg-teal-200/20 blur-3xl" />
 
         <div className="container mx-auto px-4 py-12 md:py-16 max-w-6xl relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-            {/* Text */}
-            <div className="flex-1 text-center md:text-start space-y-5">
-              <div className="inline-flex items-center gap-2 bg-emerald-100/60 backdrop-blur-sm text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-200/50">
-                <Sprout className="h-3.5 w-3.5" />
-                {t("app_title")}
-              </div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-                {t("landing_hero_title")}
-              </h1>
-              <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-lg">
-                {t("landing_hero_subtitle")}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                <Link
-                  href="/register"
-                  className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {t("landing_cta_primary")}
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex justify-center items-center gap-2 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 px-6 py-3.5 text-sm font-bold shadow-sm transition-all hover:scale-[1.02]"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {t("landing_cta_secondary")}
-                </Link>
-              </div>
+          {/* Hero text - centered */}
+          <div className="text-center space-y-5 max-w-2xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-2 bg-emerald-100/60 backdrop-blur-sm text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-200/50">
+              <Sprout className="h-3.5 w-3.5" />
+              {t("app_title")}
             </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+              {t("landing_hero_title")}
+            </h1>
+            <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-lg mx-auto">
+              {t("landing_hero_subtitle")}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/register"
+                className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
+              >
+                <UserPlus className="h-4 w-4" />
+                {t("landing_cta_primary")}
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex justify-center items-center gap-2 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 px-6 py-3.5 text-sm font-bold shadow-sm transition-all hover:scale-[1.02]"
+              >
+                <LogIn className="h-4 w-4" />
+                {t("landing_cta_secondary")}
+              </Link>
+            </div>
+          </div>
 
-            {/* Feature cards */}
-            <div className="flex-1 grid grid-cols-2 gap-3 max-w-sm">
+          {/* Features showcase - informational, not clickable */}
+          <div className="relative">
+            <h2 className="text-center text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">
+              {t("features_section_title" as any)}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { icon: Droplets, color: "text-sky-500 bg-sky-50", title: language === "fa" ? "یادآور آبیاری" : "Watering Reminders" },
-                { icon: Sprout, color: "text-emerald-500 bg-emerald-50", title: language === "fa" ? "ثبت گیاهان" : "Plant Tracking" },
-                { icon: Sparkles, color: "text-amber-500 bg-amber-50", title: language === "fa" ? "مشاوره هوشمند" : "AI Advice" },
-                { icon: Store, color: "text-indigo-500 bg-indigo-50", title: language === "fa" ? "فروشگاه" : "Marketplace" },
+                {
+                  icon: Droplets,
+                  iconColor: "text-sky-500",
+                  bgColor: "bg-sky-50",
+                  borderColor: "border-sky-100",
+                  accentBar: "bg-sky-400",
+                  titleKey: "feature_watering_title",
+                  descKey: "feature_watering_desc",
+                },
+                {
+                  icon: Sprout,
+                  iconColor: "text-emerald-500",
+                  bgColor: "bg-emerald-50",
+                  borderColor: "border-emerald-100",
+                  accentBar: "bg-emerald-400",
+                  titleKey: "feature_tracking_title",
+                  descKey: "feature_tracking_desc",
+                },
+                {
+                  icon: Sparkles,
+                  iconColor: "text-amber-500",
+                  bgColor: "bg-amber-50",
+                  borderColor: "border-amber-100",
+                  accentBar: "bg-amber-400",
+                  titleKey: "feature_ai_title",
+                  descKey: "feature_ai_desc",
+                },
+                {
+                  icon: Store,
+                  iconColor: "text-indigo-500",
+                  bgColor: "bg-indigo-50",
+                  borderColor: "border-indigo-100",
+                  accentBar: "bg-indigo-400",
+                  titleKey: "feature_marketplace_title",
+                  descKey: "feature_marketplace_desc",
+                },
               ].map((feat, i) => (
                 <div
                   key={i}
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-100 p-4 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition-shadow"
+                  className={`relative overflow-hidden rounded-2xl border ${feat.borderColor} bg-white/60 backdrop-blur-sm p-5 select-none`}
                 >
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${feat.color}`}>
-                    <feat.icon className="h-5 w-5" />
+                  {/* Top accent bar */}
+                  <div className={`absolute top-0 inset-x-0 h-1 ${feat.accentBar} rounded-t-2xl`} />
+                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${feat.bgColor} mb-3`}>
+                    <feat.icon className={`h-5 w-5 ${feat.iconColor}`} />
                   </div>
-                  <span className="text-xs font-semibold text-slate-700 text-center">{feat.title}</span>
+                  <h3 className="text-sm font-bold text-slate-800 mb-1.5">
+                    {t(feat.titleKey as any)}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    {t(feat.descKey as any)}
+                  </p>
                 </div>
               ))}
             </div>

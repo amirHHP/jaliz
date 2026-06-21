@@ -305,6 +305,16 @@ const translations = {
     profile_update_success: "Profile updated successfully!",
     change_photo: "Change Photo",
     remove_photo: "Remove Photo",
+    // Features showcase
+    features_section_title: "Everything your plants need",
+    feature_watering_title: "Smart Watering Reminders",
+    feature_watering_desc: "Never forget to water again. Get personalized reminders based on each plant's needs, season, and pot type.",
+    feature_tracking_title: "Plant Growth Tracking",
+    feature_tracking_desc: "Keep a visual diary of your plants. Log health, photos, and care history to watch them thrive over time.",
+    feature_ai_title: "AI-Powered Advice",
+    feature_ai_desc: "Get smart care tips tailored to your plants and local weather. Like having a botanist in your pocket.",
+    feature_marketplace_title: "Community Marketplace",
+    feature_marketplace_desc: "Buy, sell, or trade seeds, cuttings, and tools with plant lovers in your neighborhood.",
   },
   fa: {
     app_title: "جالیز",
@@ -606,6 +616,16 @@ const translations = {
     profile_update_success: "پروفایل شما با موفقیت به‌روزرسانی شد!",
     change_photo: "تغییر عکس",
     remove_photo: "حذف عکس",
+    // Features showcase
+    features_section_title: "همه‌چیز برای گیاهان شما",
+    feature_watering_title: "یادآور هوشمند آبیاری",
+    feature_watering_desc: "دیگه یادتون نمیره! بر اساس نوع گیاه، فصل و نوع گلدان بهتون یادآوری می‌کنیم.",
+    feature_tracking_title: "ثبت و پیگیری رشد گیاهان",
+    feature_tracking_desc: "یه دفترچه خاطرات سبز! عکس بگیر، سلامت گیاهت رو ثبت کن و روند رشدش رو ببین.",
+    feature_ai_title: "مشاوره هوشمند با هوش مصنوعی",
+    feature_ai_desc: "نکات مراقبتی اختصاصی بر اساس گیاهانت و آب‌وهوای محلی. مثل داشتن یه متخصص گیاه‌شناسی!",
+    feature_marketplace_title: "بازارچه سبز محله",
+    feature_marketplace_desc: "بذر، قلمه و ابزار باغبانی رو با گیاه‌دوست‌های نزدیکت خرید و فروش یا تبادل کن.",
   }
 }
 
