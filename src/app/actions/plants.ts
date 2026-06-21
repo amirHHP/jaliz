@@ -107,6 +107,7 @@ export type UpdateUserPlantInput = {
   locationType?: string | null;
   lightExposure?: string | null;
   potType?: string | null;
+  growingMedium?: string | null;
   hasDrainage?: boolean | null;
   lastWatered?: Date | string | null;
   recentlyReplanted?: boolean | null;
@@ -129,6 +130,7 @@ export async function updateUserPlantAction(plantId: string, data: UpdateUserPla
   if (data.locationType !== undefined) updateData.locationType = data.locationType ?? undefined;
   if (data.lightExposure !== undefined) updateData.lightExposure = data.lightExposure ?? undefined;
   if (data.potType !== undefined) updateData.potType = data.potType ?? undefined;
+  if (data.growingMedium !== undefined) updateData.growingMedium = data.growingMedium ?? undefined;
   if (data.hasDrainage !== undefined) updateData.hasDrainage = data.hasDrainage;
   if (data.recentlyReplanted !== undefined) updateData.recentlyReplanted = data.recentlyReplanted;
   if (data.lastSoilChange !== undefined) {
@@ -185,6 +187,7 @@ export type CreateUserPlantInput = {
   locationType?: string | null;
   lightExposure?: string | null;
   potType?: string | null;
+  growingMedium?: string | null;
   hasDrainage?: boolean | null;
   lastWatered?: Date | string | null;
   recentlyReplanted?: boolean | null;
@@ -224,6 +227,7 @@ export async function createUserPlantAction(data: CreateUserPlantInput) {
       locationType: data.locationType ?? "Indoor",
       lightExposure: data.lightExposure ?? "Bright Indirect",
       potType: data.potType ?? "Plastic",
+      growingMedium: data.growingMedium ?? "Soil",
       hasDrainage: data.hasDrainage ?? true,
       lastWatered,
       nextWateringDate,

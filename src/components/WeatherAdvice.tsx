@@ -40,6 +40,7 @@ export function WeatherAdvice() {
           locationType: p.locationType,
           lightExposure: p.lightExposure,
           potType: p.potType,
+          growingMedium: p.growingMedium,
           hasDrainage: p.hasDrainage,
           recentlyReplanted: p.recentlyReplanted,
           lastSoilChange: p.lastSoilChange ? new Date(p.lastSoilChange).toISOString().split("T")[0] : null,

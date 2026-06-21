@@ -27,6 +27,7 @@ interface Plant {
   locationType: "Indoor" | "Outdoor"
   lightExposure: "Low Light" | "Partial Shade" | "Bright Indirect" | "Full Sun"
   potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
+  growingMedium: "Soil" | "Water"
   hasDrainage: boolean
   lastWatered: string
   nextWateringDate?: string
@@ -67,6 +68,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const [locationType, setLocationType] = useState(plant.locationType)
   const [lightExposure, setLightExposure] = useState(plant.lightExposure)
   const [potType, setPotType] = useState(plant.potType)
+  const [growingMedium, setGrowingMedium] = useState(plant.growingMedium)
   const [hasDrainage, setHasDrainage] = useState(plant.hasDrainage)
   const [lastWatered, setLastWatered] = useState(plant.lastWatered)
   const [recentlyReplanted, setRecentlyReplanted] = useState(plant.recentlyReplanted)
@@ -266,6 +268,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
       if (data.locationType) setLocationType(data.locationType)
       if (data.lightExposure) setLightExposure(data.lightExposure)
       if (data.potType) setPotType(data.potType)
+      if (data.growingMedium) setGrowingMedium(data.growingMedium)
       if (data.hasDrainage !== undefined) setHasDrainage(data.hasDrainage)
       if (data.careTips || data.soilChangeTips) setCareTips([data.careTips, data.soilChangeTips].filter(Boolean).join("\n\n"))
       if (data.wateringTips) setWateringTips(data.wateringTips)
@@ -280,7 +283,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     if (!name.trim()) return
     onSave({
       ...plant,
-      name, type, locationType, lightExposure, potType,
+      name, type, locationType, lightExposure, potType, growingMedium,
       hasDrainage, lastWatered, recentlyReplanted, lastSoilChange, health,
       image, careTips, wateringTips, wateringInterval
     })
@@ -290,7 +293,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const handleDiscard = () => {
     setName(plant.name); setType(plant.type)
     setLocationType(plant.locationType); setLightExposure(plant.lightExposure)
-    setPotType(plant.potType); setHasDrainage(plant.hasDrainage)
+    setPotType(plant.potType); setGrowingMedium(plant.growingMedium); setHasDrainage(plant.hasDrainage)
     setLastWatered(plant.lastWatered); setRecentlyReplanted(plant.recentlyReplanted)
     setLastSoilChange(plant.lastSoilChange || "")
     setHealth(plant.health); setImage(plant.image || "")
@@ -394,6 +397,11 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                       plant.potType === "Plastic" ? t("pot_plastic") :
                       plant.potType === "Ceramic" ? t("pot_ceramic") :
                       plant.potType === "Metal" ? t("pot_metal") : t("pot_other"),
+                  },
+                  {
+                    icon: <Sprout className="h-4 w-4 text-emerald-500" />,
+                    label: t("growing_medium"),
+                    value: plant.growingMedium === "Water" ? t("medium_water") : t("medium_soil"),
                   },
                   {
                     icon: <Droplets className="h-4 w-4 text-slate-300" />,
@@ -720,6 +728,14 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                     <option value="Ceramic">{t("pot_ceramic")}</option>
                     <option value="Metal">{t("pot_metal")}</option>
                     <option value="Other">{t("pot_other")}</option>
+                  </select>
+                </div>
+                {/* Growing Medium */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t("growing_medium")}</label>
+                  <select value={growingMedium} onChange={e => setGrowingMedium(e.target.value as any)} className={selectCls}>
+                    <option value="Soil">{t("medium_soil")}</option>
+                    <option value="Water">{t("medium_water")}</option>
                   </select>
                 </div>
                 {/* Health */}

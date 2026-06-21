@@ -38,6 +38,7 @@ model UserPlant {
   locationType       String?  @default("Indoor")
   lightExposure      String?  @default("Bright Indirect")
   potType            String?  @default("Plastic")
+  growingMedium      String?  @default("Soil") // "Soil" or "Water"
   hasDrainage        Boolean? @default(true)
   lastWatered        DateTime?
   nextWateringDate   DateTime?

@@ -19,6 +19,7 @@ interface PlantDraft {
   locationType: "Indoor" | "Outdoor"
   lightExposure: "Low Light" | "Partial Shade" | "Bright Indirect" | "Full Sun"
   potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
+  growingMedium: "Soil" | "Water"
   hasDrainage: boolean
   lastWatered: string
   recentlyReplanted: boolean
@@ -65,6 +66,7 @@ export default function NewPlantPage() {
     locationType: "Indoor",
     lightExposure: "Bright Indirect",
     potType: "Plastic",
+    growingMedium: "Soil",
     hasDrainage: true,
     lastWatered: new Date().toISOString().split("T")[0],
     recentlyReplanted: false,
@@ -159,6 +161,7 @@ export default function NewPlantPage() {
         locationType: data.locationType as any || prev.locationType,
         lightExposure: data.lightExposure as any || prev.lightExposure,
         potType: data.potType as any || prev.potType,
+        growingMedium: data.growingMedium as any || prev.growingMedium,
         hasDrainage: data.hasDrainage !== undefined ? data.hasDrainage : prev.hasDrainage,
         careTips: data.careTips || "",
         wateringTips: data.wateringTips || "",
@@ -188,6 +191,7 @@ export default function NewPlantPage() {
         locationType: draft.locationType,
         lightExposure: draft.lightExposure,
         potType: draft.potType,
+        growingMedium: draft.growingMedium,
         hasDrainage: draft.hasDrainage,
         lastWatered: draft.lastWatered ? new Date(draft.lastWatered) : new Date(),
         recentlyReplanted: draft.recentlyReplanted,
@@ -212,6 +216,7 @@ export default function NewPlantPage() {
       locationType: "Indoor",
       lightExposure: "Bright Indirect",
       potType: "Plastic",
+      growingMedium: "Soil",
       hasDrainage: true,
       lastWatered: new Date().toISOString().split("T")[0],
       recentlyReplanted: false,
@@ -381,6 +386,15 @@ export default function NewPlantPage() {
                 </div>
               )}
 
+              {/* AI Disclaimer Banner */}
+              <div className="bg-amber-50/60 border border-amber-100/60 rounded-2xl p-4 flex gap-2.5 text-amber-900 text-[11px] leading-relaxed shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                <Info className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold block mb-0.5">{language === "fa" ? "راهنمای ثبت:" : "Registration Guide:"}</span>
+                  {t("ai_detection_disclaimer")}
+                </div>
+              </div>
+
               {/* Plant Identity */}
               <div className="space-y-3">
                 <div className="space-y-1">
@@ -480,6 +494,30 @@ export default function NewPlantPage() {
                       <option value="Metal">{language === "fa" ? "فلزی" : "Metal"}</option>
                       <option value="Other">{language === "fa" ? "سایر" : "Other"}</option>
                     </select>
+                  </div>
+                </div>
+
+                {/* Growing Medium */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <Sprout className="h-3.5 w-3.5 text-emerald-500" />
+                    {language === "fa" ? "محیط رشد" : "Growing Medium"}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 bg-slate-100 rounded-xl p-0.5 h-10">
+                    <button
+                      type="button"
+                      onClick={() => updateDraft("growingMedium", "Soil")}
+                      className={`rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${draft.growingMedium === "Soil" ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      🌱 {language === "fa" ? "خاک" : "Soil"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateDraft("growingMedium", "Water")}
+                      className={`rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${draft.growingMedium === "Water" ? 'bg-white text-sky-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                    >
+                      💧 {language === "fa" ? "آب (هیدروپونیک)" : "Water (Hydroponic)"}
+                    </button>
                   </div>
                 </div>
 

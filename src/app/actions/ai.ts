@@ -278,6 +278,7 @@ Provide the following details in a JSON object exactly matching this structure, 
     "locationType": "Indoor" or "Outdoor",
     "lightExposure": "Low Light" or "Partial Shade" or "Bright Indirect" or "Full Sun",
     "potType": "Terracotta" or "Plastic" or "Ceramic" or "Metal" or "Other",
+    "growingMedium": "Soil" or "Water" (use "Water" only if the plant is clearly in a hydroponic/water-based setup),
     "hasDrainage": true or false,
     "wateringInterval": an integer representing the recommended watering interval in days (e.g. 7),
     "careTips": "Provide a detailed and comprehensive paragraph explaining the best general care practices for this plant. Must be written in ${languageName}.",
@@ -357,6 +358,7 @@ export async function getWeatherAdviceAction(data: { latitude: number, longitude
       details.push(`Location: ${p.locationType || "Indoor"}`);
       details.push(`Light: ${p.lightExposure || "Unknown"}`);
       details.push(`Pot: ${p.potType || "Unknown"}`);
+      details.push(`Growing Medium: ${p.growingMedium || "Soil"}`);
       const drainage = p.hasDrainage ? "Yes" : "No";
       details.push(`Drainage: ${drainage}`);
       if (p.recentlyReplanted) {

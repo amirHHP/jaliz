@@ -51,6 +51,9 @@ const translations = {
     pot_ceramic: "Ceramic",
     pot_metal: "Metal",
     pot_other: "Other",
+    growing_medium: "Growing Medium",
+    medium_soil: "Soil",
+    medium_water: "Water (Hydroponic)",
     has_drainage: "Has Drainage Hole",
     last_watered: "Last Watered",
     last_soil_change: "Last Soil Change",
@@ -297,6 +300,7 @@ const translations = {
     mp_chat_sign_in_required: "Sign in to send messages.",
     // Smart detect
     smart_detect: "Smart Detect",
+    ai_detection_disclaimer: "This information is detected based on your plant's image and may contain errors due to lighting or photo angle. If needed, please edit the details before saving.",
     // Profile Edit
     edit_profile: "Edit Profile",
     profile_photo: "Profile Photo",
@@ -307,13 +311,13 @@ const translations = {
     remove_photo: "Remove Photo",
     // Features showcase
     features_section_title: "Everything your plants need",
-    feature_watering_title: "Smart Watering Reminders",
+    feature_watering_title: "Smart Watering Reminders 💧",
     feature_watering_desc: "Never forget to water again. Get personalized reminders based on each plant's needs, season, and pot type.",
-    feature_tracking_title: "Plant Growth Tracking",
+    feature_tracking_title: "Plant Growth Diary 🌿",
     feature_tracking_desc: "Keep a visual diary of your plants. Log health, photos, and care history to watch them thrive over time.",
-    feature_ai_title: "AI-Powered Advice",
-    feature_ai_desc: "Get smart care tips tailored to your plants and local weather. Like having a botanist in your pocket.",
-    feature_marketplace_title: "Community Marketplace",
+    feature_ai_title: "AI-Powered Advice ✨",
+    feature_ai_desc: "Like having a botanist friend in your pocket! Get smart care tips tailored to your plants and local weather.",
+    feature_marketplace_title: "Neighborhood Marketplace 🏘️",
     feature_marketplace_desc: "Buy, sell, or trade seeds, cuttings, and tools with plant lovers in your neighborhood.",
   },
   fa: {
@@ -362,6 +366,9 @@ const translations = {
     pot_ceramic: "سرامیکی 🍵",
     pot_metal: "فلزی 🥫",
     pot_other: "سایر",
+    growing_medium: "محیط رشد",
+    medium_soil: "خاک 🌱",
+    medium_water: "آب (هیدروپونیک) 💧",
     has_drainage: "دارای زهکشی مناسب",
     last_watered: "تاریخ آخرین آبیاری",
     last_soil_change: "آخرین تعویض خاک",
@@ -608,6 +615,7 @@ const translations = {
     mp_chat_sign_in_required: "برای ارسال پیام وارد شوید.",
     // Smart detect
     smart_detect: "تشخیص هوشمند",
+    ai_detection_disclaimer: "این اطلاعات بر اساس تصویر گیاه شما تشخیص داده شده، ممکنه به دلیل زاویه عکس یا نور خطا داشته باشه؛ در صورت نیاز اطلاعات رو قبل از ثبت ویرایش کنید.",
     // Profile Edit
     edit_profile: "ویرایش پروفایل",
     profile_photo: "عکس پروفایل",
