@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Vazirmatn:wght@100..900&display=swap');
 @import "tailwindcss";
+@dark selector;
 
 :root {
   --background: #fcfaf8; /* cute soft cream */
@@ -45,11 +46,9 @@
   --color-lime-200: #b5d4c8;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020617; /* slate-950 */
-    --foreground: #f8fafc; /* slate-50 */
-  }
+.dark {
+  --background: #020617; /* slate-950 */
+  --foreground: #f8fafc; /* slate-50 */
 }
 
 body {

@@ -94,6 +94,10 @@ const translations = {
     user_location_title: "Your Location",
     user_location_label: "City, Country",
     user_location_ph: "e.g. Tehran, Iran",
+    theme_label: "App Theme",
+    theme_light: "Light",
+    theme_dark: "Dark",
+    theme_system: "System",
     // Auth
     sign_in: "Sign in",
     sign_up: "Sign up",
@@ -409,6 +413,10 @@ const translations = {
     user_location_title: "موقعیت مکانی شما",
     user_location_label: "شهر، کشور",
     user_location_ph: "مثال: تهران، ایران",
+    theme_label: "پوسته برنامه",
+    theme_light: "روشن",
+    theme_dark: "تاریک",
+    theme_system: "سیستم",
     // Auth
     sign_in: "ورود",
     sign_up: "ثبت‌نام",

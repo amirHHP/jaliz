@@ -57,6 +57,24 @@ export default function RootLayout({
     >
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const storedTheme = localStorage.getItem('theme') || 'system';
+                  if (storedTheme === 'dark' || (storedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {
+                  console.error('Failed to init theme:', e);
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <LanguageProvider>
