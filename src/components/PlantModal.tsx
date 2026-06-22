@@ -359,125 +359,8 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
           {!isEditing ? (
             /* ── VIEW MODE ─────────────────────────────────────────────────── */
             <div className="p-6 space-y-6">
-              {/* Quick stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {[
-                  {
-                    icon: <Droplets className="h-4 w-4 text-sky-500" />,
-                    label: t("last_watered"),
-                    value: daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`,
-                  },
-                  {
-                    icon: <Droplets className="h-4 w-4 text-sky-400" />,
-                    label: language === "fa" ? "آبیاری بعدی" : "Next Watering",
-                    value: plant.nextWateringDate ? new Intl.DateTimeFormat(language === "fa" ? 'fa-IR-u-ca-persian' : 'en-US', { dateStyle: 'medium' }).format(new Date(plant.nextWateringDate)) : "-",
-                    extra: "text-sky-600 bg-sky-50 border-sky-100",
-                  },
-                  {
-                    icon: <Activity className="h-4 w-4 text-emerald-500" />,
-                    label: t("health_status"),
-                    value:
-                      plant.health === "Excellent" ? t("health_excellent") :
-                      plant.health === "Good" ? t("health_good") : t("health_needs_attention"),
-                    extra: healthColor,
-                  },
-                  {
-                    icon: <MapPin className="h-4 w-4 text-indigo-400" />,
-                    label: t("location_type"),
-                    value: plant.locationType === "Indoor" ? t("location_indoor") : t("location_outdoor"),
-                  },
-                  {
-                    icon: <Sun className="h-4 w-4 text-amber-400" />,
-                    label: t("light_exposure"),
-                    value:
-                      plant.lightExposure === "Low Light" ? t("light_low") :
-                      plant.lightExposure === "Partial Shade" ? t("light_partial") :
-                      plant.lightExposure === "Bright Indirect" ? t("light_bright") : t("light_full"),
-                  },
-                  {
-                    icon: <Box className="h-4 w-4 text-amber-700/60" />,
-                    label: t("pot_type"),
-                    value:
-                      plant.potType === "Terracotta" ? t("pot_terracotta") :
-                      plant.potType === "Plastic" ? t("pot_plastic") :
-                      plant.potType === "Ceramic" ? t("pot_ceramic") :
-                      plant.potType === "Metal" ? t("pot_metal") : t("pot_other"),
-                  },
-                  {
-                    icon: <Sprout className="h-4 w-4 text-emerald-500" />,
-                    label: t("growing_medium"),
-                    value: plant.growingMedium === "Water" ? t("medium_water") : t("medium_soil"),
-                  },
-                  {
-                    icon: <Droplets className="h-4 w-4 text-slate-300" />,
-                    label: t("has_drainage"),
-                    value: plant.hasDrainage ? "✓" : "✗",
-                    extra: plant.hasDrainage ? "text-emerald-600" : "text-red-500",
-                  },
-                  {
-                    icon: <Sprout className="h-4 w-4 text-amber-600" />,
-                    label: t("last_soil_change"),
-                    value: plant.lastSoilChange
-                      ? (() => {
-                          const months = Math.floor((Date.now() - new Date(plant.lastSoilChange!).getTime()) / (1000 * 3600 * 24 * 30));
-                          return months === 0
-                            ? (language === "fa" ? "همین ماه" : "This month")
-                            : `${months} ${t("soil_change_months_ago")}`;
-                        })()
-                      : t("soil_change_unknown"),
-                    extra: plant.lastSoilChange
-                      ? (Math.floor((Date.now() - new Date(plant.lastSoilChange!).getTime()) / (1000 * 3600 * 24 * 30)) > 12
-                          ? "text-amber-600 bg-amber-50 border-amber-200"
-                          : "text-emerald-600")
-                      : "text-slate-400",
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div className="flex items-center gap-1.5 text-slate-500 text-xs mb-1">
-                      {item.icon}
-                      <span>{item.label}</span>
-                    </div>
-                    <p className={`text-sm font-semibold ${item.extra ? item.extra.split(" ")[0] : "text-slate-800"}`}>
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Replanted badge */}
-              {plant.recentlyReplanted && (
-                <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm font-medium">
-                  <Sprout className="h-4 w-4 shrink-0" />
-                  {t("recently_replanted")}
-                </div>
-              )}
-
-              {/* Care / Watering tips */}
-              {(plant.careTips || plant.wateringTips) && (
-                <div className="space-y-3">
-                  {plant.careTips && (
-                    <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
-                      <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm mb-1.5">
-                        <Leaf className="h-4 w-4" />
-                        {t("care_tips")}
-                      </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">{plant.careTips}</p>
-                    </div>
-                  )}
-                  {plant.wateringTips && (
-                    <div className="rounded-xl bg-sky-50 border border-sky-100 p-4">
-                      <div className="flex items-center gap-2 text-sky-700 font-semibold text-sm mb-1.5">
-                        <Droplets className="h-4 w-4" />
-                        {t("watering_tips")}
-                      </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">{plant.wateringTips}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* ── Status Logs ────────────────────────────────────────────── */}
-              <div className="pt-4 border-t border-slate-100">
+              <div className="pb-6 border-b border-slate-100">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2 text-slate-800 font-bold">
                     <History className="h-4 w-4 text-emerald-600" />
@@ -666,6 +549,125 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                   )}
                 </div>
               </div>
+
+              {/* Quick stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  {
+                    icon: <Droplets className="h-4 w-4 text-sky-500" />,
+                    label: t("last_watered"),
+                    value: daysAgo === 0 ? t("watered_today") : `${daysAgo} ${t("watered_days_ago")}`,
+                  },
+                  {
+                    icon: <Droplets className="h-4 w-4 text-sky-400" />,
+                    label: language === "fa" ? "آبیاری بعدی" : "Next Watering",
+                    value: plant.nextWateringDate ? new Intl.DateTimeFormat(language === "fa" ? 'fa-IR-u-ca-persian' : 'en-US', { dateStyle: 'medium' }).format(new Date(plant.nextWateringDate)) : "-",
+                    extra: "text-sky-600 bg-sky-50 border-sky-100",
+                  },
+                  {
+                    icon: <Activity className="h-4 w-4 text-emerald-500" />,
+                    label: t("health_status"),
+                    value:
+                      plant.health === "Excellent" ? t("health_excellent") :
+                      plant.health === "Good" ? t("health_good") : t("health_needs_attention"),
+                    extra: healthColor,
+                  },
+                  {
+                    icon: <MapPin className="h-4 w-4 text-indigo-400" />,
+                    label: t("location_type"),
+                    value: plant.locationType === "Indoor" ? t("location_indoor") : t("location_outdoor"),
+                  },
+                  {
+                    icon: <Sun className="h-4 w-4 text-amber-400" />,
+                    label: t("light_exposure"),
+                    value:
+                      plant.lightExposure === "Low Light" ? t("light_low") :
+                      plant.lightExposure === "Partial Shade" ? t("light_partial") :
+                      plant.lightExposure === "Bright Indirect" ? t("light_bright") : t("light_full"),
+                  },
+                  {
+                    icon: <Box className="h-4 w-4 text-amber-700/60" />,
+                    label: t("pot_type"),
+                    value:
+                      plant.potType === "Terracotta" ? t("pot_terracotta") :
+                      plant.potType === "Plastic" ? t("pot_plastic") :
+                      plant.potType === "Ceramic" ? t("pot_ceramic") :
+                      plant.potType === "Metal" ? t("pot_metal") : t("pot_other"),
+                  },
+                  {
+                    icon: <Sprout className="h-4 w-4 text-emerald-500" />,
+                    label: t("growing_medium"),
+                    value: plant.growingMedium === "Water" ? t("medium_water") : t("medium_soil"),
+                  },
+                  {
+                    icon: <Droplets className="h-4 w-4 text-slate-300" />,
+                    label: t("has_drainage"),
+                    value: plant.hasDrainage ? "✓" : "✗",
+                    extra: plant.hasDrainage ? "text-emerald-600" : "text-red-500",
+                  },
+                  {
+                    icon: <Sprout className="h-4 w-4 text-amber-600" />,
+                    label: t("last_soil_change"),
+                    value: plant.lastSoilChange
+                      ? (() => {
+                          const months = Math.floor((Date.now() - new Date(plant.lastSoilChange!).getTime()) / (1000 * 3600 * 24 * 30));
+                          return months === 0
+                            ? (language === "fa" ? "همین ماه" : "This month")
+                            : `${months} ${t("soil_change_months_ago")}`;
+                        })()
+                      : t("soil_change_unknown"),
+                    extra: plant.lastSoilChange
+                      ? (Math.floor((Date.now() - new Date(plant.lastSoilChange!).getTime()) / (1000 * 3600 * 24 * 30)) > 12
+                          ? "text-amber-600 bg-amber-50 border-amber-200"
+                          : "text-emerald-600")
+                      : "text-slate-400",
+                  },
+                ].map((item, i) => (
+                  <div key={i} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                    <div className="flex items-center gap-1.5 text-slate-500 text-xs mb-1">
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </div>
+                    <p className={`text-sm font-semibold ${item.extra ? item.extra.split(" ")[0] : "text-slate-800"}`}>
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Replanted badge */}
+              {plant.recentlyReplanted && (
+                <div className="flex items-center gap-2 text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm font-medium">
+                  <Sprout className="h-4 w-4 shrink-0" />
+                  {t("recently_replanted")}
+                </div>
+              )}
+
+              {/* Care / Watering tips */}
+              {(plant.careTips || plant.wateringTips) && (
+                <div className="space-y-3">
+                  {plant.careTips && (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+                      <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm mb-1.5">
+                        <Leaf className="h-4 w-4" />
+                        {t("care_tips")}
+                      </div>
+                      <p className="text-sm text-slate-700 leading-relaxed">{plant.careTips}</p>
+                    </div>
+                  )}
+                  {plant.wateringTips && (
+                    <div className="rounded-xl bg-sky-50 border border-sky-100 p-4">
+                      <div className="flex items-center gap-2 text-sky-700 font-semibold text-sm mb-1.5">
+                        <Droplets className="h-4 w-4" />
+                        {t("watering_tips")}
+                      </div>
+                      <p className="text-sm text-slate-700 leading-relaxed">{plant.wateringTips}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+
             </div>
           ) : (
             /* ── EDIT MODE ─────────────────────────────────────────────────── */
