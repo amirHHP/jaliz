@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowLeftRight,
   Apple,
+  MessageSquare,
   Plus,
   Scissors,
   Search,
@@ -60,7 +61,7 @@ function MarketplaceOpenFromQuery({
 }
 
 export default function MarketplacePage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { user, status, getUser } = useAuth()
   const { revision, list, get } = useMarketplace()
 
@@ -140,13 +141,24 @@ export default function MarketplacePage() {
               {t("mp_subtitle" as never)}
             </p>
           </div>
-          <Button
-            onClick={handlePostClick}
-            className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            {t("mp_post_btn" as never)}
-          </Button>
+          <div className="flex items-center gap-2">
+            {user && (
+              <Link
+                href="/marketplace/chats"
+                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
+              >
+                <MessageSquare className="h-4 w-4 text-emerald-600" />
+                {language === "fa" ? "گفتگوها" : "Chats"}
+              </Link>
+            )}
+            <Button
+              onClick={handlePostClick}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              {t("mp_post_btn" as never)}
+            </Button>
+          </div>
         </div>
 
         {/* Tabs + search */}

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { CalendarDays, Leaf, Sparkles, Store } from "lucide-react"
+import { CalendarDays, Leaf, MessageCircle, Sparkles, Store } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 
@@ -40,6 +40,12 @@ export function BottomNav() {
             icon: CalendarDays,
             active: pathname?.startsWith("/schedule"),
           },
+          {
+            name: (t as any)("chats"),
+            href: "/marketplace/chats",
+            icon: MessageCircle,
+            active: pathname?.startsWith("/marketplace/chats"),
+          },
         ]
       : []),
     {
@@ -47,8 +53,8 @@ export function BottomNav() {
       href: isAuthenticated ? "/marketplace" : "/",
       icon: Store,
       active: isAuthenticated
-        ? pathname?.startsWith("/marketplace")
-        : pathname === "/" || pathname?.startsWith("/marketplace"),
+        ? pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")
+        : pathname === "/" || (pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")),
     },
   ]
 
@@ -62,7 +68,7 @@ export function BottomNav() {
     : null
 
   // For unauthenticated: show full-width marketplace tab
-  const gridCols = isAuthenticated ? "grid-cols-4" : "grid-cols-1"
+  const gridCols = isAuthenticated ? "grid-cols-5" : "grid-cols-1"
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-slate-200 md:hidden pb-safe">

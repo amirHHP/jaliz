@@ -65,7 +65,8 @@ async function callLlmDirect({
     const requestBody: any = {
       model: modelName,
       messages,
-      temperature
+      temperature,
+      max_tokens: 4096
     };
     // Request JSON output when the prompt expects it
     if (prompt.includes("JSON") || prompt.includes("json")) {
@@ -124,8 +125,11 @@ async function callLlmDirect({
 
     // Build request body; ask Gemini for JSON output when the prompt expects it
     const requestBody: any = { contents: [{ parts }] };
+    requestBody.generationConfig = {
+      maxOutputTokens: 4096
+    };
     if (prompt.includes("JSON") || prompt.includes("json")) {
-      requestBody.generationConfig = { responseMimeType: "application/json" };
+      requestBody.generationConfig.responseMimeType = "application/json";
     }
 
     const response = await fetch(url, {
@@ -163,27 +167,70 @@ async function callLlmDirect({
  * Tries multiple strategies: fenced code block, raw JSON.parse, and
  * extracting the first `{...}` object from mixed markdown/text.
  */
-function parseJsonFromModelText(text: string): any {
+export function parseJsonFromModelText(text: string): any {
   // Strategy 1: Extract from ```json ... ``` fenced code block
   const fenceMatch = /```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/.exec(text);
   if (fenceMatch) {
+    const content = fenceMatch[1].trim();
     try {
-      return JSON.parse(fenceMatch[1].trim());
-    } catch { /* fall through */ }
+      return JSON.parse(content);
+    } catch {
+      try {
+        const cleaned = content.replace(/,\s*([}\]])/g, '$1');
+        return JSON.parse(cleaned);
+      } catch { /* fall through */ }
+    }
   }
 
   // Strategy 2: Try parsing the raw text directly
+  const trimmed = text.trim();
   try {
-    return JSON.parse(text.trim());
-  } catch { /* fall through */ }
-
-  // Strategy 3: Find the first `{` and last `}` and try to parse the substring
-  const firstBrace = text.indexOf("{");
-  const lastBrace = text.lastIndexOf("}");
-  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    return JSON.parse(trimmed);
+  } catch {
     try {
-      return JSON.parse(text.substring(firstBrace, lastBrace + 1));
+      const cleaned = trimmed.replace(/,\s*([}\]])/g, '$1');
+      return JSON.parse(cleaned);
     } catch { /* fall through */ }
+  }
+
+  // Strategy 3: Find all combinations of opening '{' and closing '}' and try to parse the substrings.
+  // Sort them by length descending to prioritize the main JSON block over smaller fragments.
+  const braceIndices: number[] = [];
+  let idx = text.indexOf("{");
+  while (idx !== -1) {
+    braceIndices.push(idx);
+    idx = text.indexOf("{", idx + 1);
+  }
+
+  const closeIndices: number[] = [];
+  let cIdx = text.lastIndexOf("}");
+  while (cIdx !== -1) {
+    closeIndices.push(cIdx);
+    if (cIdx === 0) break;
+    cIdx = text.lastIndexOf("}", cIdx - 1);
+  }
+
+  const candidates: string[] = [];
+  for (const start of braceIndices) {
+    for (const end of closeIndices) {
+      if (end > start) {
+        candidates.push(text.substring(start, end + 1));
+      }
+    }
+  }
+
+  // Sort by length descending
+  candidates.sort((a, b) => b.length - a.length);
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      try {
+        const cleaned = candidate.replace(/,\s*([}\]])/g, '$1');
+        return JSON.parse(cleaned);
+      } catch { /* fall through */ }
+    }
   }
 
   throw new Error(

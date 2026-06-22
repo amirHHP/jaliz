@@ -24,7 +24,7 @@ import { Settings as SettingsIcon } from "lucide-react"
 
 interface NavLink {
   href: string
-  key: "schedule" | "marketplace" | "my_plants" | "admin_panel"
+  key: "schedule" | "marketplace" | "my_plants" | "admin_panel" | "chats"
   adminOnly?: boolean
   authRequired?: boolean
 }
@@ -32,6 +32,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: "/", key: "my_plants", authRequired: true },
   { href: "/schedule", key: "schedule", authRequired: true },
+  { href: "/marketplace/chats", key: "chats", authRequired: true },
   { href: "/marketplace", key: "marketplace" },
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]
@@ -102,7 +103,9 @@ export function Header() {
             const isActive =
               link.href === "/"
                 ? pathname === "/"
-                : link.href !== "#" && pathname.startsWith(link.href)
+                : link.href === "/marketplace"
+                  ? pathname === "/marketplace" || (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/chats"))
+                  : link.href !== "#" && pathname.startsWith(link.href)
             return (
               <Link
                 key={link.key}
