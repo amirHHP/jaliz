@@ -77,7 +77,7 @@ export function ListingDetailsModal({
 
   // Fetch owner info directly from the server (getUser from AuthProvider only
   // works for admins whose `users` array is populated).
-  const [owner, setOwner] = useState<{ fullName: string | null; phone: string | null } | null>(null)
+  const [owner, setOwner] = useState<{ fullName: string | null; phone: string | null; avatar: string | null } | null>(null)
   useEffect(() => {
     let cancelled = false
     getListingOwnerNameAction(listing.ownerId).then((data) => {
@@ -290,8 +290,14 @@ export function ListingDetailsModal({
           {/* Owner row + meta ---------------------------------------- */}
           <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100/50 rounded-2xl p-4 shadow-sm">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-full bg-emerald-200 border-2 border-white flex items-center justify-center shrink-0 shadow-sm">
-                <User className="h-5 w-5 text-emerald-800" />
+              <div className="h-10 w-10 rounded-full bg-emerald-200 border-2 border-white flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                {isOwner && user?.avatar ? (
+                  <img src={user.avatar} alt={ownerName} className="h-full w-full object-cover" />
+                ) : owner?.avatar ? (
+                  <img src={owner.avatar} alt={ownerName} className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-5 w-5 text-emerald-800" />
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-xs text-emerald-600/70 font-medium">

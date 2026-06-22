@@ -24,7 +24,7 @@ export async function getListingByIdAction(id: string) {
 export async function getListingOwnerNameAction(ownerId: string) {
   const user = await prisma.user.findUnique({
     where: { id: ownerId },
-    select: { fullName: true, phone: true },
+    select: { fullName: true, phone: true, avatar: true },
   });
   return user;
 }
