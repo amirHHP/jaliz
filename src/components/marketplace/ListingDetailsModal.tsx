@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useMarketplace } from "@/components/MarketplaceProvider"
+import { getListingOwnerNameAction } from "@/app/actions/marketplace"
 import { Conversation, Listing, Message } from "@/lib/marketplace"
 
 import {
@@ -58,7 +59,7 @@ export function ListingDetailsModal({
   onEdit,
 }: ListingDetailsModalProps) {
   const { t, language } = useLanguage()
-  const { user, status, getUser } = useAuth()
+  const { user, status } = useAuth()
   const {
     revision,
     setCompleted,
@@ -72,7 +73,17 @@ export function ListingDetailsModal({
   const isOwner = user?.id === listing.ownerId
   const isAuthenticated = status === "authenticated" && !!user
 
-  const owner = useMemo(() => getUser(listing.ownerId), [getUser, listing.ownerId])
+  // Fetch owner info directly from the server (getUser from AuthProvider only
+  // works for admins whose `users` array is populated).
+  const [owner, setOwner] = useState<{ fullName: string | null; phone: string | null } | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    getListingOwnerNameAction(listing.ownerId).then((data) => {
+      if (!cancelled && data) setOwner(data)
+    }).catch(console.error)
+    return () => { cancelled = true }
+  }, [listing.ownerId])
+
   const TypeIcon = TYPE_ICON[listing.type]
   const ModeIcon = MODE_ICON[listing.mode]
 
