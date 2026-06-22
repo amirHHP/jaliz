@@ -94,7 +94,8 @@ export async function registerAction(input: RegisterInput): Promise<AuthActionRe
       httpOnly: true,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
-      path: "/"
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
     return toPublicUser(user);
@@ -118,7 +119,8 @@ export async function loginAction(emailInput: string, passwordInput: string): Pr
       httpOnly: true,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
-      path: "/"
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     });
 
     return toPublicUser(user);
