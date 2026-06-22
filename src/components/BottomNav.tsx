@@ -13,8 +13,9 @@ export function BottomNav() {
 
   const isAuthenticated = status === "authenticated"
 
-  // Don't show bottom nav on auth pages, admin pages, or the new plant wizard page
+  // Don't show bottom nav if not authenticated, or on auth/admin/new-plant pages
   if (
+    status !== "authenticated" ||
     pathname === "/login" ||
     pathname === "/register" ||
     pathname?.startsWith("/admin") ||

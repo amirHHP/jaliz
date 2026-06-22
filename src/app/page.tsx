@@ -383,19 +383,6 @@ function PublicHomePage() {
 
       {/* Marketplace section — public, SEO-friendly */}
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Store className="h-5 w-5 text-emerald-600" />
-            <h2 className="text-xl font-bold text-slate-900">{t("mp_title" as never)}</h2>
-          </div>
-          <Link
-            href="/marketplace"
-            className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
-          >
-            {t("mp_view_all" as never)}
-            <ArrowRight className={`h-3.5 w-3.5 ${language === "fa" ? "rotate-180" : ""}`} />
-          </Link>
-        </div>
         <MarketplaceGrid />
       </main>
 
