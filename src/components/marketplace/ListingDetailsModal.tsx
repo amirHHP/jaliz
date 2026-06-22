@@ -160,29 +160,37 @@ export function ListingDetailsModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
         {/* Hero image with close button */}
-        <div className="relative h-64 sm:h-80 md:h-[350px] bg-slate-100">
+        <div className="relative h-80 sm:h-[380px] bg-slate-950 overflow-hidden flex items-center justify-center">
           {listing.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={listing.image}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-            />
+            <>
+              {/* Blurred background image */}
+              <img
+                src={listing.image}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
+              />
+              {/* Main crisp image, fully contained */}
+              <img
+                src={listing.image}
+                alt={listing.title}
+                className="relative max-w-full max-h-full object-contain z-10"
+              />
+            </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-300">
+            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100">
               <ImageIcon className="h-12 w-12" />
             </div>
           )}
           <button
             onClick={onClose}
-            className="absolute top-3 end-3 h-9 w-9 rounded-full bg-white/95 shadow flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-white transition"
+            className="absolute top-3 end-3 h-9 w-9 rounded-full bg-white/95 shadow flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-white transition z-20"
             aria-label={t("cancel" as never)}
           >
             <X className="h-5 w-5" />
           </button>
 
           {listing.status === "completed" && (
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-20">
               <span className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-md">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {t("mp_completed_badge" as never)}

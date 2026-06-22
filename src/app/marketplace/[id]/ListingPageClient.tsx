@@ -95,16 +95,24 @@ export function ListingPageClient({
 
         <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
           {/* Hero image */}
-          <div className="relative w-full h-72 sm:h-96 md:h-[420px] bg-slate-100">
+          <div className="relative w-full h-80 sm:h-[420px] md:h-[480px] bg-slate-950 overflow-hidden flex items-center justify-center">
             {listing.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={listing.image}
-                alt={listing.title}
-                className="w-full h-full object-cover"
-              />
+              <>
+                {/* Blurred background image */}
+                <img
+                  src={listing.image}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
+                />
+                {/* Main crisp image, fully contained */}
+                <img
+                  src={listing.image}
+                  alt={listing.title}
+                  className="relative max-w-full max-h-full object-contain z-10"
+                />
+              </>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-100">
                 <ImageIcon className="h-16 w-16 mb-2 opacity-40" />
                 <span className="text-xs uppercase tracking-wider font-semibold">
                   {language === "fa" ? "بدون عکس" : "No photo"}
@@ -113,7 +121,7 @@ export function ListingPageClient({
             )}
 
             {listing.status === "completed" && (
-              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
+              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-20">
                 <span className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-full shadow-md">
                   <CheckCircle2 className="h-4 w-4" />
                   {t("mp_completed_badge" as never)}

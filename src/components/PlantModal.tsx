@@ -313,21 +313,26 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
         dir={isRtl ? "rtl" : "ltr"}
       >
         {/* ── Hero image ────────────────────────────────────────────────────── */}
-        <div className="relative h-64 sm:h-80 md:h-[350px] bg-slate-100 shrink-0 overflow-hidden">
+        <div className="relative h-80 sm:h-[380px] bg-slate-950 shrink-0 overflow-hidden flex items-center justify-center">
           {image ? (
-            <img src={image} alt={plant.name} className="w-full h-full object-cover" />
+            <>
+              {/* Blurred background image */}
+              <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none" />
+              {/* Main crisp image, fully contained */}
+              <img src={image} alt={plant.name} className="relative max-w-full max-h-full object-contain z-10" />
+            </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-slate-300">
+            <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-100">
               <ImageIcon className="h-14 w-14 mb-2 opacity-40" />
               <span className="text-xs font-medium uppercase tracking-wider">No Photo</span>
             </div>
           )}
 
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-20" />
 
           {/* Type badge */}
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 z-20">
             <span className="text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-md uppercase tracking-wider shadow-sm">
               {type || plant.type}
             </span>
@@ -336,13 +341,13 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition"
+            className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition z-20"
           >
             <X className="h-4 w-4" />
           </button>
 
           {/* Name at bottom of hero */}
-          <div className="absolute bottom-3 left-4 right-4">
+          <div className="absolute bottom-3 left-4 right-4 z-20">
             <h2 className="text-2xl font-bold text-white drop-shadow-md leading-tight">
               {name || plant.name}
             </h2>
