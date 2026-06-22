@@ -57,6 +57,14 @@ export default function MarketplaceChatsPage() {
     }
   }, [status, router])
 
+  // Remove body padding-bottom on mobile to prevent the black scrollable gap above bottom nav
+  useEffect(() => {
+    document.body.classList.add("!pb-0")
+    return () => {
+      document.body.classList.remove("!pb-0")
+    }
+  }, [])
+
   // Get all user conversations
   const conversations = useMemo(() => {
     if (!user) return []
