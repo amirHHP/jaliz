@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 // useEffect is retained for the chat auto-scroll side effect, which is a
 // pure DOM interaction (not a setState).
 import Link from "next/link"
@@ -136,29 +136,44 @@ export function ListingDetailsModal({
     }
   }
 
-  const handleSendMessage = async (e: FormEvent) => {
+  // Guard against double-send while a request is in-flight.
+  const sendingRef = useRef(false)
+
+  const handleSendMessage = useCallback(async (e: FormEvent) => {
     e.preventDefault()
     if (!user) return
     const text = draft.trim()
     if (!text) return
+    if (sendingRef.current) return            // prevent duplicate clicks
+    sendingRef.current = true
+
+    // Optimistic: clear the input immediately so the UI feels responsive.
+    setDraft("")
+    setChatError(null)
+
     const conv = await ensureConversation()
-    if (!conv) return
+    if (!conv) {
+      setDraft(text)                          // restore on failure
+      sendingRef.current = false
+      return
+    }
     try {
       await sendMessage(conv.id, user.id, text)
-      setDraft("")
-      setChatError(null)
     } catch (err) {
       console.error(err)
+      setDraft(text)                          // restore on failure
       setChatError("Couldn't send the message.")
+    } finally {
+      sendingRef.current = false
     }
-  }
+  }, [user, draft, ensureConversation, sendMessage])
 
   const phone = listing.contactPhone || owner?.phone
   const ownerName = owner?.fullName ?? "—"
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-8">
+    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-4 sm:my-8">
         {/* Hero image with close button */}
         <div className="relative h-80 sm:h-[380px] bg-slate-950 overflow-hidden flex items-center justify-center">
           {listing.image ? (

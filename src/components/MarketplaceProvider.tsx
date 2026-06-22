@@ -122,8 +122,12 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
 
   const sendMessage = useCallback(async (conversationId: string, senderId: string, body: string) => {
     const msg = await sendMessageAction(conversationId, body)
-    await reload()
+    // Optimistic: append the new message to local state immediately so the UI
+    // updates without waiting for a full reload round-trip.
+    setMessages((prev) => [...prev, msg as any])
     bump()
+    // Background-sync the full server state (don't block the UI on this).
+    reload().catch(console.error)
     return msg as any
   }, [reload, bump])
 
