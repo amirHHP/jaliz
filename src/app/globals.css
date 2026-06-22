@@ -63,3 +63,7 @@ body {
 html[lang="fa"] {
   --font-sans: var(--font-vazirmatn);
 }
+
+body.no-pb {
+  padding-bottom: 0 !important;
+}

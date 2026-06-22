@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Header } from "@/components/Header"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useMarketplace } from "@/components/MarketplaceProvider"
@@ -58,10 +59,11 @@ export default function MarketplaceChatsPage() {
   }, [status, router])
 
   // Remove body padding-bottom on mobile to prevent the black scrollable gap above bottom nav
+  // and force body background to light gray to avoid dark-mode black canvas flash/gaps
   useEffect(() => {
-    document.body.classList.add("!pb-0")
+    document.body.classList.add("no-pb", "bg-slate-50")
     return () => {
-      document.body.classList.remove("!pb-0")
+      document.body.classList.remove("no-pb", "bg-slate-50")
     }
   }, [])
 
@@ -173,12 +175,15 @@ export default function MarketplaceChatsPage() {
 
   if (status === "loading" || !ready) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
-          <p className="text-sm text-slate-500 font-medium">
-            {language === "fa" ? "در حال بارگذاری گفتگوها..." : "Loading chats..."}
-          </p>
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-slate-50 flex-1">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent" />
+            <p className="text-sm text-slate-500 font-medium">
+              {language === "fa" ? "در حال بارگذاری گفتگوها..." : "Loading chats..."}
+            </p>
+          </div>
         </div>
       </div>
     )
@@ -187,7 +192,9 @@ export default function MarketplaceChatsPage() {
   if (!user) return null
 
   return (
-    <div className="flex h-[calc(100vh-4rem-4rem)] md:h-[calc(100vh-4rem)] bg-slate-50 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <Header />
+      <div className="flex h-[calc(100vh-4rem-4rem)] md:h-[calc(100vh-4rem)] bg-slate-50 overflow-hidden w-full">
       {/* Sidebar - Conversations list */}
       <div
         className={`w-full md:w-80 lg:w-96 bg-white border-e border-slate-200 flex flex-col shrink-0 transition-all ${
@@ -510,6 +517,7 @@ export default function MarketplaceChatsPage() {
         )}
       </div>
     </div>
+   </div>
   )
 }
 
