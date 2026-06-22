@@ -51,9 +51,6 @@ const translations = {
     pot_ceramic: "Ceramic",
     pot_metal: "Metal",
     pot_other: "Other",
-    growing_medium: "Growing Medium",
-    medium_soil: "Soil",
-    medium_water: "Water (Hydroponic)",
     has_drainage: "Has Drainage Hole",
     last_watered: "Last Watered",
     last_soil_change: "Last Soil Change",
@@ -94,10 +91,6 @@ const translations = {
     user_location_title: "Your Location",
     user_location_label: "City, Country",
     user_location_ph: "e.g. Tehran, Iran",
-    theme_label: "App Theme",
-    theme_light: "Light",
-    theme_dark: "Dark",
-    theme_system: "System",
     // Auth
     sign_in: "Sign in",
     sign_up: "Sign up",
@@ -304,7 +297,6 @@ const translations = {
     mp_chat_sign_in_required: "Sign in to send messages.",
     // Smart detect
     smart_detect: "Smart Detect",
-    ai_detection_disclaimer: "This information is detected based on your plant's image and may contain errors due to lighting or photo angle. If needed, please edit the details before saving.",
     // Profile Edit
     edit_profile: "Edit Profile",
     profile_photo: "Profile Photo",
@@ -313,16 +305,6 @@ const translations = {
     profile_update_success: "Profile updated successfully!",
     change_photo: "Change Photo",
     remove_photo: "Remove Photo",
-    // Features showcase
-    features_section_title: "Everything your plants need",
-    feature_watering_title: "Smart Watering Reminders 💧",
-    feature_watering_desc: "Never forget to water again. Get personalized reminders based on each plant's needs, season, and pot type.",
-    feature_tracking_title: "Plant Growth Diary 🌿",
-    feature_tracking_desc: "Keep a visual diary of your plants. Log health, photos, and care history to watch them thrive over time.",
-    feature_ai_title: "AI-Powered Advice ✨",
-    feature_ai_desc: "Like having a botanist friend in your pocket! Get smart care tips tailored to your plants and local weather.",
-    feature_marketplace_title: "Neighborhood Marketplace 🏘️",
-    feature_marketplace_desc: "Buy, sell, or trade seeds, cuttings, and tools with plant lovers in your neighborhood.",
   },
   fa: {
     app_title: "جالیز",
@@ -370,9 +352,6 @@ const translations = {
     pot_ceramic: "سرامیکی 🍵",
     pot_metal: "فلزی 🥫",
     pot_other: "سایر",
-    growing_medium: "محیط رشد",
-    medium_soil: "خاک 🌱",
-    medium_water: "آب (هیدروپونیک) 💧",
     has_drainage: "دارای زهکشی مناسب",
     last_watered: "تاریخ آخرین آبیاری",
     last_soil_change: "آخرین تعویض خاک",
@@ -413,10 +392,6 @@ const translations = {
     user_location_title: "موقعیت مکانی شما",
     user_location_label: "شهر، کشور",
     user_location_ph: "مثال: تهران، ایران",
-    theme_label: "پوسته برنامه",
-    theme_light: "روشن",
-    theme_dark: "تاریک",
-    theme_system: "سیستم",
     // Auth
     sign_in: "ورود",
     sign_up: "ثبت‌نام",
@@ -623,7 +598,6 @@ const translations = {
     mp_chat_sign_in_required: "برای ارسال پیام وارد شوید.",
     // Smart detect
     smart_detect: "تشخیص هوشمند",
-    ai_detection_disclaimer: "این اطلاعات بر اساس تصویر گیاه شما تشخیص داده شده، ممکنه به دلیل زاویه عکس یا نور خطا داشته باشه؛ در صورت نیاز اطلاعات رو قبل از ثبت ویرایش کنید.",
     // Profile Edit
     edit_profile: "ویرایش پروفایل",
     profile_photo: "عکس پروفایل",
@@ -632,16 +606,6 @@ const translations = {
     profile_update_success: "پروفایل شما با موفقیت به‌روزرسانی شد!",
     change_photo: "تغییر عکس",
     remove_photo: "حذف عکس",
-    // Features showcase
-    features_section_title: "همه‌چیز برای گیاهان شما",
-    feature_watering_title: "یادآور هوشمند آبیاری",
-    feature_watering_desc: "دیگه یادتون نمیره! بر اساس نوع گیاه، فصل و نوع گلدان بهتون یادآوری می‌کنیم.",
-    feature_tracking_title: "ثبت و پیگیری رشد گیاهان",
-    feature_tracking_desc: "یه دفترچه خاطرات سبز! عکس بگیر، سلامت گیاهت رو ثبت کن و روند رشدش رو ببین.",
-    feature_ai_title: "مشاوره هوشمند با هوش مصنوعی",
-    feature_ai_desc: "نکات مراقبتی اختصاصی بر اساس گیاهانت و آب‌وهوای محلی. مثل داشتن یه متخصص گیاه‌شناسی!",
-    feature_marketplace_title: "بازارچه سبز محله",
-    feature_marketplace_desc: "بذر، قلمه و ابزار باغبانی رو با گیاه‌دوست‌های نزدیکت خرید و فروش یا تبادل کن.",
   }
 }
 

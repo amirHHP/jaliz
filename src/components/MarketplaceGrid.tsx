@@ -20,11 +20,7 @@ const DASHBOARD_PREVIEW_LIMIT = 4
  * recent active listings and links out to the full /marketplace page for the
  * complete browsing experience.
  */
-interface MarketplaceGridProps {
-  hideHeader?: boolean
-}
-
-export function MarketplaceGrid({ hideHeader = false }: MarketplaceGridProps) {
+export function MarketplaceGrid() {
   const { language, t } = useLanguage()
   const { status, getUser } = useAuth()
   const { revision, list, get } = useMarketplace()
@@ -62,37 +58,35 @@ export function MarketplaceGrid({ hideHeader = false }: MarketplaceGridProps) {
 
   return (
     <div className="space-y-4">
-      {!hideHeader && (
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-            {t("market_title")}
-          </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-full font-medium">
-              {t("market_within")}
-            </span>
-            <Link
-              href="/marketplace"
-              className="text-sm text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 font-semibold inline-flex items-center gap-1"
-            >
-              {t("mp_view_all" as never)}
-              <ArrowRight
-                className={`h-3.5 w-3.5 ${language === "fa" ? "rotate-180" : ""}`}
-              />
-            </Link>
-          </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-slate-900">
+          {t("market_title")}
+        </h2>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full font-medium">
+            {t("market_within")}
+          </span>
+          <Link
+            href="/marketplace"
+            className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
+          >
+            {t("mp_view_all" as never)}
+            <ArrowRight
+              className={`h-3.5 w-3.5 ${language === "fa" ? "rotate-180" : ""}`}
+            />
+          </Link>
         </div>
-      )}
+      </div>
 
       {previewListings.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900/50 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl py-10 px-6 text-center">
-          <div className="mx-auto h-10 w-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center mb-3">
-            <Sprout className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="bg-white border border-dashed border-slate-200 rounded-xl py-10 px-6 text-center">
+          <div className="mx-auto h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center mb-3">
+            <Sprout className="h-5 w-5 text-emerald-600" />
           </div>
-          <h3 className="font-semibold text-slate-900 dark:text-white">
+          <h3 className="font-semibold text-slate-900">
             {t("mp_dashboard_empty_title" as never)}
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {t("mp_dashboard_empty_desc" as never)}
           </p>
           <Button

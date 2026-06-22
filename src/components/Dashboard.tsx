@@ -40,15 +40,15 @@ export function Dashboard() {
     : t(timeGreetingKey as any)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[var(--background)] selection:bg-emerald-200 selection:text-emerald-900 text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
       <Header />
 
       <main className="container mx-auto px-4 py-8 space-y-12 max-w-6xl">
         <section className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
             {welcomeTitle}
           </h1>
-          <p className="text-slate-600 dark:text-slate-300 text-lg max-w-2xl">{t("welcome_desc")}</p>
+          <p className="text-slate-600 text-lg max-w-2xl">{t("welcome_desc")}</p>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
