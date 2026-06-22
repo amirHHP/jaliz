@@ -64,6 +64,7 @@ export function ListingDetailsModal({
     setCompleted,
     remove,
     getOrCreateConversation,
+    listConversations,
     listMessages,
     sendMessage,
   } = useMarketplace()
@@ -76,12 +77,20 @@ export function ListingDetailsModal({
   const ModeIcon = MODE_ICON[listing.mode]
 
   // ----- Conversation state -------------------------------------------------
-  // We lazily open or fetch the conversation only when the visitor actually
-  // wants to message — saves a write for browsers that just skim the modal.
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [draft, setDraft] = useState("")
   const [chatError, setChatError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+
+  // Eagerly load an existing conversation for this listing so that previous
+  // messages are visible as soon as the modal opens (not only after sending).
+  useEffect(() => {
+    if (conversation || !user || isOwner) return
+    const existing = listConversations(user.id).find(
+      (c) => c.listingId === listing.id,
+    )
+    if (existing) setConversation(existing)
+  }, [conversation, user, isOwner, listConversations, listing.id])
 
   // Re-derive on every revision so newly-sent messages render immediately.
   const messages: Message[] = useMemo(() => {
