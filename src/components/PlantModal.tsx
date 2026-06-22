@@ -580,7 +580,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                           size="sm"
                           disabled={!newStatus.trim() || isSubmittingLog}
                           onClick={handleAddLog}
-                          className="flex-1 sm:flex-none min-w-[100px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                          className="flex-1 sm:flex-none min-w-[100px]"
                         >
                           {isSubmittingLog ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -682,7 +682,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                   type="button"
                   onClick={handleAIAnalyze}
                   disabled={isAnalyzing || (!name && !image)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm whitespace-nowrap shadow-sm shrink-0"
+                  className="text-sm whitespace-nowrap shrink-0"
                 >
                   {isAnalyzing
                     ? (language === "fa" ? "در حال تحلیل..." : "Analyzing...")
@@ -844,9 +844,9 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
               )}
 
               {/* Edit side */}
-              <Button
+               <Button
                 onClick={() => setIsEditing(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
+                className="gap-2"
               >
                 <Pencil className="h-4 w-4" />
                 {language === "fa" ? "ویرایش اطلاعات" : "Edit info"}
@@ -862,10 +862,10 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                 <ChevronLeft className={`h-4 w-4 ${isRtl ? "rotate-180" : ""}`} />
                 {t("cancel")}
               </Button>
-              <Button
+               <Button
                 onClick={handleSave}
                 disabled={!name.trim()}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 shadow-sm"
+                className="gap-2"
               >
                 <Save className="h-4 w-4" />
                 {t("save")}

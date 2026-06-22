@@ -151,7 +151,7 @@ export default function MyPlantsPage() {
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t("my_plants")}</h1>
             <span className="text-sm font-medium text-slate-500 bg-slate-100/80 px-2.5 py-0.5 rounded-full border border-slate-200/60">{plants.length}</span>
           </div>
-          <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-sm text-white">
+          <Button asChild className="gap-2">
             <Link href="/plants/new">
               <Plus className="h-4 w-4" />
               {t("add_plant")}
@@ -169,7 +169,7 @@ export default function MyPlantsPage() {
               </div>
               <h3 className="text-2xl font-bold text-slate-800 mb-3">{t("no_plants_title" as any)}</h3>
               <p className="text-slate-500 max-w-md mb-8 text-lg">{t("no_plants_desc" as any)}</p>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all px-6 py-6 text-base rounded-xl gap-2">
+              <Button asChild size="lg" className="gap-2">
                 <Link href="/plants/new">
                   <Plus className="h-5 w-5" />
                   {t("no_plants_cta" as any)}
@@ -292,20 +292,18 @@ function PublicHomePage() {
                 {t("landing_hero_subtitle")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                <Link
-                  href="/register"
-                  className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 text-sm font-bold shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  {t("landing_cta_primary")}
-                </Link>
-                <Link
-                  href="/login"
-                  className="inline-flex justify-center items-center gap-2 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 px-6 py-3.5 text-sm font-bold shadow-sm transition-all hover:scale-[1.02]"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {t("landing_cta_secondary")}
-                </Link>
+                <Button asChild size="lg" className="gap-2">
+                  <Link href="/register">
+                    <UserPlus className="h-4 w-4" />
+                    {t("landing_cta_primary")}
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="gap-2">
+                  <Link href="/login">
+                    <LogIn className="h-4 w-4" />
+                    {t("landing_cta_secondary")}
+                  </Link>
+                </Button>
               </div>
             </div>
 
@@ -364,20 +362,18 @@ function PublicHomePage() {
               : "Browse the marketplace freely, but sign in to unlock all features."}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/register"
-              className="inline-flex justify-center items-center gap-2 rounded-full bg-white text-emerald-700 hover:bg-emerald-50 px-6 py-3 text-sm font-bold shadow-md transition-all hover:scale-[1.02]"
-            >
-              <UserPlus className="h-4 w-4" />
-              {t("landing_cta_primary")}
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex justify-center items-center gap-2 rounded-full bg-emerald-700/50 hover:bg-emerald-700/70 text-white border border-emerald-400/30 px-6 py-3 text-sm font-bold transition-all hover:scale-[1.02]"
-            >
-              <LogIn className="h-4 w-4" />
-              {t("landing_cta_secondary")}
-            </Link>
+            <Button asChild variant="secondary" size="lg" className="gap-2 bg-white text-emerald-700 hover:bg-emerald-50">
+              <Link href="/register">
+                <UserPlus className="h-4 w-4" />
+                {t("landing_cta_primary")}
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="gap-2 border-white/40 text-white hover:bg-white/10 hover:text-white bg-transparent">
+              <Link href="/login">
+                <LogIn className="h-4 w-4" />
+                {t("landing_cta_secondary")}
+              </Link>
+            </Button>
           </div>
         </div>
       </section>

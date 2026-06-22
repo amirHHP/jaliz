@@ -5,6 +5,7 @@ import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { Check, Droplets } from "lucide-react"
 import { getUserPlantsAction, getWateringLogAction, updatePlantsLastWateredAction, markWateringDoneAction } from "@/app/actions/plants"
+import { Button } from "@/components/ui/button"
 
 interface Plant {
   id: string
@@ -144,13 +145,13 @@ export function WateringSchedule() {
               ))}
             </div>
             <div className="pt-4 flex justify-center">
-              <button
+              <Button
                 onClick={handleMarkAllDone}
-                className="group relative w-full sm:w-auto min-w-[220px] flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white text-sm font-bold px-6 py-3.5 rounded-2xl transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_12px_rgba(46,116,98,0.18)] hover:shadow-[0_6px_20px_rgba(46,116,98,0.35)] hover:scale-[1.02] active:scale-[0.98] border border-emerald-500/20 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2"
+                className="group w-full sm:w-auto min-w-[220px]"
               >
                 <Check className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
                 <span>{markDoneBtn}</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}

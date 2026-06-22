@@ -109,7 +109,7 @@ export function WeatherAdvice() {
         <Button
           onClick={fetchAdvice}
           disabled={loading}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-200 shadow-sm hover:shadow active:scale-[0.98]"
+          className="w-full"
         >
           {loading ? t("generating_btn") : t("generate_btn")}
         </Button>
