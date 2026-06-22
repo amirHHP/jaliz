@@ -51,6 +51,9 @@ const translations = {
     pot_ceramic: "Ceramic",
     pot_metal: "Metal",
     pot_other: "Other",
+    growing_medium: "Growing Medium",
+    medium_soil: "Soil",
+    medium_water: "Water (Hydroponic)",
     has_drainage: "Has Drainage Hole",
     last_watered: "Last Watered",
     last_soil_change: "Last Soil Change",
@@ -297,6 +300,7 @@ const translations = {
     mp_chat_sign_in_required: "Sign in to send messages.",
     // Smart detect
     smart_detect: "Smart Detect",
+    ai_detection_disclaimer: "This information is detected based on your plant's image and may contain errors due to lighting or photo angle. If needed, please edit the details before saving.",
     // Profile Edit
     edit_profile: "Edit Profile",
     profile_photo: "Profile Photo",
@@ -352,6 +356,9 @@ const translations = {
     pot_ceramic: "سرامیکی 🍵",
     pot_metal: "فلزی 🥫",
     pot_other: "سایر",
+    growing_medium: "محیط رشد",
+    medium_soil: "خاک 🌱",
+    medium_water: "آب (هیدروپونیک) 💧",
     has_drainage: "دارای زهکشی مناسب",
     last_watered: "تاریخ آخرین آبیاری",
     last_soil_change: "آخرین تعویض خاک",
@@ -598,6 +605,7 @@ const translations = {
     mp_chat_sign_in_required: "برای ارسال پیام وارد شوید.",
     // Smart detect
     smart_detect: "تشخیص هوشمند",
+    ai_detection_disclaimer: "این اطلاعات بر اساس تصویر گیاه شما تشخیص داده شده، ممکنه به دلیل زاویه عکس یا نور خطا داشته باشه؛ در صورت نیاز اطلاعات رو قبل از ثبت ویرایش کنید.",
     // Profile Edit
     edit_profile: "ویرایش پروفایل",
     profile_photo: "عکس پروفایل",

@@ -20,6 +20,7 @@ interface Plant {
   locationType: "Indoor" | "Outdoor"
   lightExposure: "Low Light" | "Partial Shade" | "Bright Indirect" | "Full Sun"
   potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
+  growingMedium: "Soil" | "Water"
   hasDrainage: boolean
   lastWatered: string
   nextWateringDate?: string
@@ -32,6 +33,17 @@ interface Plant {
   wateringTips?: string
 }
 
+function safeDateString(val: any, fallback?: string): string | undefined {
+  if (!val) return fallback
+  try {
+    const d = new Date(val)
+    if (isNaN(d.getTime())) return fallback
+    return d.toISOString().split("T")[0]
+  } catch {
+    return fallback
+  }
+}
+
 function dbRowToPlant(row: any): Plant {
   return {
     id: row.id,
@@ -40,12 +52,13 @@ function dbRowToPlant(row: any): Plant {
     locationType: row.locationType ?? "Indoor",
     lightExposure: row.lightExposure ?? "Bright Indirect",
     potType: row.potType ?? "Plastic",
+    growingMedium: row.growingMedium ?? "Soil",
     hasDrainage: row.hasDrainage ?? true,
-    lastWatered: row.lastWatered ? new Date(row.lastWatered).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
-    nextWateringDate: row.nextWateringDate ? new Date(row.nextWateringDate).toISOString().split("T")[0] : undefined,
+    lastWatered: safeDateString(row.lastWatered, new Date().toISOString().split("T")[0])!,
+    nextWateringDate: safeDateString(row.nextWateringDate),
     wateringInterval: row.wateringInterval ?? 7,
     recentlyReplanted: row.recentlyReplanted ?? false,
-    lastSoilChange: row.lastSoilChange ? new Date(row.lastSoilChange).toISOString().split("T")[0] : undefined,
+    lastSoilChange: safeDateString(row.lastSoilChange),
     health: row.health ?? "Excellent",
     image: row.image ?? undefined,
     careTips: row.careTips ?? undefined,
@@ -95,6 +108,7 @@ export default function MyPlantsPage() {
         locationType: updated.locationType,
         lightExposure: updated.lightExposure,
         potType: updated.potType,
+        growingMedium: updated.growingMedium,
         hasDrainage: updated.hasDrainage,
         lastWatered: updated.lastWatered ? new Date(updated.lastWatered) : null,
         recentlyReplanted: updated.recentlyReplanted,
