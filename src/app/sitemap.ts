@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next"
 import prisma from "@/lib/prisma"
+import { blogPosts } from "@/lib/blogData"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaliz.ir"
 
@@ -18,7 +19,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.9,
     },
+    {
+      url: `${SITE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
   ]
+
+  // Blog post pages
+  const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+    url: `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly",
+    priority: 0.7,
+  }))
 
   // Dynamic listing pages
   let listingPages: MetadataRoute.Sitemap = []
@@ -39,5 +54,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Sitemap: failed to fetch listings", err)
   }
 
-  return [...staticPages, ...listingPages]
+  return [...staticPages, ...blogPages, ...listingPages]
 }

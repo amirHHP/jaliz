@@ -225,6 +225,8 @@ const translations = {
     landing_final_cta_subtitle: "Join thousands of beginners who are keeping their plants alive and happy.",
     landing_final_cta_button: "Get started — it's free",
     landing_footer: "Made with love for beginners everywhere.",
+    blog: "Blog",
+    articles: "Articles",
     // Marketplace
     mp_title: "Marketplace",
     mp_subtitle: "Sell, swap or share seeds, cuttings, tools and produce with growers nearby.",
@@ -531,6 +533,8 @@ const translations = {
     landing_final_cta_subtitle: "به هزاران تازه‌کاری بپیوند که با جالیز گیاهانشون رو سبز و شاداب نگه داشتن.",
     landing_final_cta_button: "همین حالا شروع کن — رایگانه",
     landing_footer: "ساخته‌شده با عشق برای تازه‌کارها.",
+    blog: "وبلاگ",
+    articles: "مقالات آموزشی",
     // Marketplace
     mp_title: "بازارچه",
     mp_subtitle: "بذر، قلمه، ابزار و محصولات را با باغبان‌های نزدیک بفروش، تبادل کن یا هدیه بده.",
