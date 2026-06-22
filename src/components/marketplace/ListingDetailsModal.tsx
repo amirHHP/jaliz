@@ -6,6 +6,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import Link from "next/link"
 import {
   CheckCircle2,
+  ChevronLeft,
   ImageIcon,
   MapPin,
   MessageCircle,
@@ -14,6 +15,7 @@ import {
   Send,
   Trash2,
   User,
+  Users,
   X,
 } from "lucide-react"
 
@@ -93,6 +95,13 @@ export function ListingDetailsModal({
   const [chatError, setChatError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
+  // For owners: all conversations on this listing (buyer inbox)
+  const ownerConversations = useMemo(() => {
+    if (!isOwner || !user) return []
+    return listConversations(user.id).filter((c) => c.listingId === listing.id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner, user?.id, listConversations, listing.id, revision])
+
   // Eagerly load an existing conversation for this listing so that previous
   // messages are visible as soon as the modal opens (not only after sending).
   useEffect(() => {
@@ -143,7 +152,9 @@ export function ListingDetailsModal({
 
   // ----- Chat actions -------------------------------------------------------
   const ensureConversation = async (): Promise<Conversation | null> => {
-    if (!user || isOwner) return null
+    if (!user) return null
+    // Owner can reply to a selected conversation
+    if (isOwner) return conversation
     if (conversation) return conversation
     try {
       const conv = await getOrCreateConversation(listing.id, user.id, listing.ownerId)
@@ -304,44 +315,61 @@ export function ListingDetailsModal({
 
           {/* Action row --------------------------------------------- */}
           {isOwner ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={handleToggleCompleted}
-                className={
-                  listing.status === "completed"
-                    ? "bg-slate-200 hover:bg-slate-300 text-slate-800 gap-2"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-                }
-              >
-                {listing.status === "completed" ? (
-                  <>
-                    <RefreshCw className="h-4 w-4" />
-                    {t("mp_action_reopen" as never)}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t("mp_action_complete" as never)}
-                  </>
-                )}
-              </Button>
-              {onEdit && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
                 <Button
-                  variant="outline"
-                  onClick={() => onEdit(listing)}
-                  className="gap-2"
+                  onClick={handleToggleCompleted}
+                  className={
+                    listing.status === "completed"
+                      ? "bg-slate-200 hover:bg-slate-300 text-slate-800 gap-2"
+                      : "bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+                  }
                 >
-                  {t("mp_action_edit" as never)}
+                  {listing.status === "completed" ? (
+                    <>
+                      <RefreshCw className="h-4 w-4" />
+                      {t("mp_action_reopen" as never)}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t("mp_action_complete" as never)}
+                    </>
+                  )}
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                onClick={handleDelete}
-                className="text-red-600 hover:bg-red-50 hover:text-red-700 gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                {t("mp_action_delete" as never)}
-              </Button>
+                {onEdit && (
+                  <Button
+                    variant="outline"
+                    onClick={() => onEdit(listing)}
+                    className="gap-2"
+                  >
+                    {t("mp_action_edit" as never)}
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  onClick={handleDelete}
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700 gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t("mp_action_delete" as never)}
+                </Button>
+              </div>
+
+              {/* Owner chat inbox */}
+              <OwnerChatInbox
+                conversations={ownerConversations}
+                activeConversation={conversation}
+                onSelectConversation={setConversation}
+                messages={messages}
+                draft={draft}
+                onDraftChange={setDraft}
+                onSubmit={handleSendMessage}
+                currentUserId={user!.id}
+                error={chatError}
+                bottomRef={messagesEndRef}
+                listMessages={listMessages}
+              />
             </div>
           ) : isAuthenticated ? (
             <div className="space-y-3">
@@ -486,6 +514,210 @@ function ChatPanel({
           {t("mp_chat_send" as never)}
         </Button>
       </form>
+    </div>
+  )
+}
+
+function BuyerName({ userId, fallback = "..." }: { userId: string; fallback?: string }) {
+  const [name, setName] = useState<string | null>(null)
+  useEffect(() => {
+    let active = true
+    getListingOwnerNameAction(userId).then(data => {
+      if (active) {
+        setName(data?.fullName || "کاربر جالیز")
+      }
+    }).catch(console.error)
+    return () => { active = false }
+  }, [userId])
+  return <span>{name || fallback}</span>
+}
+
+interface OwnerChatInboxProps {
+  conversations: Conversation[]
+  activeConversation: Conversation | null
+  onSelectConversation: (c: Conversation | null) => void
+  messages: Message[]
+  draft: string
+  onDraftChange: (value: string) => void
+  onSubmit: (e: FormEvent) => void
+  currentUserId: string
+  error: string | null
+  bottomRef: React.MutableRefObject<HTMLDivElement | null>
+  listMessages: (conversationId: string, userId: string) => Message[]
+}
+
+function OwnerChatInbox({
+  conversations,
+  activeConversation,
+  onSelectConversation,
+  messages,
+  draft,
+  onDraftChange,
+  onSubmit,
+  currentUserId,
+  error,
+  bottomRef,
+  listMessages,
+}: OwnerChatInboxProps) {
+  const { t, language } = useLanguage()
+
+  if (activeConversation) {
+    const buyerId = activeConversation.participantIds.find((id) => id !== currentUserId) || ""
+    return (
+      <div className="border border-slate-200 rounded-xl bg-white overflow-hidden animate-in fade-in duration-150">
+        {/* Header with Back button */}
+        <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onSelectConversation(null)}
+              className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition"
+              title={language === "fa" ? "بازگشت به صندوق" : "Back to inbox"}
+            >
+              <ChevronLeft className={`h-5 w-5 ${language === "fa" ? "rotate-180" : ""}`} />
+            </button>
+            <div className="flex flex-col">
+              <span className="text-[10px] text-slate-400">
+                {language === "fa" ? "گفتگو با" : "Chat with"}
+              </span>
+              <span className="text-sm font-semibold text-slate-800">
+                <BuyerName userId={buyerId} />
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+            <MessageCircle className="h-3 w-3 text-emerald-600" />
+            <span>ID: {activeConversation.id.slice(0, 6)}</span>
+          </div>
+        </div>
+
+        {/* Messages list */}
+        <div className="px-4 py-3 max-h-64 overflow-y-auto space-y-2">
+          {messages.length === 0 ? (
+            <p className="text-xs text-slate-400 text-center py-6">
+              {t("mp_chat_no_messages" as never)}
+            </p>
+          ) : (
+            messages.map((m) => {
+              const mine = m.senderId === currentUserId
+              return (
+                <div
+                  key={m.id}
+                  className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                      mine
+                        ? "bg-emerald-600 text-white"
+                        : "bg-slate-100 text-slate-800"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    <p
+                      className={`text-[10px] mt-1 ${mine ? "text-emerald-100" : "text-slate-400"}`}
+                    >
+                      {new Date(m.createdAt).toLocaleTimeString(
+                        language === "fa" ? "fa-IR" : undefined,
+                        { hour: "2-digit", minute: "2-digit" },
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )
+            })
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {error && <p className="px-4 pb-2 text-xs text-red-600">{error}</p>}
+
+        <form onSubmit={onSubmit} className="border-t border-slate-100 p-2 flex gap-2">
+          <input
+            value={draft}
+            onChange={(e) => onDraftChange(e.target.value)}
+            placeholder={t("mp_chat_input_ph" as never)}
+            className="flex-1 h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 caret-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          />
+          <Button
+            type="submit"
+            disabled={!draft.trim()}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
+          >
+            <Send className="h-4 w-4" />
+            {t("mp_chat_send" as never)}
+          </Button>
+        </form>
+      </div>
+    )
+  }
+
+  // Otherwise, render the inbox list of conversations
+  return (
+    <div className="border border-slate-200 rounded-xl bg-white overflow-hidden">
+      <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-emerald-600" />
+          <h3 className="text-sm font-semibold text-slate-800">
+            {language === "fa" ? "پیام‌های دریافتی از خریداران" : "Inboxes from Buyers"}
+          </h3>
+        </div>
+        <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
+          {conversations.length} {language === "fa" ? "گفتگو" : "chats"}
+        </span>
+      </div>
+
+      <div className="divide-y divide-slate-100 max-h-60 overflow-y-auto">
+        {conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+            <MessageCircle className="h-8 w-8 text-slate-300 mb-2" />
+            <p className="text-xs text-slate-400">
+              {language === "fa"
+                ? "هنوز هیچ خریداری برای این آگهی پیامی ارسال نکرده است."
+                : "No buyers have started a chat for this listing yet."}
+            </p>
+          </div>
+        ) : (
+          conversations.map((c) => {
+            const buyerId = c.participantIds.find((id) => id !== currentUserId) || ""
+            let lastMsg = ""
+            let lastTime: Date | null = null
+            try {
+              const msgs = listMessages(c.id, currentUserId)
+              if (msgs.length > 0) {
+                lastMsg = msgs[msgs.length - 1].body
+                lastTime = new Date(msgs[msgs.length - 1].createdAt)
+              }
+            } catch (err) {
+              console.error(err)
+            }
+            if (!lastTime) lastTime = new Date(c.lastMessageAt)
+
+            return (
+              <button
+                key={c.id}
+                onClick={() => onSelectConversation(c)}
+                className="w-full text-start px-4 py-3 hover:bg-slate-50 transition flex items-start justify-between gap-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-800 mb-0.5 truncate">
+                    <BuyerName userId={buyerId} />
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">
+                    {lastMsg || (language === "fa" ? "بدون پیام" : "No messages")}
+                  </p>
+                </div>
+                <div className="text-end shrink-0">
+                  <span className="text-[9px] text-slate-400">
+                    {lastTime.toLocaleTimeString(language === "fa" ? "fa-IR" : undefined, {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </button>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
