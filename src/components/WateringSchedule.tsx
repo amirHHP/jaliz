@@ -101,26 +101,18 @@ export function WateringSchedule() {
     <div className="bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-950 rounded-3xl p-6 relative overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-100/50">
       <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-emerald-200/40 blur-2xl" />
       <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 rounded-full bg-teal-200/30 blur-2xl" />
-      <div className="flex justify-between items-start mb-5 relative z-10">
-        <div>
-          <h3 className="font-bold text-xl text-emerald-800 flex items-center gap-2">
-            <div className="bg-emerald-100 p-2 rounded-2xl">
-              <Droplets className="w-6 h-6 text-emerald-600" />
-            </div>
-            {titleStr}
-          </h3>
-          <p className="text-emerald-700/80 text-sm mt-2 font-medium">
-            {isDone ? doneToday : plantsToWater.length > 0
-              ? (language === "fa" ? `امروز ${plantsToWater.length} گیاه نیاز به توجه و آبیاری دارند.` : `${plantsToWater.length} plants need water today.`)
-              : noPlantsStr}
-          </p>
-        </div>
-        {plantsToWater.length > 0 && !isDone && (
-          <button onClick={handleMarkAllDone} className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-sm px-4 py-2.5 rounded-2xl transition-all font-bold shadow-md hover:shadow-lg hover:-translate-y-0.5">
-            <Check className="w-5 h-5" />
-            {markDoneBtn}
-          </button>
-        )}
+      <div className="mb-5 relative z-10">
+        <h3 className="font-bold text-xl text-emerald-800 flex items-center gap-2">
+          <div className="bg-emerald-100 p-2 rounded-2xl">
+            <Droplets className="w-6 h-6 text-emerald-600" />
+          </div>
+          {titleStr}
+        </h3>
+        <p className="text-emerald-700/80 text-sm mt-2 font-medium">
+          {isDone ? doneToday : plantsToWater.length > 0
+            ? (language === "fa" ? `امروز ${plantsToWater.length} گیاه نیاز به توجه و آبیاری دارند.` : `${plantsToWater.length} plants need water today.`)
+            : noPlantsStr}
+        </p>
       </div>
       <div className="space-y-5 relative z-10">
         {!isDone && plantsToWater.length > 0 && (
@@ -146,10 +138,19 @@ export function WateringSchedule() {
                       } • {
                         p.growingMedium === "Water" ? (language === "fa" ? "آب (هیدروپونیک)" : "Water (Hydroponic)") : (language === "fa" ? "خاک" : "Soil")
                       }
-                    </div>
                   </div>
                 </div>
+              </div>
               ))}
+            </div>
+            <div className="pt-4 flex justify-center">
+              <button
+                onClick={handleMarkAllDone}
+                className="group relative w-full sm:w-auto min-w-[220px] flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:from-emerald-700 active:to-teal-700 text-white text-sm font-bold px-6 py-3.5 rounded-2xl transition-all duration-300 ease-out cursor-pointer shadow-[0_4px_12px_rgba(46,116,98,0.18)] hover:shadow-[0_6px_20px_rgba(46,116,98,0.35)] hover:scale-[1.02] active:scale-[0.98] border border-emerald-500/20 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2"
+              >
+                <Check className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                <span>{markDoneBtn}</span>
+              </button>
             </div>
           </div>
         )}
