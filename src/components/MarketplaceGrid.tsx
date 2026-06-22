@@ -22,7 +22,7 @@ const DASHBOARD_PREVIEW_LIMIT = 4
  */
 export function MarketplaceGrid() {
   const { language, t } = useLanguage()
-  const { status, getUser } = useAuth()
+  const { status, user, getUser } = useAuth()
   const { revision, list, get } = useMarketplace()
 
   // Track ids and re-derive snapshots so the modal stays in sync with the
@@ -103,7 +103,7 @@ export function MarketplaceGrid() {
             <ListingCard
               key={listing.id}
               listing={listing}
-              ownerName={getUser(listing.ownerId)?.fullName}
+              ownerName={listing.ownerId === user?.id ? (user?.fullName || undefined) : getUser(listing.ownerId)?.fullName}
               onClick={() => setSelectedId(listing.id)}
             />
           ))}

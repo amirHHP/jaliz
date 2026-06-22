@@ -188,8 +188,8 @@ export function ListingDetailsModal({
     }
   }, [user, draft, ensureConversation, sendMessage])
 
-  const phone = listing.contactPhone || owner?.phone
-  const ownerName = owner?.fullName ?? "—"
+  const phone = listing.contactPhone || owner?.phone || (isOwner ? user?.phone : undefined)
+  const ownerName = (isOwner ? user?.fullName : owner?.fullName) || "—"
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">

@@ -61,7 +61,7 @@ export default async function ListingPage({ params }: Props) {
     completedAt: listing.completedAt?.toISOString(),
   }
 
-  const ownerName = owner?.fullName ?? "—"
+  const ownerName = owner?.fullName || "—"
   const ownerPhone = owner?.phone ?? undefined
 
   // JSON-LD structured data for SEO (schema.org/Product)

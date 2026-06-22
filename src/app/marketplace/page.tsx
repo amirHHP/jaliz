@@ -193,7 +193,7 @@ export default function MarketplacePage() {
               <ListingCard
                 key={listing.id}
                 listing={listing}
-                ownerName={getUser(listing.ownerId)?.fullName}
+                ownerName={listing.ownerId === user?.id ? (user?.fullName || undefined) : getUser(listing.ownerId)?.fullName}
                 onClick={() => setSelectedId(listing.id)}
               />
             ))}
