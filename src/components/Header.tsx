@@ -18,6 +18,7 @@ import {
 
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
+import { useMarketplace } from "@/components/MarketplaceProvider"
 import { SettingsModal } from "@/components/SettingsModal"
 import { Settings as SettingsIcon } from "lucide-react"
 
@@ -41,7 +42,10 @@ const NAV_LINKS: NavLink[] = [
 export function Header() {
   const { language, setLanguage, t } = useLanguage()
   const { status, user, isAdmin, logout } = useAuth()
+  const { getUnreadCount, revision } = useMarketplace()
   const pathname = usePathname() ?? "/"
+
+  const unreadCount = user ? getUnreadCount(user.id) : 0
 
 
   const [menuOpen, setMenuOpen] = useState(false)
@@ -112,11 +116,16 @@ export function Header() {
                 href={link.href}
                 className={
                   isActive
-                    ? "text-emerald-700 font-semibold transition-colors"
-                    : "text-slate-600 hover:text-emerald-700 transition-colors"
+                    ? "inline-flex items-center gap-1.5 text-emerald-700 font-semibold transition-colors"
+                    : "inline-flex items-center gap-1.5 text-slate-600 hover:text-emerald-700 transition-colors"
                 }
               >
-                {t(link.key)}
+                <span>{t(link.key)}</span>
+                {link.key === "chats" && unreadCount > 0 && (
+                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -281,13 +290,18 @@ export function Header() {
                 key={link.key}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-emerald-50 text-emerald-700 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 hover:text-emerald-700"
                 }`}
               >
-                {t(link.key)}
+                <span>{t(link.key)}</span>
+                {link.key === "chats" && unreadCount > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}

@@ -40,6 +40,9 @@ export default function MarketplaceChatsPage() {
     listMessages,
     sendMessage,
     list,
+    isConversationUnread,
+    markAsRead,
+    markAsUnread,
   } = useMarketplace()
 
   const [activeConvId, setActiveConvId] = useState<string | null>(null)
@@ -115,6 +118,23 @@ export default function MarketplaceChatsPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length, activeConvId])
+
+  // Automatically mark as read when selecting conversation or receiving new messages
+  useEffect(() => {
+    if (activeConvId && user) {
+      markAsRead(activeConvId, user.id)
+    }
+  }, [activeConvId, user, markAsRead, messages.length])
+
+  const handleToggleReadStatus = useCallback((e: React.MouseEvent, convId: string) => {
+    e.stopPropagation()
+    if (!user) return
+    if (isConversationUnread(convId, user.id)) {
+      markAsRead(convId, user.id)
+    } else {
+      markAsUnread(convId, user.id)
+    }
+  }, [user, isConversationUnread, markAsRead, markAsUnread])
 
   // Handle send message
   const sendingRef = useRef(false)
@@ -217,12 +237,13 @@ export default function MarketplaceChatsPage() {
               if (!lastTime) lastTime = new Date(c.lastMessageAt)
 
               const active = activeConvId === c.id
+              const unread = isConversationUnread(c.id, user.id)
 
               return (
                 <button
                   key={c.id}
                   onClick={() => setActiveConvId(c.id)}
-                  className={`w-full text-start p-4 flex items-start gap-3 hover:bg-slate-50 transition-all ${
+                  className={`group w-full text-start p-4 flex items-start gap-3 hover:bg-slate-50 transition-all ${
                     active ? "bg-emerald-50/50 border-s-4 border-emerald-600" : ""
                   }`}
                 >
@@ -241,12 +262,33 @@ export default function MarketplaceChatsPage() {
                       <span className="text-xs font-bold text-slate-800 truncate">
                         <ParticipantTextName userId={otherId} />
                       </span>
-                      <span className="text-[9px] text-slate-400 shrink-0">
-                        {lastTime.toLocaleTimeString(language === "fa" ? "fa-IR" : undefined, {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[9px] text-slate-400">
+                          {lastTime.toLocaleTimeString(language === "fa" ? "fa-IR" : undefined, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        <button
+                          onClick={(e) => handleToggleReadStatus(e, c.id)}
+                          className="flex h-5 w-5 items-center justify-center rounded-full hover:bg-slate-200 transition"
+                          title={
+                            unread
+                              ? language === "fa"
+                                ? "علامت‌گذاری به‌عنوان خوانده‌شده"
+                                : "Mark as read"
+                              : language === "fa"
+                              ? "علامت‌گذاری به‌عنوان خوانده‌نشده"
+                              : "Mark as unread"
+                          }
+                        >
+                          {unread ? (
+                            <span className="h-2.5 w-2.5 rounded-full bg-red-500 shadow-sm" />
+                          ) : (
+                            <span className="h-2 w-2 rounded-full border border-slate-300 group-hover:border-slate-400 transition" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     <p className="text-xs font-semibold text-slate-900 truncate mb-1">

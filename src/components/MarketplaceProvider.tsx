@@ -27,6 +27,10 @@ interface MarketplaceContextValue {
   listConversations: (userId: string) => Conversation[]
   listMessages: (conversationId: string, requesterId: string) => Message[]
   sendMessage: (conversationId: string, senderId: string, body: string) => Promise<Message>
+  isConversationUnread: (conversationId: string, userId: string) => boolean
+  markAsRead: (conversationId: string, userId: string) => void
+  markAsUnread: (conversationId: string, userId: string) => void
+  getUnreadCount: (userId: string) => number
 }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | undefined>(undefined)
@@ -113,6 +117,76 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     bump()
   }, [reload, bump])
 
+  // Local state for last read times and forced unread conversations
+  const [readStates, setReadStates] = useState<{ [key: string]: number }>({})
+  const [forcedUnreadStates, setForcedUnreadStates] = useState<{ [key: string]: boolean }>({})
+
+  // Load initial states from localStorage on mount and sync on changes
+  useEffect(() => {
+    const states: { [key: string]: number } = {}
+    const forced: { [key: string]: boolean } = {}
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key) {
+        if (key.startsWith("jaliz_chat_read_")) {
+          const val = localStorage.getItem(key)
+          if (val) states[key] = Number(val)
+        } else if (key.startsWith("jaliz_chat_unread_forced_")) {
+          forced[key] = localStorage.getItem(key) === "true"
+        }
+      }
+    }
+    setReadStates(states)
+    setForcedUnreadStates(forced)
+  }, [revision])
+
+  const isConversationUnread = useCallback((conversationId: string, userId: string) => {
+    const forcedKey = `jaliz_chat_unread_forced_${userId}_${conversationId}`
+    if (forcedUnreadStates[forcedKey]) return true
+
+    const readKey = `jaliz_chat_read_${userId}_${conversationId}`
+    const lastRead = readStates[readKey] || 0
+
+    const convMessages = messages.filter((m) => m.conversationId === conversationId)
+    if (convMessages.length === 0) return false
+
+    const lastMsg = convMessages[convMessages.length - 1]
+    if (lastMsg.senderId === userId) return false
+
+    return new Date(lastMsg.createdAt).getTime() > lastRead
+  }, [readStates, forcedUnreadStates, messages])
+
+  const markAsRead = useCallback((conversationId: string, userId: string) => {
+    const readKey = `jaliz_chat_read_${userId}_${conversationId}`
+    const forcedKey = `jaliz_chat_unread_forced_${userId}_${conversationId}`
+    const now = Date.now()
+
+    localStorage.setItem(readKey, String(now))
+    localStorage.removeItem(forcedKey)
+
+    setReadStates((prev) => ({ ...prev, [readKey]: now }))
+    setForcedUnreadStates((prev) => {
+      const copy = { ...prev }
+      delete copy[forcedKey]
+      return copy
+    })
+    bump()
+  }, [bump])
+
+  const markAsUnread = useCallback((conversationId: string, userId: string) => {
+    const forcedKey = `jaliz_chat_unread_forced_${userId}_${conversationId}`
+    
+    localStorage.setItem(forcedKey, "true")
+
+    setForcedUnreadStates((prev) => ({ ...prev, [forcedKey]: true }))
+    bump()
+  }, [bump])
+
+  const getUnreadCount = useCallback((userId: string) => {
+    const userConvs = conversations.filter((c) => c.participantIds.includes(userId))
+    return userConvs.filter((c) => isConversationUnread(c.id, userId)).length
+  }, [conversations, isConversationUnread])
+
   const getOrCreateConversation = useCallback(async (listingId: string, requesterId: string, otherUserId: string) => {
     const conv = await getOrCreateConversationAction(listingId, otherUserId)
     await reload()
@@ -134,7 +208,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   const value = useMemo<MarketplaceContextValue>(() => ({
     ready, revision, list, get, create, update, setCompleted, remove,
     getOrCreateConversation, listConversations, listMessages, sendMessage,
-  }), [ready, revision, list, get, create, update, setCompleted, remove, getOrCreateConversation, listConversations, listMessages, sendMessage])
+    isConversationUnread, markAsRead, markAsUnread, getUnreadCount
+  }), [ready, revision, list, get, create, update, setCompleted, remove, getOrCreateConversation, listConversations, listMessages, sendMessage, isConversationUnread, markAsRead, markAsUnread, getUnreadCount])
 
   return <MarketplaceContext.Provider value={value}>{children}</MarketplaceContext.Provider>
 }

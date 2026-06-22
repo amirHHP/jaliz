@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation"
 import { CalendarDays, Leaf, MessageCircle, Sparkles, Store } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
+import { useMarketplace } from "@/components/MarketplaceProvider"
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { t } = useLanguage()
-  const { status } = useAuth()
+  const { t, language } = useLanguage()
+  const { status, user } = useAuth()
+  const { getUnreadCount, revision } = useMarketplace()
 
   const isAuthenticated = status === "authenticated"
+  const unreadCount = user ? getUnreadCount(user.id) : 0
 
   // Don't show bottom nav if not authenticated, or on auth/admin/new-plant pages
   if (
@@ -80,15 +83,22 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 group ${
+              className={`relative inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 group ${
                 isActive ? "text-emerald-600" : "text-slate-500 hover:text-emerald-600"
               }`}
             >
-              <Icon
-                className={`w-6 h-6 mb-1 ${
-                  isActive ? "text-emerald-600" : "text-slate-400 group-hover:text-emerald-500"
-                }`}
-              />
+              <div className="relative">
+                <Icon
+                  className={`w-6 h-6 mb-1 ${
+                    isActive ? "text-emerald-600" : "text-slate-400 group-hover:text-emerald-500"
+                  }`}
+                />
+                {tab.href === "/marketplace/chats" && unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] sm:text-xs text-center">{tab.name}</span>
             </Link>
           )
