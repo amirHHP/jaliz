@@ -266,6 +266,46 @@ export default function MyPlantsPage() {
 /** Public homepage for unauthenticated users: hero + marketplace */
 function PublicHomePage() {
   const { t, language } = useLanguage()
+  const [activeFeature, setActiveFeature] = useState<number | null>(null)
+
+  const features = [
+    {
+      icon: Droplets,
+      color: "text-sky-500 bg-sky-50",
+      activeColor: "text-sky-600 bg-sky-100/80 border-sky-300 ring-sky-100/50",
+      title: language === "fa" ? "یادآور آبیاری" : "Watering Reminders",
+      description: language === "fa"
+        ? "تنظیم زمان‌بندی هوشمند، دریافت هشدارهای منظم و ثبت گزارش‌های آبیاری برای حفظ شادابی گیاهان."
+        : "Set smart schedules, receive timely watering alerts, and log events to keep your plants thriving."
+    },
+    {
+      icon: Sprout,
+      color: "text-emerald-500 bg-emerald-50",
+      activeColor: "text-emerald-600 bg-emerald-100/80 border-emerald-300 ring-emerald-100/50",
+      title: language === "fa" ? "ثبت گیاهان" : "Plant Tracking",
+      description: language === "fa"
+        ? "ثبت مشخصات گیاه، نوع خاک، نیاز نوری، دفعات تعویض گلدان و تصویر رشد در شناسنامه گیاه."
+        : "Log light needs, soil details, repotting history, and upload photos to follow growth over time."
+    },
+    {
+      icon: Sparkles,
+      color: "text-amber-500 bg-amber-50",
+      activeColor: "text-amber-600 bg-amber-100/80 border-amber-300 ring-amber-100/50",
+      title: language === "fa" ? "مشاوره هوشمند" : "AI Advice",
+      description: language === "fa"
+        ? "تشخیص دقیق بیماری‌ها از روی تصویر برگ، راه‌حل‌های علمی درمان و راهنمای گام‌به‌گام نگهداری."
+        : "Identify pests and diseases from photos, receive expert care instructions, and get custom guidance."
+    },
+    {
+      icon: Store,
+      color: "text-indigo-500 bg-indigo-50",
+      activeColor: "text-indigo-600 bg-indigo-100/80 border-indigo-300 ring-indigo-100/50",
+      title: language === "fa" ? "فروشگاه" : "Marketplace",
+      description: language === "fa"
+        ? "خرید و فروش آسان و بدون واسطه گیاهان خانگی، قلمه‌های تازه و ملزومات باغبانی با اهالی محله."
+        : "Buy, sell, or trade plants, fresh cuttings, and garden accessories directly in your neighborhood."
+    }
+  ]
 
   return (
     <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
@@ -308,23 +348,34 @@ function PublicHomePage() {
             </div>
 
             {/* Feature cards */}
-            <div className="flex-1 grid grid-cols-2 gap-3 max-w-sm">
-              {[
-                { icon: Droplets, color: "text-sky-500 bg-sky-50", title: language === "fa" ? "یادآور آبیاری" : "Watering Reminders" },
-                { icon: Sprout, color: "text-emerald-500 bg-emerald-50", title: language === "fa" ? "ثبت گیاهان" : "Plant Tracking" },
-                { icon: Sparkles, color: "text-amber-500 bg-amber-50", title: language === "fa" ? "مشاوره هوشمند" : "AI Advice" },
-                { icon: Store, color: "text-indigo-500 bg-indigo-50", title: language === "fa" ? "فروشگاه" : "Marketplace" },
-              ].map((feat, i) => (
-                <div
-                  key={i}
-                  className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-100 p-4 flex flex-col items-center gap-2 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${feat.color}`}>
-                    <feat.icon className="h-5 w-5" />
+            <div className="flex-1 grid grid-cols-2 gap-3 max-w-sm w-full">
+              {features.map((feat, i) => {
+                const isOpen = activeFeature === i
+                return (
+                  <div
+                    key={i}
+                    onClick={() => setActiveFeature(isOpen ? null : i)}
+                    className={`cursor-pointer bg-white/80 backdrop-blur-sm rounded-2xl border p-4 flex flex-col items-center justify-start transition-all duration-300 select-none shadow-sm hover:shadow-md ${
+                      isOpen
+                        ? "border-emerald-300 ring-4 ring-emerald-100/50 scale-[1.02] shadow-emerald-100/20"
+                        : "border-slate-100 hover:border-slate-200"
+                    }`}
+                  >
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isOpen ? feat.activeColor.split(" ").slice(0, 2).join(" ") : feat.color}`}>
+                        <feat.icon className={`h-5 w-5 transition-transform duration-300 ${isOpen ? "scale-110 rotate-6" : ""}`} />
+                      </div>
+                      <span className="text-xs font-semibold text-slate-700 text-center">{feat.title}</span>
+                    </div>
+                    {/* Collapsible description */}
+                    <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-32 opacity-100 mt-3" : "max-h-0 opacity-0"}`}>
+                      <p className="text-[11px] text-slate-500 leading-relaxed text-center border-t border-slate-100/80 pt-2 w-full">
+                        {feat.description}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs font-semibold text-slate-700 text-center">{feat.title}</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
