@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { useLanguage } from "./LanguageProvider"
 import { useAuth } from "./AuthProvider"
-import { Settings, X, Loader2, CheckCircle2, MapPin, User, Camera, Trash2, Phone } from "lucide-react"
+import { Settings, X, Loader2, CheckCircle2, MapPin, User, Camera, Trash2, Phone, Shield, ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
@@ -270,21 +271,45 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           ) : (
             /* App settings / Location */
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-emerald-600" />
-                {t("user_location_label")}
-              </label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => {
-                  setLocation(e.target.value)
-                  setSaved(false)
-                }}
-                placeholder={t("user_location_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              />
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-emerald-600" />
+                  {t("user_location_label")}
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value)
+                    setSaved(false)
+                  }}
+                  placeholder={t("user_location_ph")}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
+
+              {/* Privacy Policy Link */}
+              <div className="border-t border-slate-100 pt-4 space-y-2">
+                <span className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">
+                  {language === "fa" ? "قوانین و حریم خصوصی" : "Rules & Privacy"}
+                </span>
+                <Link
+                  href="/privacy"
+                  onClick={onClose}
+                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/20 text-sm text-slate-700 hover:text-emerald-700 transition-all font-medium"
+                >
+                  <span className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-emerald-600" />
+                    {language === "fa" ? "سیاست حفظ حریم خصوصی جالیز" : "Jaliz Privacy Policy"}
+                  </span>
+                  {language === "fa" ? (
+                    <ChevronLeft className="h-4 w-4 text-slate-400" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                  )}
+                </Link>
+              </div>
             </div>
           )}
         </CardContent>

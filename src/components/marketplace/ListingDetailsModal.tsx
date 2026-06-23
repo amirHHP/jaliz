@@ -17,6 +17,8 @@ import {
   User,
   Users,
   X,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -88,6 +90,12 @@ export function ListingDetailsModal({
 
   const TypeIcon = TYPE_ICON[listing.type]
   const ModeIcon = MODE_ICON[listing.mode]
+
+  // ----- Report state --------------------------------------------------------
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState("")
+  const [reportSubmitted, setReportSubmitted] = useState(false)
+  const [reporting, setReporting] = useState(false)
 
   // ----- Conversation state -------------------------------------------------
   const [conversation, setConversation] = useState<Conversation | null>(null)
@@ -204,7 +212,108 @@ export function ListingDetailsModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-4 sm:my-8">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-4 sm:my-8 relative">
+        {/* Report Violation Overlay */}
+        {showReportModal && (
+          <div className="absolute inset-0 z-[60] bg-white/95 backdrop-blur-sm p-6 flex flex-col justify-center items-center">
+            <div className="w-full max-w-md space-y-5">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 mb-3">
+                  <AlertTriangle className="h-6 w-6 text-amber-600" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  {language === "fa" ? "گزارش تخلف آگهی" : "Report Listing"}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {language === "fa" 
+                    ? "لطفاً علت گزارش تخلف این آگهی را مشخص کنید. گزارش شما توسط تیم جالیز بررسی خواهد شد."
+                    : "Please select the reason for reporting this listing. It will be reviewed by the Jaliz team."}
+                </p>
+              </div>
+
+              {!reportSubmitted ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {[
+                      { id: "spam", fa: "اسپم یا تبلیغات کاذب", en: "Spam or deceptive advertising" },
+                      { id: "inappropriate", fa: "محتوای نامناسب یا غیراخلاقی", en: "Inappropriate or offensive content" },
+                      { id: "incorrect", fa: "اطلاعات نادرست یا قیمت نجومی", en: "Incorrect info or unreasonable price" },
+                      { id: "duplicate", fa: "آگهی تکراری یا منقضی شده", en: "Duplicate or expired listing" },
+                      { id: "other", fa: "سایر موارد", en: "Other issues" }
+                    ].map((reason) => (
+                      <label 
+                        key={reason.id} 
+                        className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-sm text-slate-700 font-medium transition-colors"
+                      >
+                        <input 
+                          type="radio" 
+                          name="report-reason" 
+                          value={reason.id} 
+                          checked={reportReason === reason.id}
+                          onChange={() => setReportReason(reason.id)}
+                          className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-slate-300"
+                        />
+                        <span>{language === "fa" ? reason.fa : reason.en}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => {
+                        setReporting(true)
+                        setTimeout(() => {
+                          setReporting(false)
+                          setReportSubmitted(true)
+                        }, 800)
+                      }}
+                      disabled={!reportReason || reporting}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                    >
+                      {reporting ? (
+                        <Loader2 className="h-4 w-4 animate-spin mx-auto" />
+                      ) : (
+                        language === "fa" ? "ارسال گزارش" : "Submit Report"
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowReportModal(false)
+                        setReportReason("")
+                      }}
+                      disabled={reporting}
+                      className="flex-1"
+                    >
+                      {language === "fa" ? "انصراف" : "Cancel"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center space-y-4 py-4 animate-in zoom-in-95">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-800 leading-relaxed">
+                    {language === "fa" 
+                      ? "گزارش شما با موفقیت ثبت شد و در اسرع وقت بررسی خواهد شد. با تشکر از همکاری شما!"
+                      : "Your report has been submitted and will be reviewed shortly. Thank you for your support!"}
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setShowReportModal(false)
+                      setReportReason("")
+                      setReportSubmitted(false)
+                    }}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold"
+                  >
+                    {language === "fa" ? "فهمیدم" : "Got it"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         {/* Hero image with close button */}
         <div className="relative h-80 sm:h-[380px] bg-slate-950 overflow-hidden flex items-center justify-center">
           {listing.image ? (
@@ -379,7 +488,7 @@ export function ListingDetailsModal({
             </div>
           ) : isAuthenticated ? (
             <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 {phone ? (
                   <>
                     <a
@@ -404,6 +513,14 @@ export function ListingDetailsModal({
                     {t("mp_details_no_phone" as never)}
                   </span>
                 )}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReportModal(true)}
+                  className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5 ms-auto animate-in fade-in"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  {language === "fa" ? "گزارش تخلف" : "Report"}
+                </Button>
               </div>
 
               {/* Inline chat ------------------------------------------ */}
@@ -420,12 +537,23 @@ export function ListingDetailsModal({
           ) : (
             <div className="rounded-md bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-600 flex items-center justify-between">
               <span>{t("mp_action_sign_in_to_contact" as never)}</span>
-              <Link
-                href={`/login?redirect=/marketplace`}
-                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5"
-              >
-                {t("sign_in" as never)}
-              </Link>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReportModal(true)}
+                  className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  {language === "fa" ? "گزارش تخلف" : "Report"}
+                </Button>
+                <Link
+                  href={`/login?redirect=/marketplace`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5"
+                >
+                  {t("sign_in" as never)}
+                </Link>
+              </div>
             </div>
           )}
         </div>

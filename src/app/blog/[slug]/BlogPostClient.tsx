@@ -105,16 +105,33 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
         </div>
 
         {/* Article Body */}
-        <article 
-          className="bg-white rounded-3xl border border-slate-200/60 p-6 sm:p-10 shadow-sm leading-relaxed text-slate-700 text-base sm:text-lg 
-            [&>p]:mb-6 [&>p]:leading-relaxed
-            [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-slate-900 [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:pb-2 [&>h2]:border-b [&>h2]:border-slate-100
-            [&>ul]:list-disc [&>ul]:ps-6 [&>ul]:mb-6 [&>ul]:space-y-2
-            [&>ol]:list-decimal [&>ol]:ps-6 [&>ol]:mb-6 [&>ol]:space-y-2
-            [&>li]:leading-relaxed
-            [&>strong]:font-semibold [&>strong]:text-slate-900"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
+          <article 
+            className="p-6 sm:p-10 leading-relaxed text-slate-700 text-base sm:text-lg 
+              [&>p]:mb-6 [&>p]:leading-relaxed
+              [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-slate-900 [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:pb-2 [&>h2]:border-b [&>h2]:border-slate-100
+              [&>ul]:list-disc [&>ul]:ps-6 [&>ul]:mb-6 [&>ul]:space-y-2
+              [&>ol]:list-decimal [&>ol]:ps-6 [&>ol]:mb-6 [&>ol]:space-y-2
+              [&>li]:leading-relaxed
+              [&>strong]:font-semibold [&>strong]:text-slate-900"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+          
+          {/* Article Source & Copyright Disclosure */}
+          <div className="mx-6 sm:mx-10 mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3 text-xs text-slate-500">
+            <BookOpenCheck className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-slate-700">
+                {isRtl ? "منبع و مالکیت معنوی" : "Source & Intellectual Property"}
+              </p>
+              <p className="leading-relaxed">
+                {isRtl 
+                  ? "این مقاله به صورت اختصاصی توسط تیم تحریریه جالیز تولید شده است. منابع علمی مورد استفاده در تدوین این مطلب شامل کتاب‌های مرجع گیاه‌شناسی آپارتمانی، مقالات آموزشی جهاد کشاورزی و تجربیات علمی باغبانان حرفه‌ای می‌باشد."
+                  : "This article has been exclusively produced by the Jaliz editorial team. Scientific sources used for compiling this content include houseplant botanical reference guides, agricultural extension publications, and professional gardening experience."}
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Call to Action Banner (If not logged in) */}
         {!isUserLoggedIn && (
