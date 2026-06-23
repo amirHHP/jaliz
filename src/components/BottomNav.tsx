@@ -22,7 +22,8 @@ export function BottomNav() {
     pathname === "/login" ||
     pathname === "/register" ||
     pathname?.startsWith("/admin") ||
-    pathname === "/plants/new"
+    pathname === "/plants/new" ||
+    pathname === "/plants/diagnose"
   ) {
     return null
   }
@@ -65,7 +66,7 @@ export function BottomNav() {
   const smartDetectTab = isAuthenticated
     ? {
         name: (t as any)("smart_detect"),
-        href: "/plants/new",
+        href: "/plants/diagnose",
         icon: Sparkles,
       }
     : null

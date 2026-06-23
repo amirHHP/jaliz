@@ -47,6 +47,13 @@ class PlantAnalysisRequest(BaseModel):
     model_name: Optional[str] = None
     provider: Optional[str] = "gemini"
 
+class PlantDiagnosisRequest(BaseModel):
+    image: str
+    language: Optional[str] = "en"
+    api_key: Optional[str] = None
+    model_name: Optional[str] = None
+    provider: Optional[str] = "gemini"
+
 class StatusAdviceRequest(BaseModel):
     plant_name: str
     plant_type: Optional[str] = None
@@ -314,6 +321,107 @@ def analyze_plant(request: PlantAnalysisRequest):
         result = json.loads(json_str)
         return result
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/diagnose-plant")
+def diagnose_plant(request: PlantDiagnosisRequest):
+    import base64
+    import json
+    import re
+    try:
+        api_key = request.api_key or os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise HTTPException(status_code=400, detail="API key is required")
+
+        language_name = "Persian (Farsi)" if request.language == "fa" else "English"
+
+        prompt = f"""
+        You are an expert botanist and plant care assistant.
+        Analyze the plant image provided and diagnose any problems, pests, or disease signs.
+        Provide the diagnosis details in a JSON object exactly matching this structure, returning ONLY the JSON:
+        {{
+            "name": "Scientific or common name of the plant. IMPORTANT: If Farsi, return Farsi name.",
+            "type": "e.g., Indoor Foliage, Succulent",
+            "health": "Excellent" or "Good" or "Needs Attention",
+            "diagnosis": "A detailed description of the plant's health status and any issues identified from the image. Must be written in {language_name}.",
+            "advice": "Actionable, step-by-step advice on how to treat the identified issues and care for the plant. Must be written in {language_name}.",
+            "locationType": "Indoor" or "Outdoor",
+            "lightExposure": "Low Light" or "Partial Shade" or "Bright Indirect" or "Full Sun",
+            "potType": "Terracotta" or "Plastic" or "Ceramic" or "Metal" or "Other",
+            "growingMedium": "Soil" or "Water",
+            "hasDrainage": true or false,
+            "wateringInterval": an integer representing the recommended watering interval in days (e.g. 7),
+            "careTips": "Provide a detailed care instructions paragraph. Must be written in {language_name}.",
+            "wateringTips": "Provide a detailed watering instructions paragraph. Must be written in {language_name}.",
+            "soilChangeTips": "Provide a concise soil change instructions paragraph. Must be written in {language_name}."
+        }}
+        """
+
+        if request.provider in ("sotoon", "gapgpt"):
+            import requests as req
+            base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
+            provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon"
+
+            messages = [{"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": request.image}}
+            ]}]
+
+            model_name = request.model_name or "gpt-4o"
+            resp = req.post(
+                f"{base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": model_name,
+                    "messages": messages,
+                    "temperature": 0.35
+                },
+                timeout=90
+            )
+
+            if resp.status_code != 200:
+                err_text = resp.text
+                if "egress-proxy" in err_text or "OpenrouterException" in err_text:
+                    friendly_msg = f"{provider_label} API is currently having connectivity issues with this model. Please try a different model or try again later."
+                    raise HTTPException(status_code=resp.status_code, detail=friendly_msg)
+                raise HTTPException(status_code=resp.status_code, detail=f"{provider_label} API error: {err_text}")
+
+            result_data = resp.json()
+            text = result_data["choices"][0]["message"]["content"]
+        else:
+            genai.configure(api_key=api_key)
+            model_name = request.model_name or "gemini-1.5-pro"
+            model = genai.GenerativeModel(model_name)
+
+            contents = [prompt]
+            if "," in request.image:
+                header, encoded = request.image.split(",", 1)
+                mime_type = header.split(";")[0].split(":")[1]
+            else:
+                encoded = request.image
+                mime_type = "image/jpeg"
+
+            image_data = base64.b64decode(encoded)
+            contents.append({
+                "mime_type": mime_type,
+                "data": image_data
+            })
+
+            response = model.generate_content(contents)
+            text = response.text
+
+        match = re.search(r'```(?:json)?\n?(.*?)\n?```', text, re.DOTALL)
+        if match:
+            json_str = match.group(1).strip()
+        else:
+            json_str = text.strip()
+
+        result = json.loads(json_str)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

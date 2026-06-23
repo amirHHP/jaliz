@@ -606,3 +606,77 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
     return { error: error instanceof Error ? error.message : "Failed to fetch status advice" };
   }
 }
+
+export async function diagnosePlantAction(formData: {
+  image: string;
+  language?: string;
+  model_name?: string;
+}): Promise<any> {
+  try {
+    const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
+    const api_key = globalApiKey;
+    const model_name = formData.model_name || globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
+
+    if (!api_key) {
+      return { error: "API key is required. Please set it in admin settings." };
+    }
+
+    if (process.env.API_URL) {
+      const response = await fetch(`${getApiBase()}/api/diagnose-plant`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          api_key,
+          model_name,
+          provider
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        return { error: err.detail || "Diagnosis failed" };
+      }
+
+      return await response.json();
+    }
+
+    // Direct JS call fallback
+    const languageName = formData.language === "fa" ? "Persian (Farsi)" : "English";
+    const prompt = `
+You are an expert botanist and plant care assistant.
+Analyze the plant image provided and diagnose any problems, pests, or disease signs.
+Provide the diagnosis details in a JSON object exactly matching this structure, returning ONLY the JSON:
+{
+    "name": "Scientific or common name of the plant. IMPORTANT: If Farsi, return Farsi name.",
+    "type": "e.g., Indoor Foliage, Succulent",
+    "health": "Excellent" or "Good" or "Needs Attention",
+    "diagnosis": "A detailed description of the plant's health status and any issues identified from the image. Must be written in ${languageName}.",
+    "advice": "Actionable, step-by-step advice on how to treat the identified issues and care for the plant. Must be written in ${languageName}.",
+    "locationType": "Indoor" or "Outdoor",
+    "lightExposure": "Low Light" or "Partial Shade" or "Bright Indirect" or "Full Sun",
+    "potType": "Terracotta" or "Plastic" or "Ceramic" or "Metal" or "Other",
+    "growingMedium": "Soil" or "Water",
+    "hasDrainage": true or false,
+    "wateringInterval": an integer representing the recommended watering interval in days (e.g. 7),
+    "careTips": "Provide a detailed care instructions paragraph. Must be written in ${languageName}.",
+    "wateringTips": "Provide a detailed watering instructions paragraph. Must be written in ${languageName}.",
+    "soilChangeTips": "Provide a concise soil change instructions paragraph. Must be written in ${languageName}."
+}
+`;
+
+    const text = await callLlmDirect({
+      provider,
+      apiKey: api_key,
+      modelName: model_name,
+      prompt,
+      image: formData.image
+    });
+
+    return parseJsonFromModelText(text);
+  } catch (error) {
+    console.error("AI Action Error:", error);
+    return { error: error instanceof Error ? error.message : "Failed to diagnose plant" };
+  }
+}
+
