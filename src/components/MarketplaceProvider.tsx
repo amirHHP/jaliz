@@ -1,7 +1,8 @@
 "use client"
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, useRef } from "react"
 import { Conversation, CreateListingInput, Listing, ListingFilter, Message, UpdateListingInput } from "@/lib/marketplace"
+import { useAuth } from "@/components/AuthProvider"
 import {
   getMarketplaceListingsAction,
   getMarketplaceConversationsAction,
@@ -11,7 +12,8 @@ import {
   setListingCompletedAction,
   removeListingAction,
   getOrCreateConversationAction,
-  sendMessageAction
+  sendMessageAction,
+  getListingOwnerNameAction
 } from "@/app/actions/marketplace"
 
 interface MarketplaceContextValue {
@@ -31,11 +33,15 @@ interface MarketplaceContextValue {
   markAsRead: (conversationId: string, userId: string) => void
   markAsUnread: (conversationId: string, userId: string) => void
   getUnreadCount: (userId: string) => number
+  activeConversationId: string | null
+  setActiveConversationId: (id: string | null) => void
 }
 
 const MarketplaceContext = createContext<MarketplaceContextValue | undefined>(undefined)
 
 export function MarketplaceProvider({ children }: { children: React.ReactNode }) {
+  const { status, user } = useAuth()
+
   const [ready, setReady] = useState(false)
   const [revision, setRevision] = useState(0)
 
@@ -43,7 +49,89 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [messages, setMessages] = useState<Message[]>([])
 
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
+
   const bump = useCallback(() => setRevision((n) => n + 1), [])
+
+  // Refs to avoid unnecessary rebuilds of showLocalNotification / reload
+  const userRef = useRef(user)
+  const readyRef = useRef(ready)
+  const activeConversationIdRef = useRef(activeConversationId)
+
+  useEffect(() => {
+    userRef.current = user
+    readyRef.current = ready
+    activeConversationIdRef.current = activeConversationId
+  }, [user, ready, activeConversationId])
+
+  // Play a gentle beep tone using Web Audio API (completely offline/internal)
+  const playNotificationSound = useCallback(() => {
+    if (typeof window === "undefined") return
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      
+      const playBeep = (delay: number, frequency: number, duration: number) => {
+        const osc = audioCtx.createOscillator()
+        const gainNode = audioCtx.createGain()
+        
+        osc.connect(gainNode)
+        gainNode.connect(audioCtx.destination)
+        
+        osc.frequency.setValueAtTime(frequency, audioCtx.currentTime + delay)
+        osc.type = "sine"
+        
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + delay)
+        gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + delay + 0.05)
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + duration)
+        
+        osc.start(audioCtx.currentTime + delay)
+        osc.stop(audioCtx.currentTime + delay + duration)
+      }
+
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume()
+      }
+      
+      // Play a gentle dual tone: C5 (523.25 Hz) then E5 (659.25 Hz)
+      playBeep(0, 523.25, 0.15)
+      playBeep(0.15, 659.25, 0.25)
+    } catch (err) {
+      console.error("Failed to play notification sound", err)
+    }
+  }, [])
+
+  // Show browser Notification
+  const showLocalNotification = useCallback(async (msg: Message) => {
+    if (typeof window === "undefined") return
+
+    // Always play the audio alert
+    playNotificationSound()
+
+    // Show visual system notification only when in background or viewing other screen/chat
+    const isTabInactive = document.hidden
+    const isDifferentChat = activeConversationIdRef.current !== msg.conversationId
+
+    if ((isTabInactive || isDifferentChat) && "Notification" in window && Notification.permission === "granted") {
+      try {
+        let senderName = "کاربر جالیز"
+        try {
+          const ownerInfo = await getListingOwnerNameAction(msg.senderId)
+          if (ownerInfo?.fullName) {
+            senderName = ownerInfo.fullName
+          }
+        } catch (e) {
+          console.error(e)
+        }
+
+        new Notification(`پیام جدید از ${senderName}`, {
+          body: msg.body,
+          tag: `chat-${msg.conversationId}`,
+        })
+      } catch (err) {
+        console.error("Failed to display notification", err)
+      }
+    }
+  }, [playNotificationSound])
 
   const reload = useCallback(async () => {
     try {
@@ -52,14 +140,31 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         getMarketplaceConversationsAction(),
         getMarketplaceMessagesAction()
       ])
-      // Map Prisma Date objects to ISO strings if needed, Prisma client in server actions usually returns them as dates or strings depending on exact usage, but we'll cast to any for simplicity or assume they match the interface.
+      // Map Prisma Date objects to ISO strings if needed
       setListings(lData as any)
       setConversations(cData as any)
-      setMessages(mData as any)
+
+      setMessages((prev) => {
+        const currentUser = userRef.current
+        const isReady = readyRef.current
+
+        if (isReady && currentUser) {
+          const newMessages = (mData as any[]).filter((m) => 
+            m.senderId !== currentUser.id && 
+            !prev.some((p) => p.id === m.id)
+          )
+          if (newMessages.length > 0) {
+            newMessages.forEach((msg) => {
+              showLocalNotification(msg)
+            })
+          }
+        }
+        return mData as any
+      })
     } catch (err) {
       console.error(err)
     }
-  }, [])
+  }, [showLocalNotification])
 
   useEffect(() => {
     let cancelled = false
@@ -205,11 +310,32 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     return msg as any
   }, [reload, bump])
 
+  // Request notification permissions when authenticated
+  useEffect(() => {
+    if (status === "authenticated" && typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().catch(console.error)
+      }
+    }
+  }, [status])
+
+  // Start polling for new messages if user is logged in
+  useEffect(() => {
+    if (status !== "authenticated" || !user) return
+
+    const interval = setInterval(() => {
+      reload().catch(console.error)
+    }, 4000)
+
+    return () => clearInterval(interval)
+  }, [status, user, reload])
+
   const value = useMemo<MarketplaceContextValue>(() => ({
     ready, revision, list, get, create, update, setCompleted, remove,
     getOrCreateConversation, listConversations, listMessages, sendMessage,
-    isConversationUnread, markAsRead, markAsUnread, getUnreadCount
-  }), [ready, revision, list, get, create, update, setCompleted, remove, getOrCreateConversation, listConversations, listMessages, sendMessage, isConversationUnread, markAsRead, markAsUnread, getUnreadCount])
+    isConversationUnread, markAsRead, markAsUnread, getUnreadCount,
+    activeConversationId, setActiveConversationId
+  }), [ready, revision, list, get, create, update, setCompleted, remove, getOrCreateConversation, listConversations, listMessages, sendMessage, isConversationUnread, markAsRead, markAsUnread, getUnreadCount, activeConversationId])
 
   return <MarketplaceContext.Provider value={value}>{children}</MarketplaceContext.Provider>
 }

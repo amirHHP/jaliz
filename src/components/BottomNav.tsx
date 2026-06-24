@@ -45,21 +45,26 @@ export function BottomNav() {
             active: pathname?.startsWith("/schedule"),
           },
           {
+            name: t("marketplace"),
+            href: "/marketplace",
+            icon: Store,
+            active: pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats"),
+          },
+          {
             name: (t as any)("chats"),
             href: "/marketplace/chats",
             icon: MessageCircle,
             active: pathname?.startsWith("/marketplace/chats"),
           },
         ]
-      : []),
-    {
-      name: t("marketplace"),
-      href: isAuthenticated ? "/marketplace" : "/",
-      icon: Store,
-      active: isAuthenticated
-        ? pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")
-        : pathname === "/" || (pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")),
-    },
+      : [
+          {
+            name: t("marketplace"),
+            href: "/",
+            icon: Store,
+            active: pathname === "/" || (pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")),
+          },
+        ]),
   ]
 
   // Smart detect tab (separate for special styling)

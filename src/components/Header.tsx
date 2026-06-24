@@ -33,8 +33,8 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: "/", key: "my_plants", authRequired: true },
   { href: "/schedule", key: "schedule", authRequired: true },
-  { href: "/marketplace/chats", key: "chats", authRequired: true },
   { href: "/marketplace", key: "marketplace" },
+  { href: "/marketplace/chats", key: "chats", authRequired: true },
   { href: "/blog", key: "blog" },
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]

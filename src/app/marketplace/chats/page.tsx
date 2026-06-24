@@ -44,9 +44,19 @@ export default function MarketplaceChatsPage() {
     isConversationUnread,
     markAsRead,
     markAsUnread,
+    activeConversationId,
+    setActiveConversationId,
   } = useMarketplace()
 
-  const [activeConvId, setActiveConvId] = useState<string | null>(null)
+  const activeConvId = activeConversationId
+  const setActiveConvId = setActiveConversationId
+
+  // Clear active conversation on unmount so all chats receive notifications
+  useEffect(() => {
+    return () => {
+      setActiveConversationId(null)
+    }
+  }, [setActiveConversationId])
   const [draft, setDraft] = useState("")
   const [chatError, setChatError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
