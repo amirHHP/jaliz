@@ -316,5 +316,435 @@ export const blogPosts: BlogPost[] = [
         Keep your newly repotted plant out of direct hot sunlight and harsh drafts for a week or two. Give it time to adjust. Avoid fertilizing for at least 4 to 6 weeks, as sensitive young root growth can easily be burned by fertilizer salts.
       </p>
     `
+  },
+  {
+    slug: "راهنمای-تکثیر-گیاهان-در-آب",
+    lang: "fa",
+    title: "راهنمای قدم‌به‌قدم تکثیر گیاهان آپارتمانی در آب: از برش تا کاشت",
+    description: "تکثیر گیاهان آپارتمانی در آب یکی از لذت‌بخش‌ترین و ساده‌ترین کارهای باغبانی خانگی است. در این مقاله به زبان ساده یاد می‌گیریم چطور قلمه‌ها را ریشه‌دار کنیم و به خاک انتقال دهیم.",
+    category: "آموزش‌ها",
+    categoryEn: "tutorials",
+    publishedAt: "۶ تیر ۱۴۰۵",
+    readTime: "۶ دقیقه",
+    author: "سارا گل‌پرور",
+    icon: "BookOpen",
+    gradient: "from-blue-400 to-indigo-600",
+    keywords: ["تکثیر گیاهان در آب", "قلمه زدن گل", "ریشه دار کردن قلمه", "انتقال قلمه به خاک", "جالیز"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        تکثیر گیاهان آپارتمانی در آب یکی از لذت‌بخش‌ترین و ساده‌ترین کارهایی است که می‌توانید در خانه انجام دهید. تماشای رشد ریشه‌های سفید و کوچک از پشت شیشه، درست مثل یک آزمایش علمی خانگی است که علاوه بر جذابیت، به شما کمک می‌کند تا خانه‌تان را کاملاً رایگان به یک باغ کوچک تبدیل کنید.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۱. انتخاب و برش اصولی قلمه</h2>
+      <p class="text-slate-600 mb-4">
+        تکثیر موفق همیشه از یک برش اصولی شروع می‌شود. اگر قلمه را از جای اشتباه ببرید، به جای ریشه زدن، ساقه سیاه شده و از بین می‌رود:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>انتخاب گیاه مادر سالم:</strong> قلمه‌ای که جدا می‌کنید باید شاداب، سفت و عاری از هرگونه لک یا آفت باشد. بهتر است گیاه مادر را روز قبل به خوبی آبیاری کنید.</li>
+        <li><strong>پیدا کردن گره ساقه:</strong> گره همان برجستگی‌های قهوه‌ای یا محل اتصال برگ به ساقه است که ریشه‌ها قرار است از آنجا رشد کنند.</li>
+        <li><strong>برش اریب:</strong> با یک قیچی یا چاقوی کاملاً تیز و ضدعفونی‌شده، ساقه را با زاویه ۴۵ درجه و دقیقاً در فاصله ۱ سانتی‌متری زیر گره برش دهید.</li>
+        <li><strong>هرس برگ‌های اضافی:</strong> قلمه‌ای به طول ۱۰ تا ۱۵ سانتی‌متر بردارید و تمام برگ‌های نیمه پایینی آن را جدا کنید تا در آب نپوسند. فقط ۲ تا ۳ برگ در بالا باقی بگذارید.</li>
+      </ul>
+      <p class="text-slate-600 mb-4">
+        <strong>فوت کوزه‌گری برای پپرومیا و ساکولنت‌ها:</strong> اگر گیاهانی با برگ‌های گوشتی را تکثیر می‌کنید، بلافاصله آن‌ها را در آب نگذارید. اجازه دهید قلمه ۲۴ ساعت روی میز بماند تا انتهای آن خشک شود و پینه (کالوس) ببندد تا جلوی پوسیدگی گرفته شود.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۲. انتخاب ظرف مناسب و کیفیت آب</h2>
+      <p class="text-slate-600 mb-4">
+        شیشه‌های شفاف برای تماشای رشد ریشه‌ها عالی هستند، اما نور خورشید باعث رشد جلبک‌های سبز و خفگی ریشه‌ها می‌شود. استفاده از ظروف با شیشه تیره (مانند شیشه‌های کهربایی یا قهوه‌ای) با شبیه‌سازی تاریکی خاک، سرعت ریشه‌زایی را افزایش داده و مانع جلبک‌زدن آب می‌شود.
+      </p>
+      <p class="text-slate-600 mb-4">
+        برای آب مصرفی نیز هرگز از آب مستقیم لوله‌کشی استفاده نکنید. آب شیر را ۲۴ ساعت در یک ظرف دهان‌گشاد بگذارید تا کلر آن خارج شود و هم‌دمای محیط گردد. قلمه را طوری قرار دهید که فقط قسمت گره در آب باشد.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۳. پیشگیری از پوسیدگی ریشه</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>تعویض منظم آب:</strong> عامل اصلی ریشه‌زایی، میزان اکسیژن محلول در آب است. آب ظرف را هر ۵ تا ۷ روز یک‌بار تعویض کنید تا اکسیژن تازه به ریشه‌ها برسد.</li>
+        <li><strong>استفاده از آب اکسیژنه:</strong> اگر نگران قارچی شدن قلمه‌ها هستید، اضافه کردن چند قطره هیدروژن پراکسید (آب اکسیژنه ۳٪) به آب، باکتری‌ها را نابود کرده و اکسیژن را افزایش می‌دهد.</li>
+        <li><strong>نور غیرمستقیم:</strong> ظرف تکثیر را در مکانی روشن با نور فیلتر شده قرار دهید. نور مستقیم قلمه‌ها را می‌سوزاند.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۴. کاشتن قلمه در خاک بدون شوک انتقال</h2>
+      <p class="text-slate-600 mb-4">
+        ریشه‌های آب ترد هستند و برای انتقال به خاک نیاز به مراقبت دارند:
+      </p>
+      <ol class="list-decimal list-inside space-y-3 text-slate-600 mb-6 ps-4">
+        <li><strong>قانون ۵ سانتی‌متر:</strong> بهترین زمان انتقال به خاک، وقتی است که طول ریشه‌ها بین ۲.۵ تا ۵ سانتی‌متر باشد. اگر ریشه‌ها خیلی طولانی شوند در خاک زنده نمی‌مانند.</li>
+        <li><strong>خاک سبک:</strong> از گلدانی کوچک با زهکشی عالی و خاکی بسیار سبک حاوی پیت‌ماس و پرلیت استفاده کنید.</li>
+        <li><strong>فاز مرطوب اولیه:</strong> برای ۷ تا ۱۰ روز اول پس از کاشت، خاک را همواره بسیار مرطوب (شبیه به گل ملایم) نگه دارید تا ریشه‌ها به محیط جدید عادت کنند. به مرور دفعات آبیاری را کاهش دهید.</li>
+        <li><strong>کاور رطوبتی:</strong> کشیدن یک پلاستیک شفاف روی گلدان جدید به مدت یک هفته، رطوبت هوا را بالا نگه داشته و جلوی پژمردگی را می‌گیرد.</li>
+      </ol>
+    `
+  },
+  {
+    slug: "water-propagation-guide",
+    lang: "en",
+    title: "Step-by-Step Guide to Houseplant Water Propagation",
+    description: "Water propagation is one of the easiest and most satisfying ways to multiply your houseplants. Learn how to successfully root cuttings and transfer them to soil.",
+    category: "Tutorials",
+    categoryEn: "tutorials",
+    publishedAt: "June 26, 2026",
+    readTime: "6 min",
+    author: "Sarah Flower",
+    icon: "BookOpen",
+    gradient: "from-blue-400 to-indigo-600",
+    keywords: ["water propagation", "plant cuttings", "rooting cuttings", "transplanting to soil", "jaliz"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        Propagating houseplants in water is one of the most rewarding and simple activities you can do at home. Watching small white roots grow from behind the glass is like a home science experiment that helps you green up your space for free.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">1. Choosing and Cutting Properly</h2>
+      <p class="text-slate-600 mb-4">
+        Successful propagation always starts with a correct cut. If you cut in the wrong place, the stem will rot instead of rooting:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Select a Healthy Mother Plant:</strong> The cutting should be fresh, firm, and free of any spots or pests. Water the mother plant the day before.</li>
+        <li><strong>Locate the Node:</strong> The node is the bump or point where leaves join the stem. This is where roots will grow from.</li>
+        <li><strong>Make a Diagonal Cut:</strong> Use sharp, sterilized shears to cut at a 45-degree angle, about 1 cm below the node.</li>
+        <li><strong>Prune Extra Leaves:</strong> Take a 10-15 cm cutting and remove the lower leaves so they don't rot in the water. Leave only 2-3 leaves at the top.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">2. Container and Water Choice</h2>
+      <p class="text-slate-600 mb-4">
+        Clear glass is great for watching roots grow, but sunlight can cause algae growth which suffocates roots. Using dark or amber bottles simulates the darkness of soil, increasing rooting speed and preventing algae.
+      </p>
+      <p class="text-slate-600 mb-4">
+        Never use tap water directly. Let it sit for 24 hours in an open container to dechlorinate and reach room temperature. Place the cutting so only the node is submerged.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">3. Preventing Root Rot</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Change Water Regularly:</strong> Oxygen is key. Change the water every 5-7 days to keep it fresh and oxygenated.</li>
+        <li><strong>Add Hydrogen Peroxide:</strong> To prevent fungus, add a few drops of 3% hydrogen peroxide to the water to eliminate bacteria and boost oxygen levels.</li>
+        <li><strong>Indirect Light:</strong> Place the container in a bright area with filtered light. Direct hot sun will damage the cuttings.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">4. Transplanting to Soil Without Shock</h2>
+      <p class="text-slate-600 mb-4">
+        Water roots are fragile and need a gentle transition to soil:
+      </p>
+      <ol class="list-decimal list-inside space-y-3 text-slate-600 mb-6 ps-4">
+        <li><strong>The 5 cm Rule:</strong> The best time to transplant is when roots are 2.5 to 5 cm long. If roots get too long, they will struggle to adapt to soil.</li>
+        <li><strong>Light Potting Mix:</strong> Use a small pot with excellent drainage and a light soil mix of peat moss and perlite.</li>
+        <li><strong>Keep Soil Moist Initially:</strong> For the first 7-10 days, keep the soil quite damp (like soft mud) to ease the transition. Gradually reduce watering to normal levels.</li>
+        <li><strong>Humidity Cover:</strong> Placing a clear plastic bag over the pot for the first week keeps humidity high and prevents wilting.</li>
+      </ol>
+    `
+  },
+  {
+    slug: "راهنمای-هیدروپونیک-به-زبان-ساده",
+    lang: "fa",
+    title: "راهنمای هیدروپونیک به زبان ساده: کشت بدون خاک چیست؟",
+    description: "پرورش گیاه بدون خاک چطور کار می‌کند؟ در این مقاله با اصول پایه کشت هیدروپونیک خانگی، مزایا و بخش‌های مختلف آن آشنا می‌شوید.",
+    category: "نگهداری",
+    categoryEn: "care",
+    publishedAt: "۶ تیر ۱۴۰۵",
+    readTime: "۵ دقیقه",
+    author: "علی سبزواری",
+    icon: "Droplets",
+    gradient: "from-sky-400 to-blue-600",
+    keywords: ["کشت هیدروپونیک", "کشاورزی بدون خاک", "سیستم هیدروپونیک خانگی", "پرورش گیاه در آب", "جالیز"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        وقتی به کشاورزی یا پرورش گل و گیاه فکر می‌کنیم، اولین تصویری که به ذهنمان می‌رسد خاک، بیلچه و باغچه است. اما تصور کنید بتوانید بدون استفاده از حتی یک ذره خاک، زیباترین گل‌ها یا خوشمزه‌ترین سبزیجات را در خانه پرورش دهید! این روش جادویی، کشت هیدروپونیک (Hydroponics) یا همان آب‌کشت نام دارد.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">هیدروپونیک به زبان خیلی ساده</h2>
+      <p class="text-slate-600 mb-4">
+        در کشاورزی سنتی، خاک دو کار اصلی انجام می‌دهد: گیاه را محکم سر جایش نگه می‌دارد و آب و مواد مغذی را در خود ذخیره می‌کند. اما واقعیت این است که گیاه برای رشد کردن اصلاً نیازی به خودِ خاک ندارد! گیاه به آب، اکسیژن و مواد مغذی نیاز دارد. در هیدروپونیک ما خاک را کاملاً حذف می‌کنیم و این مواد را به صورت مستقیم و در قالب یک «محلول غذایی» به ریشه می‌رسانیم.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">چرا ریشه گیاه در آب نمی‌پوسد؟</h2>
+      <p class="text-slate-600 mb-4">
+        پاسخ در یک کلمه است: اکسیژن. وقتی خاک گلدان معمولی بیش از حد خیس بماند، ریشه‌ها به دلیل کمبود اکسیژن خفه شده و می‌پوسند. اما در سیستم‌های هیدروپونیک، آب مدام در جریان است یا با استفاده از پمپ‌های هوا به آن اکسیژن تزریق می‌شود. ریشه‌ها در این روش هم‌زمان به آب، غذا و اکسیژن فراوان دسترسی دارند.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">مزایای شگفت‌انگیز هیدروپونیک</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>رشد فوق‌العاده سریع‌تر:</strong> در هیدروپونیک، غذا مستقیماً در اختیار ریشه است. در نتیجه گیاه تمام انرژی خود را صرف رشد برگ‌ها و میوه‌ها می‌کند و تا ۵۰ درصد سریع‌تر رشد می‌کند.</li>
+        <li><strong>صرفه‌جویی عالی در مصرف آب:</strong> مصرف آب در این روش تا ۹۰ درصد کمتر از کشاورزی معمولی است؛ زیرا آب در یک چرخه بسته مدام گردش می‌کند و تبخیر یا جذب زمین نمی‌شود.</li>
+        <li><strong>خداحافظی با آفات خاک‌زی:</strong> بیشتر آفات و قارچ‌ها از طریق خاک آلوده منتقل می‌شوند. بدون خاک، نیاز به سم‌پاشی‌های مضر و علف‌های هرز از بین می‌رود.</li>
+        <li><strong>مناسب برای آپارتمان‌ها:</strong> بدون نیاز به گلدان‌های بزرگ و سنگین، می‌توانید گیاهان را به صورت عمودی پرورش دهید و از فضاها بیشترین استفاده را ببرید.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">یک سیستم هیدروپونیک ساده از چه بخش‌هایی تشکیل شده؟</h2>
+      <p class="text-slate-600 mb-4">
+        هر سیستم هیدروپونیک معمولاً از این چهار بخش تشکیل می‌شود:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>مخزن آب و مواد مغذی:</strong> ظرفی که آب و کودهای مخصوص هیدروپونیک در آن مخلوط می‌شوند.</li>
+        <li><strong>پمپ اکسیژن:</strong> وسیله‌ای که اکسیژن را به ریشه‌ها می‌رساند (مانند پمپ آکواریوم).</li>
+        <li><strong>بستر نگهدارنده بی‌اثر:</strong> موادی مثل پوکه معدنی (لیکا)، پرلیت یا الیاف نارگیل که هیچ ماده غذایی ندارند و فقط تکیه‌گاه فیزیکی گیاه هستند تا کج نشود.</li>
+        <li><strong>نور کافی:</strong> نور طبیعی پشت پنجره یا لامپ‌های مخصوص رشد گیاه (LED).</li>
+      </ul>
+    `
+  },
+  {
+    slug: "simple-hydroponics-guide",
+    lang: "en",
+    title: "A Simple Guide to Hydroponics: What is Soil-less Growing?",
+    description: "Interested in growing plants without soil? Discover how home hydroponics works, its main advantages, and the components you need to start your first system.",
+    category: "Care",
+    categoryEn: "care",
+    publishedAt: "June 26, 2026",
+    readTime: "5 min",
+    author: "Alex Green",
+    icon: "Droplets",
+    gradient: "from-sky-400 to-blue-600",
+    keywords: ["hydroponics for beginners", "soil-less growing", "home hydroponic system", "growing in water", "jaliz"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        When we think about gardening, the first image that comes to mind is soil, trowels, and gardens. But imagine being able to grow beautiful flowers or delicious vegetables at home without using a single speck of soil! This method is called hydroponics.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Hydroponics in Simple Terms</h2>
+      <p class="text-slate-600 mb-4">
+        In traditional farming, soil serves two purposes: keeping the plant upright and holding water and nutrients. But the truth is, plants don't actually need soil itself! They need the water, oxygen, and nutrients inside it. In hydroponics, we eliminate soil and deliver these nutrients directly via a water-based nutrient solution.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Why Don't Roots Rot in Water?</h2>
+      <p class="text-slate-600 mb-4">
+        The answer is simple: oxygen. In regular pots, overwatering drowns the roots because air pockets in the soil close up, leading to root rot. In hydroponics, the water is kept flowing or aerated using an air pump (like in aquariums). Roots get constant water, food, and oxygen, allowing them to thrive.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Key Advantages of Hydroponics</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Faster Growth:</strong> Because nutrients are delivered directly to the roots, plants save energy and grow up to 50% faster than in soil. For example, lettuce is ready in 30 days instead of 50.</li>
+        <li><strong>Huge Water Savings:</strong> Water usage is reduced by up to 90% since water circulates in a closed loop, rather than evaporating or sinking into the ground.</li>
+        <li><strong>No Soil-Borne Pests:</strong> Without soil, pests, fungi, weeds, and the need for harmful chemical pesticides are significantly reduced.</li>
+        <li><strong>Great for Small Spaces:</strong> You can stack systems vertically to grow food in tiny apartments or balconies.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Basic Components of a Hydroponic System</h2>
+      <p class="text-slate-600 mb-4">
+        A simple home setup usually consists of:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Nutrient Reservoir:</strong> A tank where water is mixed with special hydroponic fertilizers containing all essential minerals.</li>
+        <li><strong>Aerator:</strong> An air pump and air stone to dissolve oxygen into the water.</li>
+        <li><strong>Inert Growing Medium:</strong> Materials like clay pebbles (LECA), perlite, or coco coir that provide physical support for the roots but contain no nutrients.</li>
+        <li><strong>Light Source:</strong> Bright windows or LED grow lights.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "علت-زرد-شدن-برگ-گیاهان",
+    lang: "fa",
+    title: "راهنمای کاربردی عیب‌یابی و درمان زرد شدن برگ گیاهان آپارتمانی",
+    description: "زرد شدن برگ گیاه نشانه چیست؟ در این راهنمای کاربردی علل اصلی زردی برگ‌ها شامل آبیاری نامناسب، نور، آفات و کمبود مواد مغذی را به سرعت تشخیص داده و درمان کنید.",
+    category: "نگهداری",
+    categoryEn: "care",
+    publishedAt: "۲۶ ژوئن ۲۰۲۶",
+    readTime: "۶ دقیقه",
+    author: "سارا گل‌پرور",
+    icon: "Droplets",
+    gradient: "from-amber-400 to-yellow-600",
+    keywords: ["علت زرد شدن برگ گیاهان", "درمان زردی برگ", "آبیاری زیاد گیاه آپارتمانی", "کمبود آهن گیاه", "جالیز"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        زرد شدن برگ‌ها یکی از رایج‌ترین نشانه‌هایی است که نشان می‌دهد گیاه آپارتمانی شما با مشکلی در محیط نگهداری خود مواجه شده است. برگ‌های زرد در واقع مانند یک زنگ خطر عمل می‌کنند؛ اما تشخیص علت دقیق این اتفاق گاهی دشوار است.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۱. آبیاری نامناسب: رایج‌ترین علت زردی برگ‌ها</h2>
+      <p class="text-slate-600 mb-4">
+        تنظیم میزان آب، مهم‌ترین بخش از نگهداری گیاهان آپارتمانی است:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>آبیاری بیش از حد (خفگی ریشه):</strong> زردی معمولاً از برگ‌های قدیمی‌تر و پایینی شروع شده و به سمت بالا می‌رود. برگ‌های زرد شده حالتی نرم، پژمرده و آبکی دارند و خاک برای مدت طولانی خیس می‌ماند.</li>
+        <li><strong>کم‌آبی و خشکی کشیدن گیاه:</strong> زردی معمولاً از لبه‌ها و نوک برگ‌ها شروع می‌شود و این بخش‌ها حالتی خشک، شکننده و کاغذی پیدا می‌کنند و خاک کاملاً خشک و سبک است.</li>
+      </ul>
+      <p class="text-slate-600 mb-4">
+        <strong>راهکار:</strong> برای آبیاری زیاد، اجازه دهید خاک کاملاً خشک شود و زهکشی گلدان را بررسی کنید. برای کم‌آبی نیز آبیاری عمیق انجام دهید تا آب از ته گلدان خارج شود.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۲. نور نامناسب محیط</h2>
+      <p class="text-slate-600 mb-4">
+        کمبود نور باعث زرد شدن برگ‌های پایینی و رشد ضعیف گیاه می‌شود زیرا توانایی فتوسنتز کاهش می‌یابد. از طرفی نور مستقیم آفتاب شدید باعث ایجاد سوختگی و لکه‌های زرد و قهوه‌ای خشک روی برگ‌ها می‌شود.
+      </p>
+      <p class="text-slate-600 mb-4">
+        <strong>راهکار:</strong> اکثر گیاهان آپارتمانی نور روشن اما غیرمستقیم (مانند پشت پرده توری پنجره جنوبی یا شرقی) را ترجیح می‌دهند.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۳. کمبودهای تغذیه‌ای و نیاز به کوددهی</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>کمبود نیتروژن:</strong> ابتدا برگ‌های قدیمی و پایینی به طور یکدست رنگ‌پریده و زرد می‌شوند.</li>
+        <li><strong>کمبود آهن (کلروز):</strong> برگ‌های جدید و جوان در بالای گیاه زرد می‌شوند اما رگبرگ‌های آن‌ها کاملاً سبز باقی می‌مانند.</li>
+        <li><strong>کمبود منیزیم:</strong> باعث زرد شدن فضای بین رگبرگ‌های برگ‌های قدیمی می‌شود.</li>
+      </ul>
+      <p class="text-slate-600 mb-4">
+        <strong>راهکار:</strong> در بهار و تابستان از یک کود مایع متعادل گیاهان آپارتمانی استفاده کنید.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۴. نوسانات دمایی و جریان باد سرد</h2>
+      <p class="text-slate-600 mb-4">
+        قرار گرفتن گلدان در معرض باد مستقیم کولر گازی، یا باد سرد پنجره در زمستان، شوک دمایی ایجاد کرده و برگ‌ها را زرد و بی‌حال می‌کند. همچنین نزدیکی به بخاری و رادیاتور لبه برگ‌ها را زرد و خشک می‌کند.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۵. آفات و بیماری‌های گیاهی</h2>
+      <p class="text-slate-600 mb-4">
+        حشرات مکنده مثل کنه تارعنکبوتی و شته‌ها با خوردن شیره گیاه لکه‌های زرد نقطه‌ای ایجاد می‌کنند. پشه‌های سیاه خاک نیز ریشه را جویده و باعث زردی کلی گیاه می‌شوند.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۶. پیری طبیعی برگ‌ها</h2>
+      <p class="text-slate-600 mb-4">
+        اگر زردی فقط به صورت تک برگ در پایین‌ترین قسمت گیاه رخ می‌دهد و برگ‌های بالای آن شاداب و در حال رشد هستند، این یک روند طبیعی پیری بیولوژیک است و جای نگرانی ندارد.
+      </p>
+    `
+  },
+  {
+    slug: "why-plant-leaves-turn-yellow",
+    lang: "en",
+    title: "A Practical Guide to Diagnosing and Treating Yellow Houseplant Leaves",
+    description: "Yellow leaves are a warning sign. Learn how to quickly diagnose the root cause—whether it is watering issues, light, nutrient deficiencies, or pests—and save your plant.",
+    category: "Care",
+    categoryEn: "care",
+    publishedAt: "June 26, 2026",
+    readTime: "6 min",
+    author: "Sarah Flower",
+    icon: "Droplets",
+    gradient: "from-amber-400 to-yellow-600",
+    keywords: ["yellow plant leaves", "how to treat yellow leaves", "overwatered houseplants", "iron deficiency in plants", "jaliz"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        Yellowing leaves are one of the most common signs that your houseplant is facing stress in its environment. Think of them as a distress call—but diagnosing the exact cause can be tricky because watering, lighting, pests, and nutrients can all cause a similar reaction.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">1. Improper Watering: The Number One Culprit</h2>
+      <p class="text-slate-600 mb-4">
+        Watering is the most critical element of plant care. Both overwatering and underwatering cause yellowing, but their appearances differ:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Overwatering (Root Suffocation):</strong> Yellowing starts from the lower, older leaves and moves up. Leaves feel soft, limp, and waterlogged, and the soil remains wet for a long time.</li>
+        <li><strong>Underwatering (Dehydration):</strong> Leaves start yellowing at the tips and edges, becoming dry, crispy, and paper-like. The pot feels very light.</li>
+      </ul>
+      <p class="text-slate-600 mb-4">
+        <strong>Fix:</strong> For overwatered plants, stop watering and check drainage. For dehydrated plants, give them a slow, deep soak.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">2. Poor Lighting</h2>
+      <p class="text-slate-600 mb-4">
+        Too little light prevents the plant from producing chlorophyll, causing lower leaves to turn pale yellow. Conversely, too much direct hot sun burns leaves, leaving yellow and brown dry scorch spots.
+      </p>
+      <p class="text-slate-600 mb-4">
+        <strong>Fix:</strong> Move your plant to bright, indirect light (e.g. near an east or south-facing window behind a sheer curtain).
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">3. Nutrient Deficiencies</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Nitrogen Deficiency:</strong> Older, lower leaves turn completely pale yellow first.</li>
+        <li><strong>Iron Deficiency (Chlorosis):</strong> New, young leaves at the top turn yellow while the veins stay bright green.</li>
+        <li><strong>Magnesium Deficiency:</strong> Causes yellowing between the veins of older leaves.</li>
+      </ul>
+      <p class="text-slate-600 mb-4">
+        <strong>Fix:</strong> Feed your plants with a balanced liquid houseplant fertilizer during the spring and summer growing season.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">4. Temperature Fluctuations & Drafts</h2>
+      <p class="text-slate-600 mb-4">
+        Cold drafts from windows or air conditioners shock plants, causing sudden yellowing. Heat from radiators or heaters dries them out, causing crispy leaf edges.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">5. Pests and Diseases</h2>
+      <p class="text-slate-600 mb-4">
+        Sap-sucking insects like spider mites and aphids leave tiny yellow stippling spots on leaves. Fungus gnat larvae feed on roots, causing general yellowing.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">6. Natural Aging</h2>
+      <p class="text-slate-600 mb-4">
+        If only one or two oldest leaves at the very bottom turn yellow and drop while new growth at the top is healthy, this is natural aging. No treatment is needed.
+      </p>
+    `
+  },
+  {
+    slug: "مقاوم-ترین-گیاهان-آپارتمانی",
+    lang: "fa",
+    title: "معرفی مقاوم‌ترین و جان‌سخت‌ترین گیاهان آپارتمانی دنیا",
+    description: "اگر نگران خراب شدن گیاهان خود هستید، با این ۵ گیاه فوق‌العاده مقاوم، براق و زیبا آشنا شوید که تقریباً در هر شرایطی زنده می‌مانند.",
+    category: "معرفی گیاهان",
+    categoryEn: "plants",
+    publishedAt: "۲۶ ژوئن ۲۰۲۶",
+    readTime: "۵ دقیقه",
+    author: "علی سبزواری",
+    icon: "Sprout",
+    gradient: "from-emerald-400 to-green-600",
+    keywords: ["مقاوم ترین گیاهان آپارتمانی", "زاموفیلیا", "سانسوریا", "گیاهان جان سخت", "جالیز"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        در این مقاله می‌خواهیم مقاوم‌ترین و بی‌دردسرترین گیاهان آپارتمانی را به شما معرفی کنیم که حتی در شرایط نور کم یا فراموشی در آبیاری، باز هم زنده و سرسبز می‌مانند.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">راز جان‌سخت بودن این گیاهان در چیست؟</h2>
+      <p class="text-slate-600 mb-4">
+        طبیعت به این گیاهان ابزارهای ویژه‌ای داده است تا در سخت‌ترین شرایط اقلیمی زنده بمانند:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>ذخیره آب هوشمند:</strong> گیاهانی مثل سانسوریا منافذ برگ‌های خود را در طول روز کاملاً می‌بندند تا آب تبخیر نشود و در عوض شب‌ها که هوا خنک است نفس می‌کشند.</li>
+        <li><strong>غده‌های زیرزمینی:</strong> گیاهانی مثل زاموفیلیا غده‌هایی شبیه سیب‌زمینی (ریزوم) در زیر خاک دارند که آب را ذخیره کرده و هفته‌ها بی‌نیازی از آب را تضمین می‌کنند.</li>
+        <li><strong>لایه محافظ مومی:</strong> برگ‌های ضخیم و براق گیاهانی مثل برگ عبایی دارای لایه‌ای مومی هستند که جلوی هدر رفتن رطوبت را می‌گیرد.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">معرفی ۵ قهرمان جان‌سخت آپارتمانی</h2>
+      <ol class="list-decimal list-inside space-y-3 text-slate-600 mb-6 ps-4">
+        <li><strong>سانسوریا (Sansevieria):</strong> قهرمان شماره یک مقاومت و تصفیه هوا. این گیاه در تاریک‌ترین گوشه‌های خانه زنده می‌ماند و طبق تایید ناسا سموم هوا را فیلتر می‌کند. تنها راه کشتن آن آبیاری بیش از حد است.</li>
+        <li><strong>زاموفیلیا (ZZ Plant):</strong> سنگ صبور آپارتمان‌ها. با برگ‌های براق و چرمی که شبیه گیاهان مصنوعی است. در محیط‌های اداری تاریک رشد می‌کند و به خشکی طولانی خاک مقاوم است.</li>
+        <li><strong>پتوس (Pothos):</strong> رونده محبوب و بی‌ادعا. در هر نوری رشد می‌کند و ریشه‌های هوایی آن رطوبت را جذب می‌کنند.</li>
+        <li><strong>برگ عبایی (Cast Iron Plant):</strong> معروف به گیاه چدنی. با خاکی ضعیف، تاریکی زیاد، گرد و غبار و نوسانات دما کنار می‌آید. رشد کندی دارد و نیاز به کود کمی دارد.</li>
+        <li><strong>اسپاتی فیلوم (Peace Lily):</strong> گل صلح و شاخص زنده تشنگی. برعکس بقیه، خاک مرطوب را دوست دارد. وقتی تشنه می‌شود شل شده و می‌افتد و بلافاصله پس از آبیاری دوباره سرپا می‌شود.</li>
+      </ol>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۳ قانون طلایی برای نگهداری از گیاهان جان‌سخت</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>قانون انگشت در خاک:</strong> قبل از آبیاری انگشت خود را تا بند دوم (۵ سانتی‌متر) در خاک فرو کنید. اگر کاملاً خشک بود آب بدهید.</li>
+        <li><strong>زهکشی عالی:</strong> گلدان حتماً باید سوراخ تخلیه آب داشته باشد و خاک سبک باشد تا ریشه‌ها خفه نشوند.</li>
+        <li><strong>غبارزدایی برگ‌ها:</strong> هر چند هفته یک بار با دستمال مرطوب برگ‌ها را تمیز کنید تا تنفس و فتوسنتز گیاه بهتر انجام شود.</li>
+      </ul>
+    `
+  },
+  {
+    slug: "most-resilient-houseplants",
+    lang: "en",
+    title: "The Most Resilient and Hard-to-Kill Houseplants for Beginners",
+    description: "New to gardening or busy with work? Meet these 5 incredibly hardy, beautiful houseplants that survive almost any indoor environment with minimal care.",
+    category: "Plants",
+    categoryEn: "plants",
+    publishedAt: "June 26, 2026",
+    readTime: "5 min",
+    author: "Alex Green",
+    icon: "Sprout",
+    gradient: "from-emerald-400 to-green-600",
+    keywords: ["unkillable houseplants", "hard to kill plants", "snake plant care", "zz plant care", "jaliz"],
+    content: `
+      <p class="lead text-lg text-slate-600 mb-6 font-medium">
+        In this guide, we introduce the most resilient and low-maintenance houseplants that stay green and alive even in low light or when you forget to water them.
+      </p>
+      
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">What Makes These Plants So Resilient?</h2>
+      <p class="text-slate-600 mb-4">
+        Nature has provided these plants with specific tools to survive extreme conditions:
+      </p>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>Smart Water Retention:</strong> Plants like the Snake Plant close their pores during the day to prevent evaporation, breathing only at night when it's cooler.</li>
+        <li><strong>Underground Bulbs:</strong> Plants like the ZZ Plant have underground potato-like tubers (rhizomes) that store water, helping them go weeks without watering.</li>
+        <li><strong>Protective Waxy Layer:</strong> Waxy, thick leaves on plants like the Cast Iron Plant protect them from drying out in dry indoor air.</li>
+      </ul>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Our Top 5 Unkillable Houseplant Heroes</h2>
+      <ol class="list-decimal list-inside space-y-3 text-slate-600 mb-6 ps-4">
+        <li><strong>Snake Plant (Sansevieria):</strong> The ultimate survivor. Thrives in dark corners and is scientifically proven by NASA to filter indoor air toxins. Only overwatering can kill it.</li>
+        <li><strong>ZZ Plant (Zamioculcas Zamiifolia):</strong> The absolute champion of dark corridors. Features shiny, waxy leaves and handles long dry periods easily.</li>
+        <li><strong>Pothos:</strong> The beloved vining plant. Adapts to almost any light level, and its aerial roots absorb ambient humidity.</li>
+        <li><strong>Cast Iron Plant (Aspidistra Elatior):</strong> True to its name, it handles poor soil, low light, dust, and temperature drops. Requires very little fertilizer.</li>
+        <li><strong>Peace Lily (Spathiphyllum):</strong> The dramatic communicator. Unlike the others, it prefers moist soil. When thirsty, it visibly droops, bouncing back to life within hours of watering.</li>
+      </ol>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">3 Golden Rules for Easy Care</h2>
+      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
+        <li><strong>The Soil Finger Test:</strong> Insert your finger 2 inches deep. Water only if the soil is completely dry.</li>
+        <li><strong>Good Drainage:</strong> Always use pots with drainage holes and light, aerated soil to prevent root suffocation.</li>
+        <li><strong>Dust the Leaves:</strong> Wipe the leaves with a damp cloth every few weeks so the plant can breathe and photosynthesize properly.</li>
+      </ul>
+    `
   }
 ];
+
