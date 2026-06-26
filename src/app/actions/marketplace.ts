@@ -241,3 +241,73 @@ export async function sendMessageAction(conversationId: string, body: string) {
 
   return msg;
 }
+
+export async function createListingReportAction(listingId: string, reason: string) {
+  const reporterId = await getSessionUserId();
+  
+  const report = await prisma.marketplaceReport.create({
+    data: {
+      listingId,
+      reporterId,
+      reason,
+    }
+  });
+
+  return report;
+}
+
+export async function getMarketplaceReportsAction() {
+  const userId = await getSessionUserId();
+  if (!userId) throw new MarketplaceError("FORBIDDEN");
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== "admin") throw new MarketplaceError("FORBIDDEN");
+
+  const reports = await prisma.marketplaceReport.findMany({
+    include: {
+      listing: {
+        select: {
+          id: true,
+          title: true,
+          ownerId: true,
+          status: true,
+        }
+      },
+      reporter: {
+        select: {
+          fullName: true,
+          email: true,
+        }
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  return reports;
+}
+
+export async function deleteReportAction(id: string) {
+  const userId = await getSessionUserId();
+  if (!userId) throw new MarketplaceError("FORBIDDEN");
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== "admin") throw new MarketplaceError("FORBIDDEN");
+
+  await prisma.marketplaceReport.delete({
+    where: { id }
+  });
+}
+
+export async function deleteListingByAdminAction(listingId: string) {
+  const userId = await getSessionUserId();
+  if (!userId) throw new MarketplaceError("FORBIDDEN");
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role !== "admin") throw new MarketplaceError("FORBIDDEN");
+
+  await prisma.marketplaceListing.delete({
+    where: { id: listingId }
+  });
+}

@@ -33,6 +33,8 @@ import { authErrorTranslationKey } from "@/lib/auth"
 import type { AdminCreateUserInput, AdminUpdateUserInput, User, UserRole } from "@/lib/auth/types"
 import { getAiConfig, setGlobalSetting, getAllProviderKeys } from "@/app/actions/settings"
 import { fetchModelsAction } from "@/app/actions/ai"
+import { getMarketplaceReportsAction, deleteReportAction, deleteListingByAdminAction } from "@/app/actions/marketplace"
+import { AlertTriangle, Flag, Trash2 as TrashIcon, Check as CheckIcon } from "lucide-react"
 
 interface ResetTarget {
   id: string
@@ -62,6 +64,64 @@ export default function AdminPage() {
   const [editTarget, setEditTarget] = useState<User | null>(null)
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
+
+  // Reports state
+  const [reports, setReports] = useState<any[]>([])
+  const [reportsLoading, setReportsLoading] = useState(false)
+  const [activeAdminTab, setActiveAdminTab] = useState<"users" | "reports">("users")
+
+  const fetchReports = async () => {
+    if (status !== "authenticated" || !isAdmin) return
+    setReportsLoading(true)
+    try {
+      const data = await getMarketplaceReportsAction()
+      setReports(data)
+    } catch (err) {
+      console.error("Failed to fetch reports:", err)
+    } finally {
+      setReportsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === "authenticated" && isAdmin) {
+      const timer = setTimeout(() => {
+        fetchReports()
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, isAdmin])
+
+  const handleDeleteReport = async (reportId: string) => {
+    const confirmed = window.confirm(language === "fa" ? "آیا از رد این گزارش مطمئن هستید؟" : "Are you sure you want to dismiss this report?")
+    if (!confirmed) return
+    
+    setActionError(null)
+    try {
+      await deleteReportAction(reportId)
+      setFlash(language === "fa" ? "گزارش با موفقیت رد شد." : "Report dismissed successfully.")
+      setTimeout(() => setFlash(null), 3000)
+      await fetchReports()
+    } catch (err: any) {
+      setActionError(authErrorTranslationKey(err))
+    }
+  }
+
+  const handleDeleteListingByAdmin = async (listingId: string) => {
+    const confirmed = window.confirm(language === "fa" ? "آیا از حذف دائمی این آگهی مطمئن هستید؟ با این کار تمامی گزارش‌ها و چت‌های مرتبط با آن حذف خواهند شد." : "Are you sure you want to permanently delete this listing? This will also delete all associated reports and chats.")
+    if (!confirmed) return
+    
+    setActionError(null)
+    try {
+      await deleteListingByAdminAction(listingId)
+      setFlash(language === "fa" ? "آگهی با موفقیت حذف شد." : "Listing deleted successfully.")
+      setTimeout(() => setFlash(null), 3000)
+      await fetchReports()
+    } catch (err: any) {
+      setActionError(authErrorTranslationKey(err))
+    }
+  }
 
   // AI API key state — separate keys per provider
   const [aiProvider, setAiProvider] = useState<"gemini" | "sotoon" | "gapgpt">("gemini")
@@ -328,7 +388,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatCard
             icon={<Users className="h-5 w-5 text-slate-500" />}
             label={t("admin_total_users")}
@@ -344,9 +404,47 @@ export default function AdminPage() {
             label={t("admin_admins")}
             value={totals.admins}
           />
+          <StatCard
+            icon={<Flag className="h-5 w-5 text-amber-500" />}
+            label={language === "fa" ? "گزارش‌های فعال" : "Active Reports"}
+            value={reports.length}
+          />
         </div>
 
-        {/* AI API Configuration */}
+        {/* Tabs for Admin Panel sections */}
+        <div className="flex border-b border-slate-200 mb-6 bg-white rounded-xl p-1 shadow-sm">
+          <button
+            onClick={() => setActiveAdminTab("users")}
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all ${
+              activeAdminTab === "users"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            {language === "fa" ? "مدیریت کاربران و تنظیمات" : "Users & Settings"}
+          </button>
+          <button
+            onClick={() => setActiveAdminTab("reports")}
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeAdminTab === "reports"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            {language === "fa" ? "گزارش‌های تخلف بازارچه" : "Marketplace Reports"}
+            {reports.length > 0 && (
+              <span className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full ${
+                activeAdminTab === "reports" ? "bg-white text-emerald-700" : "bg-amber-100 text-amber-800"
+              }`}>
+                {reports.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {activeAdminTab === "users" && (
+          <>
+            {/* AI API Configuration */}
         <div className="bg-white border border-emerald-200 rounded-xl shadow-sm mb-6 overflow-hidden">
           <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
             <div className="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center">
@@ -685,11 +783,144 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {currentUser && filtered.some((u) => u.id === currentUser.id) && (
-          <p className="mt-4 text-xs text-slate-400 flex items-center gap-1.5">
-            <UserX className="h-3.5 w-3.5" />
-            {t("admin_self_warning")}
-          </p>
+            {currentUser && filtered.some((u) => u.id === currentUser.id) && (
+              <p className="mt-4 text-xs text-slate-400 flex items-center gap-1.5">
+                <UserX className="h-3.5 w-3.5" />
+                {t("admin_self_warning")}
+              </p>
+            )}
+          </>
+        )}
+
+        {/* Marketplace Reports Tab Content */}
+        {activeAdminTab === "reports" && (
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden animate-in fade-in duration-200">
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">
+                  {language === "fa" ? "گزارش‌های تخلف دریافتی" : "Received Violation Reports"}
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {language === "fa" 
+                    ? "لیست آگهی‌های گزارش‌شده توسط کاربران را مدیریت کنید."
+                    : "Manage marketplace listings reported by users."}
+                </p>
+              </div>
+            </div>
+
+            {actionError && (
+              <div role="alert" className="mx-4 mt-4 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2">
+                {t(actionError as any)}
+              </div>
+            )}
+            {flash && (
+              <div role="status" className="mx-4 mt-4 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-3 py-2 flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                {flash}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-start bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
+                    <th className="text-start font-semibold px-4 py-3">{language === "fa" ? "آگهی گزارش‌شده" : "Reported Listing"}</th>
+                    <th className="text-start font-semibold px-4 py-3">{language === "fa" ? "علت گزارش" : "Reason"}</th>
+                    <th className="text-start font-semibold px-4 py-3">{language === "fa" ? "گزارش‌دهنده" : "Reporter"}</th>
+                    <th className="text-start font-semibold px-4 py-3">{language === "fa" ? "تاریخ" : "Date"}</th>
+                    <th className="text-end font-semibold px-4 py-3">{language === "fa" ? "عملیات" : "Actions"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportsLoading ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-emerald-600" />
+                      </td>
+                    </tr>
+                  ) : reports.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-12 text-center text-slate-400 font-medium">
+                        {language === "fa" ? "هیچ گزارش تخلفی ثبت نشده است." : "No reports have been submitted."}
+                      </td>
+                    </tr>
+                  ) : (
+                    reports.map((report) => {
+                      const reasonMap: Record<string, { fa: string, en: string }> = {
+                        spam: { fa: "اسپم یا تبلیغات کاذب", en: "Spam or deceptive advertising" },
+                        inappropriate: { fa: "محتوای نامناسب یا غیراخلاقی", en: "Inappropriate or offensive content" },
+                        incorrect: { fa: "اطلاعات نادرست یا قیمت نجومی", en: "Incorrect info or unreasonable price" },
+                        duplicate: { fa: "آگهی تکراری یا منقضی شده", en: "Duplicate or expired listing" },
+                        other: { fa: "سایر موارد", en: "Other issues" }
+                      }
+                      const reasonText = reasonMap[report.reason]?.[language === "fa" ? "fa" : "en"] || report.reason
+
+                      return (
+                        <tr key={report.id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                          <td className="px-4 py-3.5">
+                            {report.listing ? (
+                              <div>
+                                <div className="font-semibold text-slate-900">{report.listing.title}</div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">ID: {report.listing.id.slice(0, 8)}...</div>
+                              </div>
+                            ) : (
+                              <span className="text-rose-500 font-medium">{language === "fa" ? "آگهی حذف شده" : "Deleted Listing"}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                              <AlertTriangle className="h-3 w-3 text-amber-600" />
+                              {reasonText}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            {report.reporter ? (
+                              <div>
+                                <div className="font-medium text-slate-800">{report.reporter.fullName}</div>
+                                <div className="text-xs text-slate-500">{report.reporter.email}</div>
+                              </div>
+                            ) : (
+                              <span className="text-slate-400 italic text-xs">{language === "fa" ? "ناشناس (مهمان)" : "Anonymous (Guest)"}</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-slate-500 text-xs font-medium">
+                            {new Date(report.createdAt).toLocaleDateString(
+                              language === "fa" ? "fa-IR" : undefined,
+                              { year: "numeric", month: "short", day: "numeric" },
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex justify-end gap-2">
+                              {report.listing && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteListingByAdmin(report.listing.id)}
+                                  className="h-8 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-100 gap-1 rounded-lg text-xs font-bold"
+                                >
+                                  <TrashIcon className="h-3.5 w-3.5" />
+                                  {language === "fa" ? "حذف آگهی" : "Delete Ad"}
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteReport(report.id)}
+                                className="h-8 text-slate-600 hover:bg-slate-50 gap-1 rounded-lg text-xs font-bold"
+                              >
+                                <CheckIcon className="h-3.5 w-3.5 text-emerald-600" />
+                                {language === "fa" ? "رد گزارش" : "Dismiss"}
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </main>
 

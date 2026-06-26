@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useMarketplace } from "@/components/MarketplaceProvider"
-import { getListingOwnerNameAction } from "@/app/actions/marketplace"
+import { getListingOwnerNameAction, createListingReportAction } from "@/app/actions/marketplace"
 import { Conversation, Listing, Message } from "@/lib/marketplace"
 
 import {
@@ -260,12 +260,16 @@ export function ListingDetailsModal({
 
                   <div className="flex gap-2 pt-2">
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         setReporting(true)
-                        setTimeout(() => {
-                          setReporting(false)
+                        try {
+                          await createListingReportAction(listing.id, reportReason)
                           setReportSubmitted(true)
-                        }, 800)
+                        } catch (err) {
+                          console.error("Failed to submit report:", err)
+                        } finally {
+                          setReporting(false)
+                        }
                       }}
                       disabled={!reportReason || reporting}
                       className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"

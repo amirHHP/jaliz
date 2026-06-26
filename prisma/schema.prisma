@@ -27,6 +27,7 @@ model User {
   messagesSent  MarketplaceMessage[] @relation("MessagesSent")
   messagesRecv  MarketplaceMessage[] @relation("MessagesReceived")
   conversations ConversationParticipant[]
+  reports       MarketplaceReport[]
 }
 
 model UserPlant {
@@ -94,6 +95,7 @@ model MarketplaceListing {
 
   conversations MarketplaceConversation[]
   messages      MarketplaceMessage[]
+  reports       MarketplaceReport[]
 }
 
 model MarketplaceConversation {
@@ -131,4 +133,14 @@ model MarketplaceMessage {
 model GlobalSetting {
   key   String @id
   value String
+}
+
+model MarketplaceReport {
+  id         String             @id @default(uuid())
+  listingId  String
+  listing    MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reporterId String?
+  reporter   User?              @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+  reason     String
+  createdAt  DateTime           @default(now())
 }
