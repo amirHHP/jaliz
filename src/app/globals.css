@@ -2,8 +2,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fcfaf8; /* cute soft cream */
-  --foreground: #2d3748; /* softer dark grey */
+  --background: #f8fafc; /* slate-50 */
+  --foreground: #0f172a; /* slate-900 */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --input: #ffffff;
   --font-geist-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --font-vazirmatn: "Vazirmatn", Tahoma, sans-serif;
@@ -12,6 +17,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-input: var(--input);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
@@ -48,8 +58,17 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #020617; /* slate-950 */
-    --foreground: #f8fafc; /* slate-50 */
+    --foreground: #f1f5f9; /* slate-100 */
+    --card: #1e293b; /* slate-800 */
+    --card-foreground: #f8fafc;
+    --muted: #94a3b8;
+    --border: #334155;
+    --input: #1e293b;
   }
+}
+
+html {
+  color-scheme: light dark;
 }
 
 body {
@@ -57,6 +76,24 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer components {
+  .page-shell {
+    @apply min-h-screen bg-background text-foreground selection:bg-emerald-200 selection:text-emerald-900 dark:selection:bg-emerald-800 dark:selection:text-emerald-100;
+  }
+
+  .surface-card {
+    @apply rounded-xl border border-border bg-card text-card-foreground shadow-sm;
+  }
+
+  .surface-input {
+    @apply rounded-md border border-border bg-input text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500;
+  }
+
+  .app-header {
+    @apply sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md shadow-sm;
+  }
 }
 
 /* Override the default sans font variable when language is Persian */

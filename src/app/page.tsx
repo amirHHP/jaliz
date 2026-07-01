@@ -132,7 +132,7 @@ export default function MyPlantsPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-emerald-50 via-white to-emerald-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
       </div>
     )
@@ -143,13 +143,13 @@ export default function MyPlantsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
+    <div className="page-shell">
       <Header />
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{t("my_plants")}</h1>
-            <span className="text-sm font-medium text-slate-500 bg-slate-100/80 px-2.5 py-0.5 rounded-full border border-slate-200/60">{plants.length}</span>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("my_plants")}</h1>
+            <span className="text-sm font-medium text-muted bg-slate-100/80 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-border">{plants.length}</span>
           </div>
           <Button asChild className="gap-2">
             <Link href="/plants/new">
@@ -161,14 +161,14 @@ export default function MyPlantsPage() {
 
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
           {loading ? (
-            <div className="col-span-full py-16 text-center text-slate-400">Loading...</div>
+            <div className="col-span-full py-16 text-center text-muted">Loading...</div>
           ) : plants.length === 0 ? (
-            <div className="col-span-full py-24 flex flex-col items-center justify-center text-center bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-slate-200 border-dashed shadow-sm">
+            <div className="col-span-full py-24 flex flex-col items-center justify-center text-center bg-card/50 backdrop-blur-sm rounded-2xl border-2 border-border border-dashed shadow-sm">
               <div className="w-24 h-24 bg-emerald-100/50 rounded-full flex items-center justify-center mb-6">
                 <Leaf className="h-12 w-12 text-emerald-600" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-3">{t("no_plants_title" as any)}</h3>
-              <p className="text-slate-500 max-w-md mb-8 text-lg">{t("no_plants_desc" as any)}</p>
+              <h3 className="text-2xl font-bold text-foreground mb-3">{t("no_plants_title" as any)}</h3>
+              <p className="text-muted max-w-md mb-8 text-lg">{t("no_plants_desc" as any)}</p>
               <Button asChild size="lg" className="gap-2">
                 <Link href="/plants/new">
                   <Plus className="h-5 w-5" />
@@ -217,8 +217,8 @@ export default function MyPlantsPage() {
                   : "bg-rose-50/90 text-rose-700 border-rose-200"
 
               return (
-                <Card key={plant.id} className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg border-slate-200 bg-white hover:-translate-y-1 flex flex-col cursor-pointer ring-0 hover:ring-2 hover:ring-emerald-300" onClick={() => setSelectedPlantId(plant.id)}>
-                  <div className="w-full aspect-[4/5] bg-slate-100 relative overflow-hidden border-b border-slate-100 shrink-0">
+                <Card key={plant.id} className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg border-border bg-card hover:-translate-y-1 flex flex-col cursor-pointer ring-0 hover:ring-2 hover:ring-emerald-300 dark:hover:ring-emerald-700" onClick={() => setSelectedPlantId(plant.id)}>
+                  <div className="w-full aspect-[4/5] bg-slate-100 dark:bg-slate-700 relative overflow-hidden border-b border-border shrink-0">
                     {plant.image ? (
                       <img src={plant.image} alt={plant.name} className="w-full h-full object-cover" />
                     ) : (
@@ -235,18 +235,18 @@ export default function MyPlantsPage() {
                   </div>
                   <CardContent className="space-y-3 p-3 sm:p-5 grow flex flex-col">
                     <div>
-                      <CardTitle className="text-sm sm:text-base md:text-xl font-bold text-slate-900 leading-tight truncate">
+                      <CardTitle className="text-sm sm:text-base md:text-xl font-bold text-card-foreground leading-tight truncate">
                         {plant.name}
                       </CardTitle>
                     </div>
                     <div className="space-y-2 text-[10px] sm:text-xs pt-1">
-                      <div className="flex items-start text-slate-600">
+                      <div className="flex items-start text-muted">
                         <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 me-1.5 sm:me-2 mt-0.5 text-indigo-400" />
                         <span className="font-medium">
                           {plant.locationType === "Indoor" ? t("location_indoor") : t("location_outdoor")}
                         </span>
                       </div>
-                      <div className="flex items-start text-slate-600">
+                      <div className="flex items-start text-muted">
                         <Droplets className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 me-1.5 sm:me-2 mt-0.5 text-sky-500" />
                         <span className="font-medium">{wateringText}</span>
                       </div>
@@ -308,11 +308,11 @@ function PublicHomePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-50 selection:bg-emerald-200 selection:text-emerald-900">
+    <div className="page-shell">
       <Header />
 
       {/* Hero section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-b border-emerald-100/50">
+      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950 dark:via-slate-900 dark:to-teal-950 border-b border-emerald-100/50 dark:border-emerald-900/50">
         {/* Decorative blobs */}
         <div className="pointer-events-none absolute -top-24 -end-24 h-72 w-72 rounded-full bg-lime-200/30 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 -start-24 h-72 w-72 rounded-full bg-teal-200/20 blur-3xl" />
@@ -321,14 +321,14 @@ function PublicHomePage() {
           <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
             {/* Text */}
             <div className="flex-1 text-center md:text-start space-y-5">
-              <div className="inline-flex items-center gap-2 bg-emerald-100/60 backdrop-blur-sm text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-200/50">
+              <div className="inline-flex items-center gap-2 bg-emerald-100/60 dark:bg-emerald-900/40 backdrop-blur-sm text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/50">
                 <Sprout className="h-3.5 w-3.5" />
                 {t("app_title")}
               </div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
                 {t("landing_hero_title")}
               </h1>
-              <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-lg">
+              <p className="text-base md:text-lg text-muted leading-relaxed max-w-lg">
                 {t("landing_hero_subtitle")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
@@ -355,21 +355,21 @@ function PublicHomePage() {
                   <div
                     key={i}
                     onClick={() => setActiveFeature(isOpen ? null : i)}
-                    className={`cursor-pointer bg-white/80 backdrop-blur-sm rounded-2xl border p-4 flex flex-col items-center justify-start transition-all duration-300 select-none shadow-sm hover:shadow-md ${
+                    className={`cursor-pointer bg-card/80 backdrop-blur-sm rounded-2xl border p-4 flex flex-col items-center justify-start transition-all duration-300 select-none shadow-sm hover:shadow-md ${
                       isOpen
-                        ? "border-emerald-300 ring-4 ring-emerald-100/50 scale-[1.02] shadow-emerald-100/20"
-                        : "border-slate-100 hover:border-slate-200"
+                        ? "border-emerald-300 dark:border-emerald-700 ring-4 ring-emerald-100/50 dark:ring-emerald-900/50 scale-[1.02] shadow-emerald-100/20"
+                        : "border-border hover:border-slate-300 dark:hover:border-slate-600"
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2 w-full">
                       <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isOpen ? feat.activeColor.split(" ").slice(0, 2).join(" ") : feat.color}`}>
                         <feat.icon className={`h-5 w-5 transition-transform duration-300 ${isOpen ? "scale-110 rotate-6" : ""}`} />
                       </div>
-                      <span className="text-xs font-semibold text-slate-700 text-center">{feat.title}</span>
+                      <span className="text-xs font-semibold text-foreground text-center">{feat.title}</span>
                     </div>
                     {/* Collapsible description */}
                     <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-32 opacity-100 mt-3" : "max-h-0 opacity-0"}`}>
-                      <p className="text-[11px] text-slate-500 leading-relaxed text-center border-t border-slate-100/80 pt-2 w-full">
+                      <p className="text-[11px] text-muted leading-relaxed text-center border-t border-border pt-2 w-full">
                         {feat.description}
                       </p>
                     </div>

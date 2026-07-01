@@ -59,11 +59,11 @@ export function MarketplaceGrid() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-slate-900">
+        <h2 className="text-xl font-semibold text-foreground">
           {t("market_title")}
         </h2>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-600 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full font-medium">
+          <span className="text-sm text-muted bg-slate-100 dark:bg-slate-800 border border-border px-3 py-1 rounded-full font-medium">
             {t("market_within")}
           </span>
           <Link
@@ -79,14 +79,14 @@ export function MarketplaceGrid() {
       </div>
 
       {previewListings.length === 0 ? (
-        <div className="bg-white border border-dashed border-slate-200 rounded-xl py-10 px-6 text-center">
+        <div className="surface-card border-dashed py-10 px-6 text-center">
           <div className="mx-auto h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center mb-3">
             <Sprout className="h-5 w-5 text-emerald-600" />
           </div>
-          <h3 className="font-semibold text-slate-900">
+          <h3 className="font-semibold text-foreground">
             {t("mp_dashboard_empty_title" as never)}
           </h3>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-muted mt-1">
             {t("mp_dashboard_empty_desc" as never)}
           </p>
           <Button

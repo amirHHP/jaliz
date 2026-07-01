@@ -31,11 +31,16 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLanguage()
-  const { login, status, user } = useAuth()
+  const { login, sendOtp, loginWithOtp, status, user } = useAuth()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [otpCode, setOtpCode] = useState("")
+  const [loginMode, setLoginMode] = useState<"otp" | "password">("otp")
+  const [otpSent, setOtpSent] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const [errorKey, setErrorKey] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const redirectTo = searchParams?.get("redirect") || "/"
@@ -47,17 +52,72 @@ function LoginForm() {
     }
   }, [status, user, router, redirectTo])
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  // Cooldown timer for sending OTP
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [cooldown])
+
+  const handleSendOtp = async () => {
+    if (!email.trim()) {
+      setErrorKey("auth_error_empty_field")
+      return
+    }
     setErrorKey(null)
+    setSuccessMsg(null)
     setSubmitting(true)
     try {
-      await login(email, password)
-      router.replace(redirectTo)
+      await sendOtp(email)
+      setOtpSent(true)
+      setCooldown(60) // 60 seconds cooldown
+      setSuccessMsg("otp_sent_success")
     } catch (err) {
       setErrorKey(authErrorTranslationKey(err))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setErrorKey(null)
+    setSuccessMsg(null)
+
+    if (loginMode === "password") {
+      if (!email.trim() || !password) {
+        setErrorKey("auth_error_empty_field")
+        return
+      }
+      setSubmitting(true)
+      try {
+        await login(email, password)
+        router.replace(redirectTo)
+      } catch (err) {
+        setErrorKey(authErrorTranslationKey(err))
+      } finally {
+        setSubmitting(false)
+      }
+    } else {
+      if (!otpSent) {
+        await handleSendOtp()
+      } else {
+        if (!otpCode.trim()) {
+          setErrorKey("auth_error_empty_field")
+          return
+        }
+        setSubmitting(true)
+        try {
+          await loginWithOtp(email, otpCode)
+          router.replace(redirectTo)
+        } catch (err) {
+          setErrorKey(authErrorTranslationKey(err))
+        } finally {
+          setSubmitting(false)
+        }
+      }
     }
   }
 
@@ -79,46 +139,136 @@ function LoginForm() {
             <p className="text-slate-500 text-sm mt-1">{t("login_desc")}</p>
           </div>
 
+          {/* Mode Switcher */}
+          <div className="grid grid-cols-2 p-1 gap-1 bg-slate-100 rounded-xl mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode("otp")
+                setErrorKey(null)
+                setSuccessMsg(null)
+              }}
+              className={`py-2 text-xs font-semibold rounded-lg transition ${
+                loginMode === "otp"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              {t("login_with_otp")}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setLoginMode("password")
+                setErrorKey(null)
+                setSuccessMsg(null)
+              }}
+              className={`py-2 text-xs font-semibold rounded-lg transition ${
+                loginMode === "password"
+                  ? "bg-white text-slate-900 shadow-sm"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              {t("login_with_password")}
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-slate-700">
                 {t("email")}
               </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("email_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-              />
+              <div className="flex gap-2 items-center">
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  disabled={loginMode === "otp" && otpSent}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t("email_ph")}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500"
+                />
+                {loginMode === "otp" && otpSent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false)
+                      setOtpCode("")
+                      setSuccessMsg(null)
+                    }}
+                    className="text-xs text-emerald-700 font-semibold hover:underline shrink-0"
+                  >
+                    {t("change_email")}
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-slate-700">
-                {t("password")}
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("password_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-              />
-            </div>
+            {loginMode === "password" && (
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium text-slate-700">
+                  {t("password")}
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t("password_ph")}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
+                />
+              </div>
+            )}
+
+            {loginMode === "otp" && otpSent && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label htmlFor="otpCode" className="text-sm font-medium text-slate-700">
+                  {t("otp_code")}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="otpCode"
+                    type="text"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder={t("otp_ph")}
+                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400 text-center tracking-[0.25em] font-bold"
+                  />
+                  <Button
+                    type="button"
+                    disabled={cooldown > 0 || submitting}
+                    onClick={handleSendOtp}
+                    variant="outline"
+                    className="shrink-0 text-xs border-slate-300 hover:bg-slate-50 text-slate-700"
+                  >
+                    {cooldown > 0 ? `${cooldown}s` : t("send_otp")}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {errorKey && (
               <div
                 role="alert"
                 className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2"
               >
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {t(errorKey as any)}
+              </div>
+            )}
+
+            {successMsg && (
+              <div
+                role="alert"
+                className="rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-3 py-2"
+              >
+                {t(successMsg as any)}
               </div>
             )}
 
@@ -132,7 +282,11 @@ function LoginForm() {
               ) : (
                 <LogIn className="h-4 w-4" />
               )}
-              {t("login_btn")}
+              {loginMode === "password"
+                ? t("login_btn")
+                : otpSent
+                ? t("login_btn_otp")
+                : t("send_otp")}
             </Button>
           </form>
 
@@ -145,8 +299,6 @@ function LoginForm() {
               {t("sign_up")}
             </Link>
           </div>
-
-
         </div>
       </div>
     </div>

@@ -34,6 +34,8 @@ services:
       - API_URL=http://api:8000
       # تغییر به true چون اکنون پروژه پشت HTTPS و گواهینامه امنیتی قرار دارد
       - COOKIE_SECURE=true
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM=${RESEND_FROM:-Jaliz <onboarding@resend.dev>}
 
   nginx:
     image: nginx:alpine

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import {
   X, Droplets, Activity, MapPin, Sun, Box, Sprout,
   Leaf, Image as ImageIcon, Sparkles, Pencil, Trash2, Save, ChevronLeft,
-  History, PlusCircle, Loader2
+  History, PlusCircle, Loader2, Share2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AdviceMarketplaceStrip } from "@/components/marketplace/AdviceMarketplaceStrip"
@@ -10,6 +10,7 @@ import { useLanguage } from "@/components/LanguageProvider"
 import { analyzePlantAction, getStatusAdviceAction } from "@/app/actions/ai"
 import { getPlantLogsAction, addPlantStatusLogAction } from "@/app/actions/plants"
 import { normalizePlantHealth } from "@/lib/plant-status-health"
+import { sharePlant } from "@/lib/plant-share"
 
 interface PlantStatusLog {
   id: string
@@ -89,6 +90,8 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const [isInferringHealth, setIsInferringHealth] = useState(false)
   const [isLoadingLogs, setIsLoadingLogs] = useState(true)
   const [isSubmittingLog, setIsSubmittingLog] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
+  const [shareNotice, setShareNotice] = useState<string | null>(null)
   const healthInferGen = useRef(0)
   const newLogHealthRef = useRef(newLogHealth)
   newLogHealthRef.current = newLogHealth
@@ -300,6 +303,35 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
     setCareTips(plant.careTips || ""); setWateringTips(plant.wateringTips || "")
     setWateringInterval(plant.wateringInterval || 7)
     setIsEditing(false)
+  }
+
+  const handleShare = async () => {
+    setIsSharing(true)
+    setShareNotice(null)
+    try {
+      const latestLog = logs[0]
+      const result = await sharePlant({
+        name: plant.name,
+        health: plant.health,
+        latestStatus: latestLog?.status,
+        nextWateringDate: plant.nextWateringDate,
+        image: latestLog?.image || plant.image || image,
+        language,
+      })
+      if (!result.shared) {
+        const msg = t("share_plant_cancelled" as never)
+        setShareNotice(msg)
+        window.setTimeout(() => setShareNotice(null), 3000)
+      } else if (result.fallback) {
+        const msg = t("share_plant_success" as never)
+        setShareNotice(msg)
+        window.setTimeout(() => setShareNotice(null), 4000)
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Share failed")
+    } finally {
+      setIsSharing(false)
+    }
   }
 
   // ── Backdrop ────────────────────────────────────────────────────────────────
@@ -667,6 +699,42 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                 </div>
               )}
 
+              {/* Share card CTA */}
+              <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-5 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-emerald-900 text-base flex items-center gap-2">
+                      <Share2 className="h-4 w-4 shrink-0" />
+                      {t("share_plant_cta" as never)}
+                    </h3>
+                    <p className="text-sm text-emerald-700/80 mt-1 leading-relaxed">
+                      {t("share_plant_desc" as never)}
+                    </p>
+                    {shareNotice && (
+                      <p className="text-xs text-emerald-600 font-medium mt-2 animate-in fade-in">
+                        {shareNotice}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleShare}
+                    disabled={isSharing}
+                    className="shrink-0 gap-2 bg-emerald-700 hover:bg-emerald-800 shadow-md"
+                  >
+                    {isSharing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {t("share_plant_preparing" as never)}
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="h-4 w-4" />
+                        {t("share_plant" as never)}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
 
             </div>
           ) : (
@@ -851,6 +919,21 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
               )}
 
               {/* Edit side */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleShare}
+                  disabled={isSharing}
+                  className="gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                >
+                  {isSharing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
+                  {t("share_plant" as never)}
+                </Button>
                <Button
                 onClick={() => setIsEditing(true)}
                 className="gap-2"
@@ -858,6 +941,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
                 <Pencil className="h-4 w-4" />
                 {language === "fa" ? "ویرایش اطلاعات" : "Edit info"}
               </Button>
+              </div>
             </>
           ) : (
             <>

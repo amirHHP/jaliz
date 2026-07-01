@@ -80,7 +80,7 @@ export function BottomNav() {
   const gridCols = isAuthenticated ? "grid-cols-5" : "grid-cols-1"
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-white border-t border-slate-200 md:hidden pb-safe">
+    <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-card border-t border-border md:hidden pb-safe">
       <div className={`grid h-full max-w-lg ${gridCols} mx-auto font-medium`}>
         {tabs.map((tab) => {
           const Icon = tab.icon
@@ -89,14 +89,14 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`relative inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 group ${
-                isActive ? "text-emerald-600" : "text-slate-500 hover:text-emerald-600"
+              className={`relative inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 dark:hover:bg-slate-800 group ${
+                isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted hover:text-emerald-600 dark:hover:text-emerald-400"
               }`}
             >
               <div className="relative">
                 <Icon
                   className={`w-6 h-6 mb-1 ${
-                    isActive ? "text-emerald-600" : "text-slate-400 group-hover:text-emerald-500"
+                    isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
                   }`}
                 />
                 {tab.href === "/marketplace/chats" && unreadCount > 0 && (
@@ -116,7 +116,7 @@ export function BottomNav() {
             id="smart-detect-bottom"
             className="inline-flex flex-col items-center justify-center px-2 group"
           >
-            <div className="w-9 h-9 -mt-5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg ring-2 ring-white group-hover:scale-110 transition-transform">
+            <div className="w-9 h-9 -mt-5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg ring-2 ring-card group-hover:scale-110 transition-transform">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
             <span className="text-[9px] mt-0.5 text-emerald-600 font-bold">{smartDetectTab.name}</span>

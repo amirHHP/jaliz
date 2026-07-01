@@ -26,14 +26,16 @@ export type UserProfilePatch = {
 
 /** Internal user shape persisted to storage. Includes credential material. */
 export interface StoredUser extends User {
-  passwordHash: string
-  salt: string
+  passwordHash?: string | null
+  salt?: string | null
+  otpCode?: string | null
+  otpExpiresAt?: string | null
 }
 
 export interface RegisterInput {
   email: string
   fullName: string
-  password: string
+  password?: string
 }
 
 export interface AdminCreateUserInput extends RegisterInput {
@@ -93,4 +95,6 @@ export interface IAuthService {
   resetPassword(id: string, newPassword: string): Promise<void>
   /** Update mutable profile fields on a user. */
   updateProfile(id: string, patch: UserProfilePatch): User
+  sendOtp(email: string): Promise<{ success: boolean }>
+  loginWithOtp(email: string, code: string): Promise<User>
 }

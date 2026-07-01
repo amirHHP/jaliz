@@ -12,6 +12,7 @@ import {
 } from "@/lib/auth/server-action";
 import { AdminCreateUserInput, AdminUpdateUserInput, RegisterInput, AuthError } from "@/lib/auth/types";
 import { UserRole } from "@/lib/auth/types";
+import { sendOtpEmail } from "@/lib/email/send-otp-email";
 
 const SESSION_KEY = "jaliz_session";
 
@@ -62,10 +63,9 @@ export async function getCurrentUser() {
 export async function registerAction(input: RegisterInput): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
   return runAuthAction(async () => {
     const email = normalizeEmail(input.email);
-    const fullName = input.fullName.trim();
     const password = input.password;
 
-    if (!email || !fullName || !password) throw new AuthError("EMPTY_FIELD");
+    if (!email || !password) throw new AuthError("EMPTY_FIELD");
     if (!EMAIL_REGEX.test(email)) throw new AuthError("INVALID_EMAIL");
     if (password.length < MIN_PASSWORD_LENGTH) throw new AuthError("WEAK_PASSWORD");
 
@@ -78,10 +78,12 @@ export async function registerAction(input: RegisterInput): Promise<AuthActionRe
     const isFirstUser = (await prisma.user.count()) === 0;
     const role = isFirstUser ? "admin" : "user";
 
+    const username = email.split("@")[0];
+
     const user = await prisma.user.create({
       data: {
         email,
-        fullName,
+        fullName: username, // Set username to be the prefix of the email address
         passwordHash,
         salt,
         role,
@@ -111,8 +113,100 @@ export async function loginAction(emailInput: string, passwordInput: string): Pr
     if (!user) throw new AuthError("INVALID_CREDENTIALS");
     if (!user.isActive) throw new AuthError("USER_INACTIVE");
 
+    if (!user.passwordHash || !user.salt) {
+      throw new AuthError("INVALID_CREDENTIALS");
+    }
+
     const ok = await verifyPassword(passwordInput, user.salt, user.passwordHash);
     if (!ok) throw new AuthError("INVALID_CREDENTIALS");
+
+    const cookieStore = await cookies();
+    cookieStore.set(SESSION_KEY, user.id, {
+      httpOnly: true,
+      secure: useSecureSessionCookie(),
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+
+    return toPublicUser(user);
+  });
+}
+
+export async function sendOtpAction(emailInput: string): Promise<AuthActionResult<{ success: boolean }>> {
+  return runAuthAction(async () => {
+    const email = normalizeEmail(emailInput);
+    if (!email) throw new AuthError("EMPTY_FIELD");
+    if (!EMAIL_REGEX.test(email)) throw new AuthError("INVALID_EMAIL");
+
+    let user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Auto-register using email prefix as username
+      const username = email.split("@")[0];
+      const isFirstUser = (await prisma.user.count()) === 0;
+      const role = isFirstUser ? "admin" : "user";
+
+      user = await (prisma.user as any).create({
+        data: {
+          email,
+          fullName: username,
+          passwordHash: null,
+          salt: null,
+          role,
+          isActive: true,
+        }
+      });
+    }
+
+    if (!user.isActive) throw new AuthError("USER_INACTIVE");
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await (prisma.user as any).update({
+      where: { id: user.id },
+      data: {
+        otpCode,
+        otpExpiresAt,
+      }
+    });
+
+    try {
+      await sendOtpEmail(email, otpCode);
+    } catch (err) {
+      console.error("[sendOtpAction] Failed to send OTP email:", err);
+      throw new AuthError("GENERIC");
+    }
+
+    return { success: true };
+  });
+}
+
+export async function loginWithOtpAction(emailInput: string, code: string): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
+  return runAuthAction(async () => {
+    const email = normalizeEmail(emailInput);
+    if (!email || !code) throw new AuthError("EMPTY_FIELD");
+
+    const user = await prisma.user.findUnique({ where: { email } }) as any;
+    if (!user) throw new AuthError("INVALID_CREDENTIALS");
+    if (!user.isActive) throw new AuthError("USER_INACTIVE");
+
+    if (!user.otpCode || user.otpCode !== code) {
+      throw new AuthError("INVALID_CREDENTIALS");
+    }
+
+    if (!user.otpExpiresAt || user.otpExpiresAt.getTime() < Date.now()) {
+      throw new AuthError("INVALID_CREDENTIALS");
+    }
+
+    // Clear OTP fields after use
+    await (prisma.user as any).update({
+      where: { id: user.id },
+      data: {
+        otpCode: null,
+        otpExpiresAt: null,
+      }
+    });
 
     const cookieStore = await cookies();
     cookieStore.set(SESSION_KEY, user.id, {

@@ -296,3 +296,62 @@ describe("logout", () => {
     expect(service.getCurrentUser()).toBeNull()
   })
 })
+
+describe("OTP passwordless auth", () => {
+  it("sends OTP and registers new user with email prefix as fullName", async () => {
+    const { service } = await freshService()
+    const email = "otp-user@example.com"
+    const res = await service.sendOtp(email)
+    expect(res.success).toBe(true)
+
+    // User should have been registered in db
+    const users = service.listUsers()
+    const u = users.find(x => x.email === email)
+    expect(u).toBeDefined()
+    expect(u?.fullName).toBe("otp-user") // email prefix
+
+    // Attempting login via password should fail
+    await expect(service.login(email, "some-password")).rejects.toMatchObject({
+      code: "INVALID_CREDENTIALS"
+    })
+  })
+
+  it("authenticates an existing user via OTP", async () => {
+    const { service, store } = await freshService()
+    const email = "existing@example.com"
+
+    // Create user first
+    await service.register({
+      email,
+      fullName: "Existing User",
+      password: "password123"
+    })
+
+    // Send OTP
+    await service.sendOtp(email)
+
+    // Retrieve stored user to get mock OTP code
+    const raw = store.getItem("jaliz-users")
+    const users = JSON.parse(raw || "[]")
+    const storedUser = users.find((x: any) => x.email === email)
+    const code = storedUser.otpCode
+    expect(code).toBeDefined()
+
+    // Sign in with correct OTP
+    const signed = await service.loginWithOtp(email, code)
+    expect(signed.email).toBe(email)
+    expect(service.getCurrentUser()?.id).toBe(signed.id)
+  })
+
+  it("rejects incorrect or expired OTP", async () => {
+    const { service } = await freshService()
+    const email = "test-otp@example.com"
+
+    await service.sendOtp(email)
+
+    // Incorrect code
+    await expect(service.loginWithOtp(email, "000000")).rejects.toMatchObject({
+      code: "INVALID_CREDENTIALS"
+    })
+  })
+})

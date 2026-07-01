@@ -30,6 +30,8 @@ import {
   setUserActiveAction,
   deleteUserAction,
   resetPasswordAction,
+  sendOtpAction,
+  loginWithOtpAction,
 } from "@/app/actions/auth"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
@@ -53,6 +55,8 @@ interface AuthContextValue {
   deleteUser: (id: string) => Promise<void>
   resetPassword: (id: string, newPassword: string) => Promise<void>
   listUsers: () => User[]
+  sendOtp: (email: string) => Promise<{ success: boolean }>
+  loginWithOtp: (email: string, code: string) => Promise<User>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -92,6 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string): Promise<User> => {
     const u = unwrapAuthResult(await loginAction(email, password))
+    setUser(u)
+    setStatus("authenticated")
+    return u
+  }, [])
+
+  const sendOtp = useCallback(async (email: string): Promise<{ success: boolean }> => {
+    return unwrapAuthResult(await sendOtpAction(email))
+  }, [])
+
+  const loginWithOtp = useCallback(async (email: string, code: string): Promise<User> => {
+    const u = unwrapAuthResult(await loginWithOtpAction(email, code))
     setUser(u)
     setStatus("authenticated")
     return u
@@ -198,8 +213,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserActive,
       deleteUser,
       resetPassword,
+      sendOtp,
+      loginWithOtp,
     }),
-    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword],
+    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword, sendOtp, loginWithOtp],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

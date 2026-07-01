@@ -118,7 +118,7 @@ export default function MarketplacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="page-shell">
       <Suspense fallback={null}>
         <MarketplaceOpenFromQuery setSelectedId={setSelectedId} />
       </Suspense>
@@ -134,10 +134,10 @@ export default function MarketplacePage() {
                 {t("mp_title" as never)}
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
               {t("mp_title" as never)}
             </h1>
-            <p className="text-slate-500 mt-1 max-w-xl">
+            <p className="text-muted mt-1 max-w-xl">
               {t("mp_subtitle" as never)}
             </p>
           </div>
@@ -145,7 +145,7 @@ export default function MarketplacePage() {
             {user && (
               <Link
                 href="/marketplace/chats"
-                className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
+                className="inline-flex items-center gap-2 rounded-md border border-border bg-card hover:bg-slate-50 dark:hover:bg-slate-700 text-foreground px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
               >
                 <MessageSquare className="h-4 w-4 text-emerald-600" />
                 {language === "fa" ? "گفتگوها" : "Chats"}
@@ -162,7 +162,7 @@ export default function MarketplacePage() {
         </div>
 
         {/* Tabs + search */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-3 mb-6 flex flex-col gap-3">
+        <div className="surface-card p-3 mb-6 flex flex-col gap-3">
           <div className="flex flex-wrap gap-1.5">
             {tabsToRender.map(({ id, key, icon: Icon }) => {
               const isActive = activeTab === id
@@ -173,7 +173,7 @@ export default function MarketplacePage() {
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      : "bg-slate-100 dark:bg-slate-800 text-foreground hover:bg-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -183,12 +183,12 @@ export default function MarketplacePage() {
             })}
           </div>
           <div className="relative">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t("mp_search_ph" as never)}
-              className="w-full h-10 ps-9 pe-3 rounded-md border border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="surface-input w-full h-10 ps-9 pe-3 text-sm"
             />
           </div>
         </div>
@@ -257,17 +257,17 @@ function EmptyState({
 }) {
   const { t } = useLanguage()
   return (
-    <div className="bg-white border border-dashed border-slate-200 rounded-xl py-16 px-6 text-center">
+    <div className="surface-card border-dashed py-16 px-6 text-center">
       <div className="mx-auto h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
         <Sprout className="h-6 w-6 text-emerald-600" />
       </div>
-      <h3 className="text-lg font-semibold text-slate-900">
+      <h3 className="text-lg font-semibold text-foreground">
         {isFiltered
           ? t("mp_no_results" as never)
           : t("mp_empty_title" as never)}
       </h3>
       {!isFiltered && (
-        <p className="text-slate-500 mt-1 max-w-sm mx-auto text-sm">
+        <p className="text-muted mt-1 max-w-sm mx-auto text-sm">
           {t("mp_empty_desc" as never)}
         </p>
       )}
@@ -280,7 +280,7 @@ function EmptyState({
           {t("mp_post_btn" as never)}
         </Button>
       </div>
-      <p className="mt-3 text-xs text-slate-400">
+      <p className="mt-3 text-xs text-muted">
         <Link href="/" className="underline-offset-2 hover:underline">
           {t("go_home" as never)}
         </Link>

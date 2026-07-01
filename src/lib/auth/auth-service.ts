@@ -141,10 +141,100 @@ export class LocalAuthService implements IAuthService {
       throw new AuthError("USER_INACTIVE")
     }
 
+    if (!stored.salt || !stored.passwordHash) {
+      throw new AuthError("INVALID_CREDENTIALS")
+    }
+
     const ok = await verifyPassword(password, stored.salt, stored.passwordHash)
     if (!ok) {
       throw new AuthError("INVALID_CREDENTIALS")
     }
+
+    const publicUser = toPublicUser(stored)
+    this.currentUser = publicUser
+    this.persistSession(publicUser.id)
+    return publicUser
+  }
+
+  async sendOtp(email: string): Promise<{ success: boolean }> {
+    const normalized = normalizeEmail(email)
+    if (!normalized) {
+      throw new AuthError("EMPTY_FIELD")
+    }
+    if (!EMAIL_REGEX.test(normalized)) {
+      throw new AuthError("INVALID_EMAIL")
+    }
+
+    const users = this.readUsers()
+    let stored = users.find((u) => u.email === normalized)
+    if (!stored) {
+      // Auto-register using email prefix as fullName / username
+      const username = normalized.split("@")[0]
+      const newUser: StoredUser = {
+        id: generateId(),
+        email: normalized,
+        fullName: username,
+        role: "user",
+        isActive: true,
+        avatar: null,
+        createdAt: new Date().toISOString(),
+        salt: null,
+        passwordHash: null,
+        otpCode: null,
+        otpExpiresAt: null,
+      }
+      users.push(newUser)
+      stored = newUser
+    }
+
+    if (!stored.isActive) {
+      throw new AuthError("USER_INACTIVE")
+    }
+
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString()
+    stored.otpCode = otpCode
+    // 5 minutes expiration
+    stored.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
+
+    this.writeUsers(users)
+
+    console.log(`
+    ==================================================
+    [MOCK OTP CODE] Sent to: ${normalized}
+    Code: ${otpCode}
+    ==================================================
+    `)
+
+    return { success: true }
+  }
+
+  async loginWithOtp(email: string, code: string): Promise<User> {
+    const normalized = normalizeEmail(email)
+    if (!normalized || !code) {
+      throw new AuthError("EMPTY_FIELD")
+    }
+
+    const users = this.readUsers()
+    const stored = users.find((u) => u.email === normalized)
+    if (!stored) {
+      throw new AuthError("INVALID_CREDENTIALS")
+    }
+    if (!stored.isActive) {
+      throw new AuthError("USER_INACTIVE")
+    }
+
+    if (!stored.otpCode || stored.otpCode !== code) {
+      throw new AuthError("INVALID_CREDENTIALS")
+    }
+
+    if (!stored.otpExpiresAt || new Date(stored.otpExpiresAt).getTime() < Date.now()) {
+      throw new AuthError("INVALID_CREDENTIALS")
+    }
+
+    // Clear OTP details upon verification
+    stored.otpCode = null
+    stored.otpExpiresAt = null
+    this.writeUsers(users)
 
     const publicUser = toPublicUser(stored)
     this.currentUser = publicUser
@@ -282,24 +372,29 @@ export class LocalAuthService implements IAuthService {
     avatar: string | null = null,
   ): Promise<User> {
     const email = normalizeEmail(input.email)
-    const fullName = input.fullName.trim()
+    const fullName = input.fullName ? input.fullName.trim() : email.split("@")[0]
     const password = input.password
 
-    if (!email || !fullName || !password) {
+    if (!email) {
       throw new AuthError("EMPTY_FIELD")
     }
     if (!EMAIL_REGEX.test(email)) {
       throw new AuthError("INVALID_EMAIL")
     }
-    if (password.length < MIN_PASSWORD_LENGTH) {
+    if (password !== undefined && password !== "" && password.length < MIN_PASSWORD_LENGTH) {
       throw new AuthError("WEAK_PASSWORD")
     }
     if (this.findStoredByEmail(email)) {
       throw new AuthError("EMAIL_EXISTS")
     }
 
-    const salt = generateSalt()
-    const passwordHash = await hashPassword(password, salt)
+    let salt: string | null = null
+    let passwordHash: string | null = null
+    if (password) {
+      salt = generateSalt()
+      passwordHash = await hashPassword(password, salt)
+    }
+
     const newUser: StoredUser = {
       id: generateId(),
       email,
@@ -310,6 +405,8 @@ export class LocalAuthService implements IAuthService {
       createdAt: new Date().toISOString(),
       salt,
       passwordHash,
+      otpCode: null,
+      otpExpiresAt: null,
     }
 
     const users = this.readUsers()
