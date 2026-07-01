@@ -4,6 +4,7 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
 import { BottomNav } from "@/components/BottomNav";
+import { Analytics } from "@vercel/analytics/next";
 
 export const maxDuration = 60;
 
@@ -67,6 +68,7 @@ export default function RootLayout({
             </MarketplaceProvider>
           </AuthProvider>
         </LanguageProvider>
+        <Analytics />
         <script
           dangerouslySetInnerHTML={{
             __html: `
