@@ -36,6 +36,19 @@ describe("runAuthAction", () => {
       expect(result.__authError).toBe("GENERIC")
     }
   })
+
+  it("maps Prisma client errors to GENERIC", async () => {
+    const prismaError = Object.assign(new Error("column otpCode does not exist"), {
+      name: "PrismaClientKnownRequestError",
+    })
+    const result = await runAuthAction(async () => {
+      throw prismaError
+    })
+    expect(isAuthActionError(result)).toBe(true)
+    if (isAuthActionError(result)) {
+      expect(result.__authError).toBe("GENERIC")
+    }
+  })
 })
 
 describe("unwrapAuthResult", () => {

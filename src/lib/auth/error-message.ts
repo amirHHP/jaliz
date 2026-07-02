@@ -10,6 +10,7 @@ const TRANSLATION_KEY_BY_CODE: Record<AuthErrorCode, string> = {
   INVALID_EMAIL: "auth_error_invalid_email",
   EMPTY_FIELD: "auth_error_empty_field",
   FORBIDDEN: "auth_error_generic",
+  OTP_SEND_FAILED: "auth_error_otp_send_failed",
   GENERIC: "auth_error_generic",
 }
 

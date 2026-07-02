@@ -62,6 +62,7 @@ export type AuthErrorCode =
   | "INVALID_EMAIL"
   | "EMPTY_FIELD"
   | "FORBIDDEN"
+  | "OTP_SEND_FAILED"
   | "GENERIC"
 
 export class AuthError extends Error {

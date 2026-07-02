@@ -19,9 +19,22 @@ export function unwrapAuthResult<T>(result: AuthActionResult<T>): T {
   return result
 }
 
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err)
+}
+
 function isReadonlyDatabaseError(err: unknown): boolean {
-  const message = err instanceof Error ? err.message : String(err)
+  const message = errorMessage(err)
   return message.includes("readonly database") || message.includes("read-only database")
+}
+
+function isPrismaClientError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "name" in err &&
+    (err as { name: string }).name === "PrismaClientKnownRequestError"
+  )
 }
 
 export async function runAuthAction<T>(fn: () => Promise<T>): Promise<AuthActionResult<T>> {
@@ -31,8 +44,8 @@ export async function runAuthAction<T>(fn: () => Promise<T>): Promise<AuthAction
     if (err instanceof AuthError) {
       return { __authError: err.code }
     }
-    if (isReadonlyDatabaseError(err)) {
-      console.error("Database is not writable:", err)
+    if (isReadonlyDatabaseError(err) || isPrismaClientError(err)) {
+      console.error("Auth action database error:", err)
       return { __authError: "GENERIC" }
     }
     console.error("Unexpected auth action error:", err)
@@ -41,9 +54,11 @@ export async function runAuthAction<T>(fn: () => Promise<T>): Promise<AuthAction
 }
 
 export function toPublicUser(user: PrismaUser): User {
-  const { passwordHash, salt, ...publicUser } = user
+  const { passwordHash, salt, otpCode, otpExpiresAt, ...publicUser } = user
   void passwordHash
   void salt
+  void otpCode
+  void otpExpiresAt
   return {
     ...publicUser,
     role: publicUser.role as UserRole,

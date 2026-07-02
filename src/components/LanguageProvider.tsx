@@ -139,6 +139,8 @@ const translations = {
     auth_error_invalid_email: "Please enter a valid email address.",
     auth_error_empty_field: "Please fill in all required fields.",
     auth_error_password_mismatch: "Passwords do not match.",
+    auth_error_otp_send_failed:
+      "Could not send the verification email. Check your email address or try password login.",
     auth_error_generic: "Something went wrong. Please try again.",
 
     // Admin panel
@@ -478,6 +480,8 @@ const translations = {
     auth_error_invalid_email: "لطفاً یک ایمیل معتبر وارد کنید.",
     auth_error_empty_field: "لطفاً همه فیلدهای ضروری را پر کنید.",
     auth_error_password_mismatch: "رمز عبور و تکرار آن یکسان نیستند.",
+    auth_error_otp_send_failed:
+      "ارسال ایمیل کد تایید ممکن نشد. ایمیل را بررسی کنید یا با رمز عبور وارد شوید.",
     auth_error_generic: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
 
     // Admin panel

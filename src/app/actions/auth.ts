@@ -78,17 +78,17 @@ export async function registerAction(input: RegisterInput): Promise<AuthActionRe
     const isFirstUser = (await prisma.user.count()) === 0;
     const role = isFirstUser ? "admin" : "user";
 
-    const username = email.split("@")[0];
+    const fullName = input.fullName?.trim() || email.split("@")[0];
 
     const user = await prisma.user.create({
       data: {
         email,
-        fullName: username, // Set username to be the prefix of the email address
+        fullName,
         passwordHash,
         salt,
         role,
         isActive: true,
-      }
+      },
     });
 
     const cookieStore = await cookies();
@@ -175,7 +175,7 @@ export async function sendOtpAction(emailInput: string): Promise<AuthActionResul
       await sendOtpEmail(email, otpCode);
     } catch (err) {
       console.error("[sendOtpAction] Failed to send OTP email:", err);
-      throw new AuthError("GENERIC");
+      throw new AuthError("OTP_SEND_FAILED");
     }
 
     return { success: true };
