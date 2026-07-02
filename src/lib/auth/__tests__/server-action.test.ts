@@ -19,14 +19,6 @@ describe("runAuthAction", () => {
     }
   })
 
-  it("rethrows unexpected errors", async () => {
-    await expect(
-      runAuthAction(async () => {
-        throw new Error("db down")
-      }),
-    ).rejects.toThrow("db down")
-  })
-
   it("maps readonly sqlite errors to GENERIC", async () => {
     const result = await runAuthAction(async () => {
       throw new Error("attempt to write a readonly database")
@@ -43,6 +35,29 @@ describe("runAuthAction", () => {
     })
     const result = await runAuthAction(async () => {
       throw prismaError
+    })
+    expect(isAuthActionError(result)).toBe(true)
+    if (isAuthActionError(result)) {
+      expect(result.__authError).toBe("GENERIC")
+    }
+  })
+
+  it("maps Prisma initialization errors to GENERIC instead of throwing", async () => {
+    const prismaError = Object.assign(new Error("Can't reach database server"), {
+      name: "PrismaClientInitializationError",
+    })
+    const result = await runAuthAction(async () => {
+      throw prismaError
+    })
+    expect(isAuthActionError(result)).toBe(true)
+    if (isAuthActionError(result)) {
+      expect(result.__authError).toBe("GENERIC")
+    }
+  })
+
+  it("never rethrows unexpected errors", async () => {
+    const result = await runAuthAction(async () => {
+      throw new Error("db down")
     })
     expect(isAuthActionError(result)).toBe(true)
     if (isAuthActionError(result)) {

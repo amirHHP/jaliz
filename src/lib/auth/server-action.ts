@@ -29,11 +29,28 @@ function isReadonlyDatabaseError(err: unknown): boolean {
 }
 
 function isPrismaClientError(err: unknown): boolean {
+  if (typeof err !== "object" || err === null || !("name" in err)) return false
+  const name = (err as { name: string }).name
+  return name.startsWith("Prisma")
+}
+
+function isDatabaseError(err: unknown): boolean {
+  if (isPrismaClientError(err) || isReadonlyDatabaseError(err)) return true
+  const message = errorMessage(err).toLowerCase()
   return (
-    typeof err === "object" &&
-    err !== null &&
-    "name" in err &&
-    (err as { name: string }).name === "PrismaClientKnownRequestError"
+    message.includes("libsql") ||
+    message.includes("sqlite") ||
+    message.includes("database") ||
+    message.includes("turso")
+  )
+}
+
+function isEmailDeliveryError(err: unknown): boolean {
+  const message = errorMessage(err).toLowerCase()
+  return (
+    message.includes("resend") ||
+    message.includes("email") ||
+    message.includes("smtp")
   )
 }
 
@@ -44,12 +61,14 @@ export async function runAuthAction<T>(fn: () => Promise<T>): Promise<AuthAction
     if (err instanceof AuthError) {
       return { __authError: err.code }
     }
-    if (isReadonlyDatabaseError(err) || isPrismaClientError(err)) {
-      console.error("Auth action database error:", err)
+    console.error("Auth action error:", err)
+    if (isEmailDeliveryError(err)) {
+      return { __authError: "OTP_SEND_FAILED" }
+    }
+    if (isDatabaseError(err)) {
       return { __authError: "GENERIC" }
     }
-    console.error("Unexpected auth action error:", err)
-    throw err
+    return { __authError: "GENERIC" }
   }
 }
 

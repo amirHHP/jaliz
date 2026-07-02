@@ -23,6 +23,13 @@ function normalizeEmail(email: string): string {
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
 
+/** Placeholder credentials for OTP-only accounts (legacy DB columns may be NOT NULL). */
+async function createOtpOnlyCredentials(): Promise<{ salt: string; passwordHash: string }> {
+  const salt = generateSalt();
+  const passwordHash = await hashPassword(generateSalt(), salt);
+  return { salt, passwordHash };
+}
+
 async function requireAdmin(): Promise<PrismaUser> {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "admin") throw new AuthError("FORBIDDEN");
@@ -145,13 +152,14 @@ export async function sendOtpAction(emailInput: string): Promise<AuthActionResul
       const username = email.split("@")[0];
       const isFirstUser = (await prisma.user.count()) === 0;
       const role = isFirstUser ? "admin" : "user";
+      const credentials = await createOtpOnlyCredentials();
 
       user = await prisma.user.create({
         data: {
           email,
           fullName: username,
-          passwordHash: null,
-          salt: null,
+          passwordHash: credentials.passwordHash,
+          salt: credentials.salt,
           role,
           isActive: true,
         },

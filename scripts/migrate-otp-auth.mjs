@@ -51,6 +51,9 @@ try {
   await addColumnIfMissing("User", "otpCode", "TEXT")
   await addColumnIfMissing("User", "otpExpiresAt", "DATETIME")
   console.log("✅ OTP auth migration complete.")
+  console.log("")
+  console.log("Note: If passwordHash/salt are still NOT NULL in your database,")
+  console.log("OTP auto-registration uses a random unknown password hash (handled in app code).")
 } catch (err) {
   console.error("❌ OTP auth migration failed:", err.message || err)
   process.exit(1)
