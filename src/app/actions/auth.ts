@@ -146,7 +146,7 @@ export async function sendOtpAction(emailInput: string): Promise<AuthActionResul
       const isFirstUser = (await prisma.user.count()) === 0;
       const role = isFirstUser ? "admin" : "user";
 
-      user = await (prisma.user as any).create({
+      user = await prisma.user.create({
         data: {
           email,
           fullName: username,
@@ -154,7 +154,7 @@ export async function sendOtpAction(emailInput: string): Promise<AuthActionResul
           salt: null,
           role,
           isActive: true,
-        }
+        },
       });
     }
 
@@ -163,12 +163,12 @@ export async function sendOtpAction(emailInput: string): Promise<AuthActionResul
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    await (prisma.user as any).update({
+    await prisma.user.update({
       where: { id: user.id },
       data: {
         otpCode,
         otpExpiresAt,
-      }
+      },
     });
 
     try {
@@ -187,7 +187,7 @@ export async function loginWithOtpAction(emailInput: string, code: string): Prom
     const email = normalizeEmail(emailInput);
     if (!email || !code) throw new AuthError("EMPTY_FIELD");
 
-    const user = await prisma.user.findUnique({ where: { email } }) as any;
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new AuthError("INVALID_CREDENTIALS");
     if (!user.isActive) throw new AuthError("USER_INACTIVE");
 
@@ -200,12 +200,12 @@ export async function loginWithOtpAction(emailInput: string, code: string): Prom
     }
 
     // Clear OTP fields after use
-    await (prisma.user as any).update({
+    await prisma.user.update({
       where: { id: user.id },
       data: {
         otpCode: null,
         otpExpiresAt: null,
-      }
+      },
     });
 
     const cookieStore = await cookies();
