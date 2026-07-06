@@ -4,6 +4,9 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
 import { BottomNav } from "@/components/BottomNav";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const maxDuration = 60;
 
@@ -67,14 +70,17 @@ export default function RootLayout({
             </MarketplaceProvider>
           </AuthProvider>
         </LanguageProvider>
+        <SpeedInsights />
+        <Analytics />
+        <GoogleAnalytics gaId="G-FRDP1WTKXW" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
-                    .then(function(reg) { console.log('SW registered:', reg.scope); })
-                    .catch(function(err) { console.log('SW registration failed:', err); });
+                     .then(function(reg) { console.log('SW registered:', reg.scope); })
+                     .catch(function(err) { console.log('SW registration failed:', err); });
                 });
               }
             `,

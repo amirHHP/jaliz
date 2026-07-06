@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { track } from "@vercel/analytics"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { 
@@ -165,6 +166,7 @@ export default function SmartDiagnosisPage() {
         canvas.getContext("2d")?.drawImage(img, 0, 0, w, h)
         const base64 = canvas.toDataURL("image/jpeg", 0.7)
         setUploadedImage(base64)
+        track("Plant Diagnose Upload Photo")
         triggerAIAnalysis(base64)
       }
       img.src = event.target?.result as string
@@ -232,6 +234,7 @@ export default function SmartDiagnosisPage() {
         wateringInterval: data.wateringInterval || 7,
       })
       
+      track("Plant Diagnose Analysis Success")
       setStep(2)
     } catch (error) {
       console.error("AI Diagnosis Error", error)
@@ -265,6 +268,7 @@ export default function SmartDiagnosisPage() {
         wateringTips: draft.wateringTips || null,
         wateringInterval: draft.wateringInterval,
       })
+      track("Plant Diagnose Register New Plant", { type: draft.type || "Unknown" })
       alert(t("smart_diag_new_success"))
       router.push("/")
     } catch (error) {
@@ -289,6 +293,7 @@ export default function SmartDiagnosisPage() {
         diagnosis?.advice || "",
         uploadedImage
       )
+      track("Plant Diagnose Log Status Existing", { health: diagnosis?.health || "Good" })
       alert(t("smart_diag_save_success"))
       router.push("/")
     } catch (error) {

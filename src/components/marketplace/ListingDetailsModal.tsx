@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 // useEffect is retained for the chat auto-scroll side effect, which is a
 // pure DOM interaction (not a setState).
 import Link from "next/link"
+import { track } from "@vercel/analytics"
 import {
   CheckCircle2,
   ChevronLeft,
@@ -198,6 +199,7 @@ export function ListingDetailsModal({
     }
     try {
       await sendMessage(conv.id, user.id, text)
+      track("Marketplace Send Message", { listingId: listing.id, type: listing.type })
     } catch (err) {
       console.error(err)
       setDraft(text)                          // restore on failure
@@ -264,6 +266,7 @@ export function ListingDetailsModal({
                         setReporting(true)
                         try {
                           await createListingReportAction(listing.id, reportReason)
+                          track("Marketplace Report Submitted", { listingId: listing.id, reason: reportReason })
                           setReportSubmitted(true)
                         } catch (err) {
                           console.error("Failed to submit report:", err)
@@ -497,6 +500,7 @@ export function ListingDetailsModal({
                   <>
                     <a
                       href={telLink(phone)}
+                      onClick={() => track("Marketplace Open Contact Call", { listingId: listing.id, type: listing.type })}
                       className="inline-flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
                     >
                       <PhoneCall className="h-4 w-4" />
@@ -506,6 +510,7 @@ export function ListingDetailsModal({
                       href={whatsappLink(phone)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => track("Marketplace Open Contact WhatsApp", { listingId: listing.id, type: listing.type })}
                       className="inline-flex items-center gap-2 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
                     >
                       <MessageCircle className="h-4 w-4 text-emerald-600" />
@@ -519,7 +524,10 @@ export function ListingDetailsModal({
                 )}
                 <Button
                   variant="outline"
-                  onClick={() => setShowReportModal(true)}
+                  onClick={() => {
+                    setShowReportModal(true)
+                    track("Marketplace Report Clicked", { listingId: listing.id })
+                  }}
                   className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5 ms-auto animate-in fade-in"
                 >
                   <AlertTriangle className="h-4 w-4" />
@@ -545,7 +553,10 @@ export function ListingDetailsModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowReportModal(true)}
+                  onClick={() => {
+                    setShowReportModal(true)
+                    track("Marketplace Report Clicked", { listingId: listing.id })
+                  }}
                   className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5"
                 >
                   <AlertTriangle className="h-3.5 w-3.5" />

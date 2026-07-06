@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { track } from "@vercel/analytics"
 import {
   ArrowLeftRight,
   Apple,
@@ -101,6 +102,7 @@ export default function MarketplacePage() {
   )
 
   const handlePostClick = () => {
+    track("Marketplace Clicked Post Button")
     if (status !== "authenticated") {
       // Push them to login with a return URL so they bounce back.
       window.location.href = "/login?redirect=/marketplace"
@@ -206,7 +208,10 @@ export default function MarketplacePage() {
                 key={listing.id}
                 listing={listing}
                 ownerName={listing.ownerId === user?.id ? (user?.fullName || undefined) : getUser(listing.ownerId)?.fullName}
-                onClick={() => setSelectedId(listing.id)}
+                onClick={() => {
+                  setSelectedId(listing.id)
+                  track("Marketplace Clicked Listing Card", { id: listing.id, type: listing.type })
+                }}
               />
             ))}
           </div>

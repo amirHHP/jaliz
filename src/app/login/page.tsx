@@ -27,6 +27,8 @@ function LoginFallback() {
   )
 }
 
+import { track } from "@vercel/analytics"
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -71,6 +73,7 @@ function LoginForm() {
     setSubmitting(true)
     try {
       await sendOtp(email)
+      track("Auth OTP Requested")
       setOtpSent(true)
       setCooldown(60) // 60 seconds cooldown
       setSuccessMsg("otp_sent_success")
@@ -94,6 +97,7 @@ function LoginForm() {
       setSubmitting(true)
       try {
         await login(email, password)
+        track("Auth Login Success", { method: "password" })
         router.replace(redirectTo)
       } catch (err) {
         setErrorKey(authErrorTranslationKey(err))
@@ -111,6 +115,7 @@ function LoginForm() {
         setSubmitting(true)
         try {
           await loginWithOtp(email, otpCode)
+          track("Auth Login Success", { method: "otp" })
           router.replace(redirectTo)
         } catch (err) {
           setErrorKey(authErrorTranslationKey(err))

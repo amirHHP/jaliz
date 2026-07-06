@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react"
 import { Loader2, X } from "lucide-react"
+import { track } from "@vercel/analytics"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/AuthProvider"
@@ -151,6 +152,11 @@ export function ListingFormModal({
       const saved = isEditing
         ? await update(editingListing!.id, user.id, input)
         : await create(user.id, input)
+
+      track(isEditing ? "Marketplace Listing Edited" : "Marketplace Listing Created", {
+        type,
+        mode,
+      })
 
       onSaved?.(saved)
       onClose()
