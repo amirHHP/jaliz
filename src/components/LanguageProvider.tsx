@@ -345,6 +345,13 @@ const translations = {
     profile_update_success: "Profile updated successfully!",
     change_photo: "Change Photo",
     remove_photo: "Remove Photo",
+    // Install Prompt
+    install_title: "Install Jaliz App",
+    install_description: "Add Jaliz to your home screen for quick access, offline support, and a better experience.",
+    install_button: "Install App",
+    install_ios_guide: "Add Jaliz to your home screen in two simple steps:",
+    install_ios_step1: "Share",
+    install_ios_step2: "Add to Home",
   },
   fa: {
     app_title: "جالیز",
@@ -686,6 +693,13 @@ const translations = {
     profile_update_success: "پروفایل شما با موفقیت به‌روزرسانی شد!",
     change_photo: "تغییر عکس",
     remove_photo: "حذف عکس",
+    // Install Prompt
+    install_title: "نصب اپلیکیشن جالیز",
+    install_description: "جالیز رو به صفحه اصلی گوشیت اضافه کن — دسترسی سریع، پشتیبانی آفلاین و تجربه بهتر.",
+    install_button: "نصب اپلیکیشن",
+    install_ios_guide: "جالیز رو در دو مرحله به صفحه اصلیت اضافه کن:",
+    install_ios_step1: "اشتراک‌گذاری",
+    install_ios_step2: "افزودن به Home",
   }
 }
 
