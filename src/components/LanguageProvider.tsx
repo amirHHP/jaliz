@@ -142,6 +142,11 @@ const translations = {
     auth_error_otp_send_failed:
       "Could not send the verification email. Check your email address or try password login.",
     auth_error_generic: "Something went wrong. Please try again.",
+    promo_top_text: "🎁 Get 200,000 Tomans first purchase discount! Sign up now to claim your gift.",
+    promo_top_cta: "Sign Up & Claim",
+    promo_card_title: "200,000 Tomans First Purchase Gift!",
+    promo_card_desc: "New to Jaliz? Sign up today and get 200,000 Tomans off your first order in our marketplace.",
+    promo_card_cta: "Register & Claim Offer",
 
     // Admin panel
     admin_title: "User Management",
@@ -352,6 +357,18 @@ const translations = {
     install_ios_guide: "Add Jaliz to your home screen in two simple steps:",
     install_ios_step1: "Share",
     install_ios_step2: "Add to Home",
+    // Storefront Scan
+    store_scan_welcome: "Welcome to {store}! 🪴",
+    store_scan_welcome_default: "Welcome to our partner store! 🪴",
+    store_scan_subtitle: "Take a picture of any plant to learn how to care for it!",
+    store_scan_take_photo: "Take Photo or Upload Image",
+    store_scan_analyzing: "Analyzing plant details...",
+    store_scan_pwa_title: "Never forget to water your plants!",
+    store_scan_pwa_desc: "Add Jaliz to your home screen to set up smart watering reminders and keep this plant healthy.",
+    store_scan_register_cta: "Sign Up & Save Plant",
+    store_scan_save_draft_modal_title: "Save Scanned Plant",
+    store_scan_save_draft_modal_desc: "We found the plant you scanned at {store}! Do you want to save it to your garden and set up watering reminders?",
+    store_scan_save_success: "Plant added to your garden!",
   },
   fa: {
     app_title: "جالیز",
@@ -490,6 +507,11 @@ const translations = {
     auth_error_otp_send_failed:
       "ارسال ایمیل کد تایید ممکن نشد. ایمیل را بررسی کنید یا با رمز عبور وارد شوید.",
     auth_error_generic: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
+    promo_top_text: "🎁 ۲۰۰,۰۰۰ تومان هدیه ثبت‌نام و خرید اول! همین حالا ثبت‌نام کنید و هدیه خود را دریافت کنید.",
+    promo_top_cta: "ثبت‌نام و دریافت هدیه",
+    promo_card_title: "۲۰۰,۰۰۰ تومان هدیه خرید اول شما! 🎁",
+    promo_card_desc: "تا حالا از جالیز خرید نکردید؟ همین حالا عضو شوید و برای اولین خرید خود از بازارچه، ۲۰۰,۰۰0 تومان تخفیف ویژه بگیرید.",
+    promo_card_cta: "ثبت‌نام و دریافت هدیه",
 
     // Admin panel
     admin_title: "مدیریت کاربران",
@@ -700,6 +722,18 @@ const translations = {
     install_ios_guide: "جالیز رو در دو مرحله به صفحه اصلیت اضافه کن:",
     install_ios_step1: "اشتراک‌گذاری",
     install_ios_step2: "افزودن به Home",
+    // Storefront Scan
+    store_scan_welcome: "به گل‌فروشی {store} خوش آمدید! 🪴",
+    store_scan_welcome_default: "به گل‌فروشی همکار جالیز خوش آمدید! 🪴",
+    store_scan_subtitle: "از هر گیاهی که دوست داری عکس بگیر تا روش نگهداریش رو بهت بگم!",
+    store_scan_take_photo: "گرفتن عکس یا بارگذاری تصویر",
+    store_scan_analyzing: "در حال بررسی جزئیات گیاه...",
+    store_scan_pwa_title: "زمان آبیاری گیاهانت رو فراموش نکن!",
+    store_scan_pwa_desc: "جالیز رو به صفحه اصلی گوشیت اضافه کن تا بتونی یادآور آبیاری هوشمند براش بسازی و همیشه شاداب نگهش داری.",
+    store_scan_register_cta: "عضویت در جالیز و ذخیره گیاه",
+    store_scan_save_draft_modal_title: "ذخیره گیاه اسکن شده",
+    store_scan_save_draft_modal_desc: "گیاهی که در گل‌فروشی {store} اسکن کرده بودید پیدا شد! آیا می‌خواهید آن را به باغچه خود اضافه کنید و یادآور آبیاری بسازید؟",
+    store_scan_save_success: "گیاه با موفقیت به باغچه شما اضافه شد!",
   }
 }
 

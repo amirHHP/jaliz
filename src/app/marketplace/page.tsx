@@ -26,6 +26,7 @@ import { ListingCard } from "@/components/marketplace/ListingCard"
 import { ListingDetailsModal } from "@/components/marketplace/ListingDetailsModal"
 import { ListingFormModal } from "@/components/marketplace/ListingFormModal"
 import { Listing, ListingType } from "@/lib/marketplace"
+import { MarketplacePromoCard } from "@/components/marketplace/MarketplacePromoCard"
 
 type Tab = "all" | ListingType | "mine"
 
@@ -161,6 +162,11 @@ export default function MarketplacePage() {
               {t("mp_post_btn" as never)}
             </Button>
           </div>
+        </div>
+
+        {/* Contextual first-purchase promo card */}
+        <div className="mb-6">
+          <MarketplacePromoCard />
         </div>
 
         {/* Tabs + search */}

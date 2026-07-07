@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
 import { MarketplaceGrid } from "@/components/MarketplaceGrid"
-import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction } from "@/app/actions/plants"
+import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction, createUserPlantAction } from "@/app/actions/plants"
 import { analyzePlantAction } from "@/app/actions/ai"
 
 interface Plant {
@@ -72,6 +72,10 @@ export default function MyPlantsPage() {
   const [plants, setPlants] = useState<Plant[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
+  
+  const [draftPlant, setDraftPlant] = useState<any>(null)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const isRtl = language === "fa"
 
   const fetchPlants = useCallback(async () => {
     if (!user) { setLoading(false); return }
@@ -89,6 +93,57 @@ export default function MyPlantsPage() {
     if (status === "authenticated") fetchPlants()
     else if (status === "unauthenticated") setLoading(false)
   }, [status, fetchPlants])
+
+  // Scan draft auto-detection
+  useEffect(() => {
+    if (status === "authenticated" && user) {
+      const draft = localStorage.getItem("jaliz_scanned_plant_draft")
+      if (draft) {
+        try {
+          setDraftPlant(JSON.parse(draft))
+        } catch (e) {
+          console.error("Failed to parse draft plant from local storage", e)
+        }
+      }
+    }
+  }, [status, user])
+
+  const handleSaveDraftPlant = async () => {
+    if (!draftPlant) return
+    setIsSavingDraft(true)
+    try {
+      const data = await createUserPlantAction({
+        name: draftPlant.name,
+        type: draftPlant.type,
+        locationType: draftPlant.locationType,
+        lightExposure: draftPlant.lightExposure,
+        potType: draftPlant.potType,
+        growingMedium: draftPlant.growingMedium,
+        hasDrainage: draftPlant.hasDrainage,
+        lastWatered: draftPlant.lastWatered,
+        recentlyReplanted: draftPlant.recentlyReplanted,
+        health: draftPlant.health,
+        image: draftPlant.image,
+        careTips: draftPlant.careTips,
+        wateringTips: draftPlant.wateringTips,
+        wateringInterval: draftPlant.wateringInterval,
+      })
+      if (data) {
+        localStorage.removeItem("jaliz_scanned_plant_draft")
+        setDraftPlant(null)
+        fetchPlants()
+      }
+    } catch (e) {
+      console.error("Failed to save draft plant:", e)
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  const handleDismissDraft = () => {
+    localStorage.removeItem("jaliz_scanned_plant_draft")
+    setDraftPlant(null)
+  }
 
   const deletePlant = async (id: string) => {
     try {
@@ -158,6 +213,51 @@ export default function MyPlantsPage() {
             </Link>
           </Button>
         </div>
+
+        {/* Scanned Plant Draft Banner */}
+        {draftPlant && (
+          <div className="mb-6 bg-gradient-to-r from-emerald-50 via-white to-teal-50 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-teal-950/40 p-4 md:p-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 shadow-md animate-slide-up flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center gap-4 text-center sm:text-start flex-col sm:flex-row">
+              {draftPlant.image ? (
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 shadow-sm border border-emerald-100 dark:border-emerald-900">
+                  <img src={draftPlant.image} alt="Scanned plant" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-emerald-100/50 dark:bg-emerald-950/50 flex items-center justify-center shrink-0">
+                  <Leaf className="w-8 h-8 text-emerald-600" />
+                </div>
+              )}
+              <div className="space-y-1 text-right sm:text-right">
+                <h3 className="text-base font-bold text-emerald-950 dark:text-emerald-100">
+                  {t("store_scan_save_draft_modal_title")} ({draftPlant.name})
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+                  {t("store_scan_save_draft_modal_desc").replace("{store}", draftPlant.store || (isRtl ? "فروشگاه" : "the store"))}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+              <Button 
+                onClick={handleSaveDraftPlant} 
+                disabled={isSavingDraft}
+                size="sm"
+                className="grow sm:grow-0 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+              >
+                {isSavingDraft ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                <span>{isRtl ? "اضافه کردن به باغچه" : "Add to Garden"}</span>
+              </Button>
+              <Button 
+                onClick={handleDismissDraft} 
+                variant="ghost" 
+                size="sm"
+                className="grow sm:grow-0 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <span>{t("cancel")}</span>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
           {loading ? (

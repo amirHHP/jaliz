@@ -16,14 +16,15 @@ export function BottomNav() {
   const isAuthenticated = status === "authenticated"
   const unreadCount = user ? getUnreadCount(user.id) : 0
 
-  // Don't show bottom nav if not authenticated, or on auth/admin/new-plant pages
+  // Don't show bottom nav if not authenticated, or on auth/admin/new-plant/store-scan pages
   if (
     status !== "authenticated" ||
     pathname === "/login" ||
     pathname === "/register" ||
     pathname?.startsWith("/admin") ||
     pathname === "/plants/new" ||
-    pathname === "/plants/diagnose"
+    pathname === "/plants/diagnose" ||
+    pathname?.startsWith("/store-scan")
   ) {
     return null
   }

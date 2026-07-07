@@ -76,3 +76,6 @@ dev.log
 *.keystore
 *.aab
 *.apk
+
+# Generated changelog (auto-built from git history)
+/public/changelog.json

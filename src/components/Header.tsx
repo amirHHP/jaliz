@@ -21,6 +21,7 @@ import { useAuth } from "@/components/AuthProvider"
 import { useMarketplace } from "@/components/MarketplaceProvider"
 import { SettingsModal } from "@/components/SettingsModal"
 import { Settings as SettingsIcon } from "lucide-react"
+import { PromoBanner } from "@/components/PromoBanner"
 
 
 interface NavLink {
@@ -92,6 +93,7 @@ export function Header() {
   return (
     <>
       <header className="app-header">
+        <PromoBanner />
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-emerald-700">
           <div className="p-2 bg-emerald-100 rounded-xl shadow-sm">
