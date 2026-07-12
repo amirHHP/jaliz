@@ -39,16 +39,34 @@ and follow the wizard to generate a Play Store-ready AAB package.
 
 ## Important: Digital Asset Links
 
+If Chrome shows a green URL bar (`jaliz.noxte.ir`) inside the app, TWA verification
+failed and Chrome fell back to Custom Tabs. Fix Digital Asset Links — do not rebuild
+the APK just to hide that bar.
+
+`public/.well-known/assetlinks.json` must contain **only** valid Google namespaces
+(`android_app`). Do **not** add `cafebazaar_twa` here — Google's parser returns
+`ERROR_CODE_MALFORMED_CONTENT` and fullscreen TWA breaks.
+
 After generating the keystore and getting the SHA256 fingerprint:
 
-1. Get fingerprint:
+1. Get fingerprint of the **signing key that users actually get**:
    ```bash
    keytool -list -v -keystore <your-keystore>.jks -alias <alias> | grep SHA256
    ```
+   If you use Play App Signing, also copy the **App signing key** SHA-256 from
+   Play Console → App integrity (not only the upload key).
 
-2. Update `public/.well-known/assetlinks.json` with the fingerprint
+2. Put every needed fingerprint in `sha256_cert_fingerprints` in
+   `public/.well-known/assetlinks.json`
 
-3. Deploy the updated file to production
+3. Deploy to production, then verify:
+   ```bash
+   curl -s "https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://jaliz.noxte.ir&relation=delegate_permission/common.handle_all_urls"
+   ```
+   Expect statements for `ir.noxte.jaliz.twa` and **no** `errorCode`.
+
+4. On the phone: clear Chrome storage for the site (or reinstall the app), open
+   **جالیز from the app icon** (not from the browser).
 
 ## Project Structure
 
