@@ -31,6 +31,7 @@ interface NavLink {
   authRequired?: boolean
 }
 
+/** Dynamic/auth pages: disable Link prefetch to avoid multi-route Origin hits on every viewport. */
 const NAV_LINKS: NavLink[] = [
   { href: "/", key: "my_plants", authRequired: true },
   { href: "/schedule", key: "schedule", authRequired: true },
@@ -39,6 +40,15 @@ const NAV_LINKS: NavLink[] = [
   { href: "/blog", key: "blog" },
   { href: "/admin", key: "admin_panel", adminOnly: true },
 ]
+
+const PREFETCH_DISABLED_HREFS = new Set([
+  "/",
+  "/schedule",
+  "/marketplace",
+  "/marketplace/chats",
+  "/admin",
+  "/plants/diagnose",
+])
 
 
 export function Header() {
@@ -117,6 +127,7 @@ export function Header() {
               <Link
                 key={link.key}
                 href={link.href}
+                prefetch={PREFETCH_DISABLED_HREFS.has(link.href) ? false : undefined}
                 className={
                   isActive
                     ? "inline-flex items-center gap-1.5 text-emerald-700 font-semibold transition-colors"
@@ -138,6 +149,7 @@ export function Header() {
         {isAuthenticated && (
           <Link
             href="/plants/diagnose"
+            prefetch={false}
             id="smart-detect-desktop"
             className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 px-4 py-2 rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
           >
@@ -211,6 +223,7 @@ export function Header() {
                   {isAdmin && (
                     <Link
                       href="/admin"
+                      prefetch={false}
                       role="menuitem"
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-slate-50 dark:hover:bg-slate-700/50"
@@ -292,6 +305,7 @@ export function Header() {
               <Link
                 key={link.key}
                 href={link.href}
+                prefetch={PREFETCH_DISABLED_HREFS.has(link.href) ? false : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
@@ -314,6 +328,7 @@ export function Header() {
             <div className="border-t border-border pt-2 mt-2">
               <Link
                 href="/plants/diagnose"
+                prefetch={false}
                 id="smart-detect-mobile"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md transition-all hover:shadow-lg"

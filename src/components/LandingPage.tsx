@@ -100,6 +100,7 @@ export function LandingPage() {
             <div className="flex flex-col gap-3">
               <Link
                 href="/plants/diagnose"
+                prefetch={false}
                 className="inline-flex justify-center items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-5 py-4 text-sm font-bold shadow-lg shadow-emerald-600/25 transition-transform w-full hover:scale-[1.02] active:scale-[0.99]"
               >
                 <Camera className="h-5 w-5" />

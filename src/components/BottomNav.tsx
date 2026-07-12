@@ -90,6 +90,7 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch={false}
               className={`relative inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 dark:hover:bg-slate-800 group ${
                 isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted hover:text-emerald-600 dark:hover:text-emerald-400"
               }`}
@@ -114,6 +115,7 @@ export function BottomNav() {
           <Link
             key="smart-detect"
             href={smartDetectTab.href}
+            prefetch={false}
             id="smart-detect-bottom"
             className="inline-flex flex-col items-center justify-center px-2 group"
           >

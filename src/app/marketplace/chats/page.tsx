@@ -235,6 +235,7 @@ export default function MarketplaceChatsPage() {
               </p>
               <Link
                 href="/marketplace"
+                prefetch={false}
                 className="mt-4 inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-full transition shadow-sm"
               >
                 <Store className="h-3.5 w-3.5" />

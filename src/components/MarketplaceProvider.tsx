@@ -2,11 +2,13 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, useRef } from "react"
 import { Conversation, CreateListingInput, Listing, ListingFilter, Message, UpdateListingInput } from "@/lib/marketplace"
+import { INBOX_POLL_MS, shouldPollInbox } from "@/lib/marketplace/inbox-poll"
 import { useAuth } from "@/components/AuthProvider"
 import {
   getMarketplaceListingsAction,
   getMarketplaceConversationsAction,
   getMarketplaceMessagesAction,
+  getMarketplaceInboxAction,
   createListingAction,
   updateListingAction,
   setListingCompletedAction,
@@ -133,6 +135,27 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   }, [playNotificationSound])
 
+  const applyInboxMessages = useCallback((mData: Message[]) => {
+    setMessages((prev) => {
+      const currentUser = userRef.current
+      const isReady = readyRef.current
+
+      if (isReady && currentUser) {
+        const newMessages = mData.filter((m) =>
+          m.senderId !== currentUser.id &&
+          !prev.some((p) => p.id === m.id)
+        )
+        if (newMessages.length > 0) {
+          newMessages.forEach((msg) => {
+            showLocalNotification(msg)
+          })
+        }
+      }
+      return mData
+    })
+  }, [showLocalNotification])
+
+  /** Full reload (listings + inbox). Use on mount and after marketplace mutations. */
   const reload = useCallback(async () => {
     try {
       const [lData, cData, mData] = await Promise.all([
@@ -140,31 +163,24 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
         getMarketplaceConversationsAction(),
         getMarketplaceMessagesAction()
       ])
-      // Map Prisma Date objects to ISO strings if needed
       setListings(lData as any)
       setConversations(cData as any)
-
-      setMessages((prev) => {
-        const currentUser = userRef.current
-        const isReady = readyRef.current
-
-        if (isReady && currentUser) {
-          const newMessages = (mData as any[]).filter((m) => 
-            m.senderId !== currentUser.id && 
-            !prev.some((p) => p.id === m.id)
-          )
-          if (newMessages.length > 0) {
-            newMessages.forEach((msg) => {
-              showLocalNotification(msg)
-            })
-          }
-        }
-        return mData as any
-      })
+      applyInboxMessages(mData as any)
     } catch (err) {
       console.error(err)
     }
-  }, [showLocalNotification])
+  }, [applyInboxMessages])
+
+  /** Lightweight poll: inbox only — avoids re-shipping listing images via Origin. */
+  const pollInbox = useCallback(async () => {
+    try {
+      const { conversations: cData, messages: mData } = await getMarketplaceInboxAction()
+      setConversations(cData as any)
+      applyInboxMessages(mData as any)
+    } catch (err) {
+      console.error(err)
+    }
+  }, [applyInboxMessages])
 
   useEffect(() => {
     let cancelled = false
@@ -319,16 +335,33 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
     }
   }, [status])
 
-  // Start polling for new messages if user is logged in
+  // Poll inbox only while tab is visible (was full reload every 4s → Fast Origin Transfer)
   useEffect(() => {
     if (status !== "authenticated" || !user) return
 
-    const interval = setInterval(() => {
-      reload().catch(console.error)
-    }, 4000)
+    const tick = () => {
+      if (
+        !shouldPollInbox({
+          authenticated: true,
+          documentHidden: typeof document !== "undefined" && document.hidden,
+        })
+      ) {
+        return
+      }
+      pollInbox().catch(console.error)
+    }
 
-    return () => clearInterval(interval)
-  }, [status, user, reload])
+    const interval = setInterval(tick, INBOX_POLL_MS)
+    const onVisibility = () => {
+      if (!document.hidden) tick()
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
+  }, [status, user, pollInbox])
 
   const value = useMemo<MarketplaceContextValue>(() => ({
     ready, revision, list, get, create, update, setCompleted, remove,

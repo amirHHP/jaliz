@@ -83,6 +83,43 @@ export async function getMarketplaceMessagesAction() {
   return messages;
 }
 
+/**
+ * Single round-trip for chat polling (conversations + messages).
+ * Avoids separate Server Action POSTs on each poll tick.
+ */
+export async function getMarketplaceInboxAction() {
+  const userId = await getSessionUserId();
+  if (!userId) return { conversations: [], messages: [] };
+
+  const conversations = await prisma.marketplaceConversation.findMany({
+    where: {
+      participants: {
+        some: { userId }
+      }
+    },
+    include: {
+      participants: true
+    },
+    orderBy: { lastMessageAt: 'desc' }
+  });
+
+  const conversationIds = conversations.map((c) => c.id);
+  const messages = conversationIds.length
+    ? await prisma.marketplaceMessage.findMany({
+        where: { conversationId: { in: conversationIds } },
+        orderBy: { createdAt: 'asc' }
+      })
+    : [];
+
+  return {
+    conversations: conversations.map((c) => ({
+      ...c,
+      participantIds: c.participants.map((p) => p.userId)
+    })),
+    messages,
+  };
+}
+
 export async function createListingAction(input: any) {
   const ownerId = await getSessionUserId();
   if (!ownerId) throw new MarketplaceError("EMPTY_FIELD", "ownerId required");

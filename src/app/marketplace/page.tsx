@@ -148,6 +148,7 @@ export default function MarketplacePage() {
             {user && (
               <Link
                 href="/marketplace/chats"
+                prefetch={false}
                 className="inline-flex items-center gap-2 rounded-md border border-border bg-card hover:bg-slate-50 dark:hover:bg-slate-700 text-foreground px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
               >
                 <MessageSquare className="h-4 w-4 text-emerald-600" />
@@ -292,7 +293,7 @@ function EmptyState({
         </Button>
       </div>
       <p className="mt-3 text-xs text-muted">
-        <Link href="/" className="underline-offset-2 hover:underline">
+        <Link href="/" prefetch={false} className="underline-offset-2 hover:underline">
           {t("go_home" as never)}
         </Link>
       </p>

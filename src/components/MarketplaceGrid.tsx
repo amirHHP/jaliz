@@ -68,6 +68,7 @@ export function MarketplaceGrid() {
           </span>
           <Link
             href="/marketplace"
+            prefetch={false}
             className="text-sm text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
           >
             {t("mp_view_all" as never)}
