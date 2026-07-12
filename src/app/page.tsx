@@ -4,14 +4,13 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { Leaf, Plus, Droplets, Activity, X, MapPin, Sun, Box, Sprout, CheckCircle2, Image as ImageIcon, Sparkles, Info, Loader2, LogIn, UserPlus, Store, ArrowRight } from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Leaf, Plus, Droplets, MapPin, Image as ImageIcon, Loader2 } from "lucide-react"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
-import { MarketplaceGrid } from "@/components/MarketplaceGrid"
+import { LandingPage } from "@/components/LandingPage"
 import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction, createUserPlantAction } from "@/app/actions/plants"
-import { analyzePlantAction } from "@/app/actions/ai"
 
 interface Plant {
   id: string
@@ -194,7 +193,7 @@ export default function MyPlantsPage() {
   }
 
   if (status === "unauthenticated") {
-    return <PublicHomePage />
+    return <LandingPage />
   }
 
   return (
@@ -359,162 +358,6 @@ export default function MyPlantsPage() {
         </div>
       </main>
       {selectedPlant && <PlantModal plant={selectedPlant} onClose={() => setSelectedPlantId(null)} onSave={handleSavePlant} onDelete={deletePlant} />}
-    </div>
-  )
-}
-
-/** Public homepage for unauthenticated users: hero + marketplace */
-function PublicHomePage() {
-  const { t, language } = useLanguage()
-  const [activeFeature, setActiveFeature] = useState<number | null>(null)
-
-  const features = [
-    {
-      icon: Droplets,
-      color: "text-sky-500 bg-sky-50",
-      activeColor: "text-sky-600 bg-sky-100/80 border-sky-300 ring-sky-100/50",
-      title: language === "fa" ? "یادآور آبیاری" : "Watering Reminders",
-      description: language === "fa"
-        ? "تنظیم زمان‌بندی هوشمند، دریافت هشدارهای منظم و ثبت گزارش‌های آبیاری برای حفظ شادابی گیاهان."
-        : "Set smart schedules, receive timely watering alerts, and log events to keep your plants thriving."
-    },
-    {
-      icon: Sprout,
-      color: "text-emerald-500 bg-emerald-50",
-      activeColor: "text-emerald-600 bg-emerald-100/80 border-emerald-300 ring-emerald-100/50",
-      title: language === "fa" ? "ثبت گیاهان" : "Plant Tracking",
-      description: language === "fa"
-        ? "ثبت مشخصات گیاه، نوع خاک، نیاز نوری، دفعات تعویض گلدان و تصویر رشد در شناسنامه گیاه."
-        : "Log light needs, soil details, repotting history, and upload photos to follow growth over time."
-    },
-    {
-      icon: Sparkles,
-      color: "text-amber-500 bg-amber-50",
-      activeColor: "text-amber-600 bg-amber-100/80 border-amber-300 ring-amber-100/50",
-      title: language === "fa" ? "مشاوره هوشمند" : "AI Advice",
-      description: language === "fa"
-        ? "تشخیص دقیق بیماری‌ها از روی تصویر برگ، راه‌حل‌های علمی درمان و راهنمای گام‌به‌گام نگهداری."
-        : "Identify pests and diseases from photos, receive expert care instructions, and get custom guidance."
-    },
-    {
-      icon: Store,
-      color: "text-indigo-500 bg-indigo-50",
-      activeColor: "text-indigo-600 bg-indigo-100/80 border-indigo-300 ring-indigo-100/50",
-      title: language === "fa" ? "فروشگاه" : "Marketplace",
-      description: language === "fa"
-        ? "خرید و فروش آسان و بدون واسطه گیاهان خانگی، قلمه‌های تازه و ملزومات باغبانی با اهالی محله."
-        : "Buy, sell, or trade plants, fresh cuttings, and garden accessories directly in your neighborhood."
-    }
-  ]
-
-  return (
-    <div className="page-shell">
-      <Header />
-
-      {/* Hero section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950 dark:via-slate-900 dark:to-teal-950 border-b border-emerald-100/50 dark:border-emerald-900/50">
-        {/* Decorative blobs */}
-        <div className="pointer-events-none absolute -top-24 -end-24 h-72 w-72 rounded-full bg-lime-200/30 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 -start-24 h-72 w-72 rounded-full bg-teal-200/20 blur-3xl" />
-
-        <div className="container mx-auto px-4 py-12 md:py-16 max-w-6xl relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-            {/* Text */}
-            <div className="flex-1 text-center md:text-start space-y-5">
-              <div className="inline-flex items-center gap-2 bg-emerald-100/60 dark:bg-emerald-900/40 backdrop-blur-sm text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/50">
-                <Sprout className="h-3.5 w-3.5" />
-                {t("app_title")}
-              </div>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-tight">
-                {t("landing_hero_title")}
-              </h1>
-              <p className="text-base md:text-lg text-muted leading-relaxed max-w-lg">
-                {t("landing_hero_subtitle")}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                <Button asChild size="lg" className="gap-2">
-                  <Link href="/register">
-                    <UserPlus className="h-4 w-4" />
-                    {t("landing_cta_primary")}
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="gap-2">
-                  <Link href="/login">
-                    <LogIn className="h-4 w-4" />
-                    {t("landing_cta_secondary")}
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* Feature cards */}
-            <div className="flex-1 grid grid-cols-2 gap-3 max-w-sm w-full">
-              {features.map((feat, i) => {
-                const isOpen = activeFeature === i
-                return (
-                  <div
-                    key={i}
-                    onClick={() => setActiveFeature(isOpen ? null : i)}
-                    className={`cursor-pointer bg-card/80 backdrop-blur-sm rounded-2xl border p-4 flex flex-col items-center justify-start transition-all duration-300 select-none shadow-sm hover:shadow-md ${
-                      isOpen
-                        ? "border-emerald-300 dark:border-emerald-700 ring-4 ring-emerald-100/50 dark:ring-emerald-900/50 scale-[1.02] shadow-emerald-100/20"
-                        : "border-border hover:border-slate-300 dark:hover:border-slate-600"
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-2 w-full">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 ${isOpen ? feat.activeColor.split(" ").slice(0, 2).join(" ") : feat.color}`}>
-                        <feat.icon className={`h-5 w-5 transition-transform duration-300 ${isOpen ? "scale-110 rotate-6" : ""}`} />
-                      </div>
-                      <span className="text-xs font-semibold text-foreground text-center">{feat.title}</span>
-                    </div>
-                    {/* Collapsible description */}
-                    <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-32 opacity-100 mt-3" : "max-h-0 opacity-0"}`}>
-                      <p className="text-[11px] text-muted leading-relaxed text-center border-t border-border pt-2 w-full">
-                        {feat.description}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Marketplace section — public, SEO-friendly */}
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <MarketplaceGrid />
-      </main>
-
-      {/* Login prompt footer */}
-      <section className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-10">
-        <div className="container mx-auto px-4 max-w-4xl text-center space-y-4">
-          <h2 className="text-xl md:text-2xl font-bold">
-            {language === "fa"
-              ? "برای ثبت گیاه، یادآور آبیاری و مشاوره هوشمند ثبت‌نام کنید"
-              : "Sign up for plant tracking, watering reminders & AI advice"}
-          </h2>
-          <p className="text-emerald-100 text-sm max-w-xl mx-auto">
-            {language === "fa"
-              ? "فروشگاه رو بدون ثبت‌نام ببینید، ولی برای استفاده از امکانات حرفه‌ای وارد شوید."
-              : "Browse the marketplace freely, but sign in to unlock all features."}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild variant="secondary" size="lg" className="gap-2 bg-white text-emerald-700 hover:bg-emerald-50">
-              <Link href="/register">
-                <UserPlus className="h-4 w-4" />
-                {t("landing_cta_primary")}
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="gap-2 border-white/40 text-white hover:bg-white/10 hover:text-white bg-transparent">
-              <Link href="/login">
-                <LogIn className="h-4 w-4" />
-                {t("landing_cta_secondary")}
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
     </div>
   )
 }

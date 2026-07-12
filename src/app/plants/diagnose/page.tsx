@@ -119,13 +119,6 @@ export default function SmartDiagnosisPage() {
     "Compiling the final health diagnosis report..."
   ]
 
-  // Redirect if unauthenticated
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/")
-    }
-  }, [status, router])
-
   // Cycle through loading messages
   useEffect(() => {
     if (!isAnalyzing) return
@@ -244,14 +237,13 @@ export default function SmartDiagnosisPage() {
     }
   }
 
-  // Handle Option 1 submission: Create new plant
+  // Handle Option 1 submission: Create new plant (guests save draft → register)
   const handleCreateNewPlant = async () => {
     if (!draft.name.trim()) return
     setIsSaving(true)
     try {
       const mergedCareTips = [draft.careTips, draft.soilChangeTips].filter(Boolean).join("\n\n")
-
-      await createUserPlantAction({
+      const plantPayload = {
         name: draft.name,
         type: draft.type || "Unknown",
         locationType: draft.locationType,
@@ -267,7 +259,23 @@ export default function SmartDiagnosisPage() {
         careTips: mergedCareTips || null,
         wateringTips: draft.wateringTips || null,
         wateringInterval: draft.wateringInterval,
-      })
+      }
+
+      if (status !== "authenticated" || !user) {
+        localStorage.setItem(
+          "jaliz_scanned_plant_draft",
+          JSON.stringify({
+            ...plantPayload,
+            lastWatered: draft.lastWatered,
+            lastSoilChange: draft.lastSoilChange || undefined,
+          }),
+        )
+        track("Plant Diagnose Guest Save Draft", { type: draft.type || "Unknown" })
+        router.push("/register")
+        return
+      }
+
+      await createUserPlantAction(plantPayload)
       track("Plant Diagnose Register New Plant", { type: draft.type || "Unknown" })
       alert(t("smart_diag_new_success"))
       router.push("/")
@@ -324,9 +332,7 @@ export default function SmartDiagnosisPage() {
     )
   }
 
-  if (status === "unauthenticated" || !user) {
-    return null
-  }
+  const isGuest = status !== "authenticated" || !user
 
   return (
     <div className="h-screen w-screen flex items-center justify-center bg-slate-50 md:p-6 p-0 overflow-hidden" dir={isRtl ? "rtl" : "ltr"}>
@@ -512,21 +518,29 @@ export default function SmartDiagnosisPage() {
                 >
                   <span className="flex items-center gap-2">
                     <Plus className="h-4.5 w-4.5" />
-                    {t("smart_diag_opt_new")}
+                    {isGuest ? t("smart_diag_opt_new_guest") : t("smart_diag_opt_new")}
                   </span>
                   <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${isRtl ? "rotate-180" : ""}`} />
                 </Button>
 
-                <Button 
-                  onClick={() => setStep(4)}
-                  className="w-full justify-between bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl py-5 font-bold shadow-sm flex items-center"
-                >
-                  <span className="flex items-center gap-2 text-slate-700">
-                    <Calendar className="h-4.5 w-4.5 text-slate-500" />
-                    {t("smart_diag_opt_existing")}
-                  </span>
-                  <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${isRtl ? "rotate-180" : ""}`} />
-                </Button>
+                {!isGuest && (
+                  <Button 
+                    onClick={() => setStep(4)}
+                    className="w-full justify-between bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl py-5 font-bold shadow-sm flex items-center"
+                  >
+                    <span className="flex items-center gap-2 text-slate-700">
+                      <Calendar className="h-4.5 w-4.5 text-slate-500" />
+                      {t("smart_diag_opt_existing")}
+                    </span>
+                    <ChevronRight className={`h-4 w-4 shrink-0 transition-transform ${isRtl ? "rotate-180" : ""}`} />
+                  </Button>
+                )}
+
+                {isGuest && (
+                  <p className="text-[11px] text-center text-slate-400 px-2 leading-relaxed">
+                    {t("smart_diag_guest_save_hint")}
+                  </p>
+                )}
 
                 <Button 
                   variant="ghost"
@@ -882,7 +896,9 @@ export default function SmartDiagnosisPage() {
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md px-6 font-bold text-sm h-10 flex items-center gap-1.5"
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-              {language === "fa" ? "ثبت نهایی گیاه جدید" : "Save New Plant"}
+              {isGuest
+                ? t("smart_diag_opt_new_guest")
+                : (language === "fa" ? "ثبت نهایی گیاه جدید" : "Save New Plant")}
             </Button>
           )}
 
