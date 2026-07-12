@@ -80,9 +80,30 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
+                  var hadController = !!navigator.serviceWorker.controller;
+                  var refreshing = false;
+                  navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    if (!hadController || refreshing) return;
+                    refreshing = true;
+                    window.location.reload();
+                  });
                   navigator.serviceWorker.register('/sw.js')
-                     .then(function(reg) { console.log('SW registered:', reg.scope); })
-                     .catch(function(err) { console.log('SW registration failed:', err); });
+                    .then(function(reg) {
+                      function askSkipWaiting(worker) {
+                        if (worker) worker.postMessage({ type: 'SKIP_WAITING' });
+                      }
+                      if (reg.waiting) askSkipWaiting(reg.waiting);
+                      reg.addEventListener('updatefound', function() {
+                        var worker = reg.installing;
+                        if (!worker) return;
+                        worker.addEventListener('statechange', function() {
+                          if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                            askSkipWaiting(worker);
+                          }
+                        });
+                      });
+                    })
+                    .catch(function(err) { console.log('SW registration failed:', err); });
                 });
               }
             `,
