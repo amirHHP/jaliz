@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
@@ -11,6 +11,10 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const maxDuration = 60;
 
+export const viewport: Viewport = {
+  themeColor: "#12382e",
+};
+
 export const metadata: Metadata = {
   title: {
     default: "جالیز | فروشگاه گیاه، بذر و ابزار باغبانی",
@@ -19,7 +23,6 @@ export const metadata: Metadata = {
   description:
     "خرید و فروش بذر، قلمه، ابزار و محصولات باغبانی. یادآور آبیاری، ثبت گیاه و مشاوره هوشمند باغبانی.",
   manifest: "/manifest.json",
-  themeColor: "#12382e",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

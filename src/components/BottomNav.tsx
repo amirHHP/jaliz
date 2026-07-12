@@ -5,13 +5,13 @@ import { usePathname } from "next/navigation"
 import { CalendarDays, Leaf, MessageCircle, Sparkles, Store } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { useMarketplace } from "@/components/MarketplaceProvider"
+import { useMarketplaceInbox } from "@/components/MarketplaceProvider"
 
 export function BottomNav() {
   const pathname = usePathname()
   const { t, language } = useLanguage()
   const { status, user } = useAuth()
-  const { getUnreadCount, revision } = useMarketplace()
+  const { getUnreadCount, revision } = useMarketplaceInbox()
 
   const isAuthenticated = status === "authenticated"
   const unreadCount = user ? getUnreadCount(user.id) : 0

@@ -18,7 +18,7 @@ import {
 
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { useMarketplace } from "@/components/MarketplaceProvider"
+import { useMarketplaceInbox } from "@/components/MarketplaceProvider"
 import { SettingsModal } from "@/components/SettingsModal"
 import { Settings as SettingsIcon } from "lucide-react"
 import { PromoBanner } from "@/components/PromoBanner"
@@ -54,7 +54,7 @@ const PREFETCH_DISABLED_HREFS = new Set([
 export function Header() {
   const { language, setLanguage, t } = useLanguage()
   const { status, user, isAdmin, logout } = useAuth()
-  const { getUnreadCount, revision } = useMarketplace()
+  const { getUnreadCount, revision } = useMarketplaceInbox()
   const pathname = usePathname() ?? "/"
 
   const unreadCount = user ? getUnreadCount(user.id) : 0

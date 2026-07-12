@@ -1,4 +1,4 @@
-/** Chat inbox poll cadence for MarketplaceProvider (ms). */
+/** Chat inbox poll cadence for MarketplaceInboxProvider (ms). */
 export const INBOX_POLL_MS = 30_000
 
 /**

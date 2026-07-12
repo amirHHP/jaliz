@@ -23,7 +23,7 @@ const DASHBOARD_PREVIEW_LIMIT = 4
 export function MarketplaceGrid() {
   const { language, t } = useLanguage()
   const { status, user, getUser } = useAuth()
-  const { revision, list, get } = useMarketplace()
+  const { ready, revision, list, get } = useMarketplace()
 
   // Track ids and re-derive snapshots so the modal stays in sync with the
   // store after mutations (mark-as-done, edits, etc.).
@@ -79,7 +79,22 @@ export function MarketplaceGrid() {
         </div>
       </div>
 
-      {previewListings.length === 0 ? (
+      {!ready ? (
+        <div className="grid grid-cols-2 gap-3 md:gap-4" aria-busy="true">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div
+              key={i}
+              className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+            >
+              <div className="aspect-[4/5] animate-pulse bg-slate-200 dark:bg-slate-700" />
+              <div className="p-3 space-y-2">
+                <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : previewListings.length === 0 ? (
         <div className="surface-card border-dashed py-10 px-6 text-center">
           <div className="mx-auto h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center mb-3">
             <Sprout className="h-5 w-5 text-emerald-600" />

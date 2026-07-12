@@ -23,13 +23,15 @@ export function AdviceMarketplaceStrip({
   contextText,
 }: AdviceMarketplaceStripProps) {
   const { language, t } = useLanguage()
-  const { list, revision } = useMarketplace()
+  // Don't force the heavy listings fetch — only show if already loaded elsewhere.
+  const { ready, list, revision } = useMarketplace({ loadListings: false })
 
   const recommendations = useMemo(() => {
+    if (!ready) return []
     const all = list({ status: "active" })
     return matchListingsToAdvice(adviceText, contextText, all, { limit: 6 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adviceText, contextText, list, revision])
+  }, [adviceText, contextText, list, revision, ready])
 
   if (recommendations.length === 0) return null
 

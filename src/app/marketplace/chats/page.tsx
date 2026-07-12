@@ -35,7 +35,7 @@ export default function MarketplaceChatsPage() {
   const { t, language } = useLanguage()
   const { user, status } = useAuth()
   const {
-    ready,
+    inboxReady,
     revision,
     listConversations,
     listMessages,
@@ -183,7 +183,7 @@ export default function MarketplaceChatsPage() {
     [user, activeConv, draft, sendMessage, language]
   )
 
-  if (status === "loading" || !ready) {
+  if (status === "loading" || !inboxReady) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col">
         <Header />

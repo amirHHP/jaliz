@@ -96,7 +96,8 @@ export function ListingDetailsModal({
         phone: listing.owner.phone ?? null,
         avatar: listing.owner.avatar ?? null,
       })
-      return
+      // List bootstrap omits avatar blobs — fetch full owner when missing.
+      if (listing.owner.avatar) return
     }
 
     let cancelled = false

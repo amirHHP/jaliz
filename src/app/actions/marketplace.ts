@@ -11,10 +11,25 @@ const listingOwnerSelect = {
   avatar: true,
 } as const;
 
+/** Grid/list payload: skip avatar blobs (often data URLs) — details fetch full owner on open. */
+const listingOwnerSelectForList = {
+  fullName: true,
+  phone: true,
+} as const;
+
 const listingOrderBy = [
   { status: "asc" as const },
   { createdAt: "desc" as const },
 ];
+
+async function fetchMarketplaceListings() {
+  return prisma.marketplaceListing.findMany({
+    include: {
+      owner: { select: listingOwnerSelectForList },
+    },
+    orderBy: listingOrderBy,
+  });
+}
 
 async function fetchMarketplaceInbox(userId: string) {
   const conversations = await prisma.marketplaceConversation.findMany({
@@ -41,30 +56,20 @@ async function fetchMarketplaceInbox(userId: string) {
   };
 }
 
+/** Listings only — used for fast grid paint (no inbox). */
 export async function getMarketplaceListingsAction() {
-  const listings = await prisma.marketplaceListing.findMany({
-    include: {
-      owner: { select: listingOwnerSelect },
-    },
-    orderBy: listingOrderBy,
-  });
-  return listings;
+  return fetchMarketplaceListings();
 }
 
 /**
- * One Server Action round-trip for initial marketplace load:
- * listings (with owner) + inbox (conversations + messages).
+ * Combined bootstrap kept for callers that need both in one round-trip.
+ * Prefer listings + inbox separately so the grid is not blocked on chat history.
  */
 export async function getMarketplaceBootstrapAction() {
   const userId = await getSessionUserId();
 
   const [listings, inbox] = await Promise.all([
-    prisma.marketplaceListing.findMany({
-      include: {
-        owner: { select: listingOwnerSelect },
-      },
-      orderBy: listingOrderBy,
-    }),
+    fetchMarketplaceListings(),
     userId ? fetchMarketplaceInbox(userId) : Promise.resolve({ conversations: [], messages: [] }),
   ]);
 
