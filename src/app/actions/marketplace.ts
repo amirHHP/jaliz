@@ -1,17 +1,74 @@
 "use server";
 
+import { cache } from "react";
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/app/actions/auth";
 import { MarketplaceError } from "@/lib/marketplace/types";
 
+const listingOwnerSelect = {
+  fullName: true,
+  phone: true,
+  avatar: true,
+} as const;
+
+const listingOrderBy = [
+  { status: "asc" as const },
+  { createdAt: "desc" as const },
+];
+
+async function fetchMarketplaceInbox(userId: string) {
+  const conversations = await prisma.marketplaceConversation.findMany({
+    where: {
+      participants: {
+        some: { userId },
+      },
+    },
+    include: {
+      participants: true,
+      messages: { orderBy: { createdAt: "asc" } },
+    },
+    orderBy: { lastMessageAt: "desc" },
+  });
+
+  const messages = conversations.flatMap((c) => c.messages);
+
+  return {
+    conversations: conversations.map(({ messages: _messages, participants, ...c }) => ({
+      ...c,
+      participantIds: participants.map((p: { userId: string }) => p.userId),
+    })),
+    messages,
+  };
+}
+
 export async function getMarketplaceListingsAction() {
   const listings = await prisma.marketplaceListing.findMany({
-    orderBy: [
-      { status: 'asc' },
-      { createdAt: 'desc' }
-    ]
+    include: {
+      owner: { select: listingOwnerSelect },
+    },
+    orderBy: listingOrderBy,
   });
   return listings;
+}
+
+/**
+ * One Server Action round-trip for initial marketplace load:
+ * listings (with owner) + inbox (conversations + messages).
+ */
+export async function getMarketplaceBootstrapAction() {
+  const userId = await getSessionUserId();
+
+  const [listings, inbox] = await Promise.all([
+    prisma.marketplaceListing.findMany({
+      include: {
+        owner: { select: listingOwnerSelect },
+      },
+      orderBy: listingOrderBy,
+    }),
+    userId ? fetchMarketplaceInbox(userId) : Promise.resolve({ conversations: [], messages: [] }),
+  ]);
+
+  return { listings, ...inbox };
 }
 
 /** Public: fetch a single listing by id — no auth required (for SSR product pages). */
@@ -20,11 +77,26 @@ export async function getListingByIdAction(id: string) {
   return listing;
 }
 
+/** Public: listing + owner in one query. Cached per request (metadata + page). */
+export const getListingWithOwnerAction = cache(async (id: string) => {
+  const listing = await prisma.marketplaceListing.findUnique({
+    where: { id },
+    include: {
+      owner: { select: listingOwnerSelect },
+    },
+  });
+
+  if (!listing) return null;
+
+  const { owner, ...rest } = listing;
+  return { listing: rest, owner };
+});
+
 /** Public: fetch owner name for a listing — no auth required (for SSR product pages). */
 export async function getListingOwnerNameAction(ownerId: string) {
   const user = await prisma.user.findUnique({
     where: { id: ownerId },
-    select: { fullName: true, phone: true, avatar: true },
+    select: listingOwnerSelect,
   });
   return user;
 }
@@ -91,33 +163,7 @@ export async function getMarketplaceInboxAction() {
   const userId = await getSessionUserId();
   if (!userId) return { conversations: [], messages: [] };
 
-  const conversations = await prisma.marketplaceConversation.findMany({
-    where: {
-      participants: {
-        some: { userId }
-      }
-    },
-    include: {
-      participants: true
-    },
-    orderBy: { lastMessageAt: 'desc' }
-  });
-
-  const conversationIds = conversations.map((c) => c.id);
-  const messages = conversationIds.length
-    ? await prisma.marketplaceMessage.findMany({
-        where: { conversationId: { in: conversationIds } },
-        orderBy: { createdAt: 'asc' }
-      })
-    : [];
-
-  return {
-    conversations: conversations.map((c) => ({
-      ...c,
-      participantIds: c.participants.map((p) => p.userId)
-    })),
-    messages,
-  };
+  return fetchMarketplaceInbox(userId);
 }
 
 export async function createListingAction(input: any) {

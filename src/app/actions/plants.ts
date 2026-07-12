@@ -22,13 +22,16 @@ function asDbString(value: unknown, maxLen: number): string | null {
   return t.length > maxLen ? t.slice(0, maxLen) : t;
 }
 
-export async function getUserPlantsAction() {
+export async function getUserPlantsAction(options?: { includeStatusLogs?: boolean }) {
   const userId = await getSessionUserId();
   if (!userId) return [];
 
   const plants = await prisma.userPlant.findMany({
     where: { userId },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: "desc" },
+    include: options?.includeStatusLogs
+      ? { statusLogs: { orderBy: { createdAt: "desc" } } }
+      : undefined,
   });
   return plants;
 }
@@ -268,12 +271,6 @@ export async function addPlantStatusLogAction(
   const healthValue =
     typeof health === "string" && health.trim() ? health.trim() : "Good";
 
-  // Update plant health
-  await prisma.userPlant.update({
-    where: { id: plantId, userId },
-    data: { health: healthValue }
-  });
-
   const adviceDb = asDbString(aiAdvice, MAX_STATUS_LOG_ADVICE_CHARS);
   const imageDb = asDbString(image, MAX_STATUS_LOG_IMAGE_CHARS);
 
@@ -286,21 +283,35 @@ export async function addPlantStatusLogAction(
   };
 
   try {
-    return await prisma.plantStatusLog.create({ data: baseData });
+    const [, created] = await prisma.$transaction([
+      prisma.userPlant.update({
+        where: { id: plantId, userId },
+        data: { health: healthValue },
+      }),
+      prisma.plantStatusLog.create({ data: baseData }),
+    ]);
+    return created;
   } catch (e) {
     if (
       e instanceof PrismaClientValidationError &&
       e.message.includes("Unknown argument") &&
       e.message.includes("image")
     ) {
-      return await prisma.plantStatusLog.create({
-        data: {
-          plantId,
-          status: statusText,
-          health: healthValue,
-          aiAdvice: adviceDb,
-        },
-      });
+      const [, created] = await prisma.$transaction([
+        prisma.userPlant.update({
+          where: { id: plantId, userId },
+          data: { health: healthValue },
+        }),
+        prisma.plantStatusLog.create({
+          data: {
+            plantId,
+            status: statusText,
+            health: healthValue,
+            aiAdvice: adviceDb,
+          },
+        }),
+      ]);
+      return created;
     }
     if (e instanceof PrismaClientKnownRequestError && e.code === "P2022") {
       throw new Error(

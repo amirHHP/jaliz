@@ -30,6 +30,14 @@ interface Plant {
   image?: string
   careTips?: string
   wateringTips?: string
+  statusLogs?: {
+    id: string
+    status: string
+    health: string
+    aiAdvice?: string | null
+    image?: string | null
+    createdAt: Date
+  }[]
 }
 
 function safeDateString(val: any, fallback?: string): string | undefined {
@@ -44,24 +52,26 @@ function safeDateString(val: any, fallback?: string): string | undefined {
 }
 
 function dbRowToPlant(row: any): Plant {
+  const { statusLogs, ...rest } = row
   return {
-    id: row.id,
-    name: row.name,
-    type: row.type ?? "",
-    locationType: row.locationType ?? "Indoor",
-    lightExposure: row.lightExposure ?? "Bright Indirect",
-    potType: row.potType ?? "Plastic",
-    growingMedium: row.growingMedium ?? "Soil",
-    hasDrainage: row.hasDrainage ?? true,
-    lastWatered: safeDateString(row.lastWatered, new Date().toISOString().split("T")[0])!,
-    nextWateringDate: safeDateString(row.nextWateringDate),
-    wateringInterval: row.wateringInterval ?? 7,
-    recentlyReplanted: row.recentlyReplanted ?? false,
-    lastSoilChange: safeDateString(row.lastSoilChange),
-    health: row.health ?? "Excellent",
-    image: row.image ?? undefined,
-    careTips: row.careTips ?? undefined,
-    wateringTips: row.wateringTips ?? undefined,
+    id: rest.id,
+    name: rest.name,
+    type: rest.type ?? "",
+    locationType: rest.locationType ?? "Indoor",
+    lightExposure: rest.lightExposure ?? "Bright Indirect",
+    potType: rest.potType ?? "Plastic",
+    growingMedium: rest.growingMedium ?? "Soil",
+    hasDrainage: rest.hasDrainage ?? true,
+    lastWatered: safeDateString(rest.lastWatered, new Date().toISOString().split("T")[0])!,
+    nextWateringDate: safeDateString(rest.nextWateringDate),
+    wateringInterval: rest.wateringInterval ?? 7,
+    recentlyReplanted: rest.recentlyReplanted ?? false,
+    lastSoilChange: safeDateString(rest.lastSoilChange),
+    health: rest.health ?? "Excellent",
+    image: rest.image ?? undefined,
+    careTips: rest.careTips ?? undefined,
+    wateringTips: rest.wateringTips ?? undefined,
+    statusLogs: statusLogs ?? undefined,
   }
 }
 
@@ -80,7 +90,7 @@ export default function MyPlantsPage() {
     if (!user) { setLoading(false); return }
     setLoading(true)
     try {
-      const data = await getUserPlantsAction()
+      const data = await getUserPlantsAction({ includeStatusLogs: true })
       setPlants(data.map(dbRowToPlant))
     } catch (e) {
       console.error(e)
@@ -357,7 +367,15 @@ export default function MyPlantsPage() {
           )}
         </div>
       </main>
-      {selectedPlant && <PlantModal plant={selectedPlant} onClose={() => setSelectedPlantId(null)} onSave={handleSavePlant} onDelete={deletePlant} />}
+      {selectedPlant && (
+        <PlantModal
+          plant={selectedPlant}
+          initialLogs={selectedPlant.statusLogs}
+          onClose={() => setSelectedPlantId(null)}
+          onSave={handleSavePlant}
+          onDelete={deletePlant}
+        />
+      )}
     </div>
   )
 }

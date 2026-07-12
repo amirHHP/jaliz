@@ -5,9 +5,7 @@ import { Conversation, CreateListingInput, Listing, ListingFilter, Message, Upda
 import { INBOX_POLL_MS, shouldPollInbox } from "@/lib/marketplace/inbox-poll"
 import { useAuth } from "@/components/AuthProvider"
 import {
-  getMarketplaceListingsAction,
-  getMarketplaceConversationsAction,
-  getMarketplaceMessagesAction,
+  getMarketplaceBootstrapAction,
   getMarketplaceInboxAction,
   createListingAction,
   updateListingAction,
@@ -158,11 +156,8 @@ export function MarketplaceProvider({ children }: { children: React.ReactNode })
   /** Full reload (listings + inbox). Use on mount and after marketplace mutations. */
   const reload = useCallback(async () => {
     try {
-      const [lData, cData, mData] = await Promise.all([
-        getMarketplaceListingsAction(),
-        getMarketplaceConversationsAction(),
-        getMarketplaceMessagesAction()
-      ])
+      const { listings: lData, conversations: cData, messages: mData } =
+        await getMarketplaceBootstrapAction()
       setListings(lData as any)
       setConversations(cData as any)
       applyInboxMessages(mData as any)

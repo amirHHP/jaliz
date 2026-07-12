@@ -16,9 +16,17 @@ export const LISTING_MODES: readonly ListingMode[] = [
   "free",
 ] as const
 
+export interface ListingOwnerPreview {
+  fullName: string
+  phone?: string | null
+  avatar?: string | null
+}
+
 export interface Listing {
   id: string
   ownerId: string
+  /** Populated when listings are fetched with owner include (avoids extra round-trip). */
+  owner?: ListingOwnerPreview
   type: ListingType
   mode: ListingMode
   title: string

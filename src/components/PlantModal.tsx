@@ -43,6 +43,8 @@ interface Plant {
 
 interface PlantModalProps {
   plant: Plant
+  /** Pre-fetched status logs — skips an extra Server Action when opening the modal. */
+  initialLogs?: PlantStatusLog[]
   onClose: () => void
   onSave: (updated: Plant) => void
   onDelete: (id: string) => void
@@ -55,7 +57,7 @@ const textareaCls =
 const selectCls =
   "flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"
 
-export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps) {
+export function PlantModal({ plant, initialLogs, onClose, onSave, onDelete }: PlantModalProps) {
   const { t, language } = useLanguage()
   const isRtl = language === "fa"
 
@@ -81,14 +83,14 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   const [lastSoilChange, setLastSoilChange] = useState(plant.lastSoilChange || "")
 
   // Log state
-  const [logs, setLogs] = useState<PlantStatusLog[]>([])
+  const [logs, setLogs] = useState<PlantStatusLog[]>(initialLogs ?? [])
   const [isLogging, setIsLogging] = useState(false)
   const [newStatus, setNewStatus] = useState("")
   const [newLogHealth, setNewLogHealth] = useState<Plant["health"]>(plant.health)
   /** Optional photo for this log entry (compressed data URL), used by AI and stored on the log */
   const [logImage, setLogImage] = useState("")
   const [isInferringHealth, setIsInferringHealth] = useState(false)
-  const [isLoadingLogs, setIsLoadingLogs] = useState(true)
+  const [isLoadingLogs, setIsLoadingLogs] = useState(!initialLogs)
   const [isSubmittingLog, setIsSubmittingLog] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [shareNotice, setShareNotice] = useState<string | null>(null)
@@ -97,6 +99,12 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
   newLogHealthRef.current = newLogHealth
 
   useEffect(() => {
+    if (initialLogs) {
+      setLogs(initialLogs)
+      setIsLoadingLogs(false)
+      return
+    }
+
     async function fetchLogs() {
       setIsLoadingLogs(true)
       try {
@@ -109,7 +117,7 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
       }
     }
     fetchLogs()
-  }, [plant.id])
+  }, [plant.id, initialLogs])
 
   // Debounced AI health classification from status text (and optional log photo)
   useEffect(() => {

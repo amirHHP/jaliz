@@ -80,14 +80,31 @@ export function ListingDetailsModal({
 
   // Fetch owner info directly from the server (getUser from AuthProvider only
   // works for admins whose `users` array is populated).
-  const [owner, setOwner] = useState<{ fullName: string | null; phone: string | null; avatar: string | null } | null>(null)
+  const [owner, setOwner] = useState<{ fullName: string | null; phone: string | null; avatar: string | null } | null>(
+    listing.owner
+      ? {
+          fullName: listing.owner.fullName,
+          phone: listing.owner.phone ?? null,
+          avatar: listing.owner.avatar ?? null,
+        }
+      : null,
+  )
   useEffect(() => {
+    if (listing.owner) {
+      setOwner({
+        fullName: listing.owner.fullName,
+        phone: listing.owner.phone ?? null,
+        avatar: listing.owner.avatar ?? null,
+      })
+      return
+    }
+
     let cancelled = false
     getListingOwnerNameAction(listing.ownerId).then((data) => {
       if (!cancelled && data) setOwner(data)
     }).catch(console.error)
     return () => { cancelled = true }
-  }, [listing.ownerId])
+  }, [listing.ownerId, listing.owner])
 
   const TypeIcon = TYPE_ICON[listing.type]
   const ModeIcon = MODE_ICON[listing.mode]

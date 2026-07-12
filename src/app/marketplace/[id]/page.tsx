@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { getListingByIdAction, getListingOwnerNameAction } from "@/app/actions/marketplace"
+import { getListingWithOwnerAction } from "@/app/actions/marketplace"
 import { ListingPageClient } from "./ListingPageClient"
 
 interface Props {
@@ -9,10 +9,12 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
-  const listing = await getListingByIdAction(id)
-  if (!listing) {
+  const data = await getListingWithOwnerAction(id)
+  if (!data) {
     return { title: "آگهی یافت نشد | جالیز" }
   }
+
+  const { listing } = data
 
   const title = `${listing.title} | فروشگاه جالیز`
   const description =
@@ -38,10 +40,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ListingPage({ params }: Props) {
   const { id } = await params
-  const listing = await getListingByIdAction(id)
-  if (!listing) notFound()
+  const data = await getListingWithOwnerAction(id)
+  if (!data) notFound()
 
-  const owner = await getListingOwnerNameAction(listing.ownerId)
+  const { listing, owner } = data
 
   // Map Prisma dates to serializable strings
   const serializedListing = {
