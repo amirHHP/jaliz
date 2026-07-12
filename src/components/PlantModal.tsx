@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import {
   X, Droplets, Activity, MapPin, Sun, Box, Sprout,
-  Leaf, Image as ImageIcon, Sparkles, Pencil, Trash2, Save, ChevronLeft,
+  Leaf, Sparkles, Pencil, Trash2, Save, ChevronLeft,
   History, PlusCircle, Loader2, Share2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -344,46 +344,22 @@ export function PlantModal({ plant, onClose, onSave, onDelete }: PlantModalProps
         className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 fade-in duration-200"
         dir={isRtl ? "rtl" : "ltr"}
       >
-        {/* ── Hero image ────────────────────────────────────────────────────── */}
-        <div className="relative h-80 sm:h-[380px] bg-slate-950 shrink-0 overflow-hidden flex items-center justify-center">
-          {image ? (
-            <>
-              {/* Blurred background image */}
-              <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none" />
-              {/* Main crisp image, fully contained */}
-              <img src={image} alt={plant.name} className="relative max-w-full max-h-full object-contain z-10" />
-            </>
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-100">
-              <ImageIcon className="h-14 w-14 mb-2 opacity-40" />
-              <span className="text-xs font-medium uppercase tracking-wider">No Photo</span>
-            </div>
-          )}
-
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-20" />
-
-          {/* Type badge */}
-          <div className="absolute top-3 left-3 z-20">
-            <span className="text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-700 px-2 py-1 rounded-md uppercase tracking-wider shadow-sm">
-              {type || plant.type}
-            </span>
+        {/* ── Compact header ────────────────────────────────────────────────── */}
+        <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100 bg-white">
+          <div className="min-w-0">
+            <h2 className="text-lg font-bold text-slate-900 truncate leading-tight">
+              {name || plant.name}
+            </h2>
+            {(type || plant.type) && (
+              <p className="text-xs text-slate-500 mt-0.5 truncate">{type || plant.type}</p>
+            )}
           </div>
-
-          {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition z-20"
+            className="h-8 w-8 shrink-0 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition"
           >
             <X className="h-4 w-4" />
           </button>
-
-          {/* Name at bottom of hero */}
-          <div className="absolute bottom-3 left-4 right-4 z-20">
-            <h2 className="text-2xl font-bold text-white drop-shadow-md leading-tight">
-              {name || plant.name}
-            </h2>
-          </div>
         </div>
 
         {/* ── Content ───────────────────────────────────────────────────────── */}

@@ -24,7 +24,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (status === "authenticated" && user) {
-      router.replace("/")
+      router.replace("/plants/diagnose")
     }
   }, [status, user, router])
 
@@ -44,7 +44,7 @@ export default function RegisterPage() {
     setSubmitting(true)
     try {
       await register({ fullName, email, password })
-      router.replace("/")
+      router.replace("/plants/diagnose")
     } catch (err) {
       setErrorKey(authErrorTranslationKey(err))
     } finally {
