@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Leaf, Loader2, UserPlus } from "lucide-react"
+import { track } from "@vercel/analytics"
 
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
@@ -13,13 +14,14 @@ import { authErrorTranslationKey } from "@/lib/auth"
 export default function RegisterPage() {
   const router = useRouter()
   const { t } = useLanguage()
-  const { register, status, user } = useAuth()
+  const { sendOtp, loginWithOtp, status, user } = useAuth()
 
-  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [otpCode, setOtpCode] = useState("")
+  const [otpSent, setOtpSent] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const [errorKey, setErrorKey] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -28,22 +30,54 @@ export default function RegisterPage() {
     }
   }, [status, user, router])
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setErrorKey(null)
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setInterval(() => {
+      setCooldown((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [cooldown])
 
-    if (!fullName.trim() || !email.trim() || !password) {
+  const handleSendOtp = async () => {
+    if (!email.trim()) {
       setErrorKey("auth_error_empty_field")
       return
     }
-    if (password !== confirmPassword) {
-      setErrorKey("auth_error_password_mismatch")
+    setErrorKey(null)
+    setSuccessMsg(null)
+    setSubmitting(true)
+    try {
+      await sendOtp(email)
+      track("Auth OTP Requested", { context: "register" })
+      setOtpSent(true)
+      setCooldown(60)
+      setSuccessMsg("otp_sent_success")
+    } catch (err) {
+      setErrorKey(authErrorTranslationKey(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setErrorKey(null)
+    setSuccessMsg(null)
+
+    if (!otpSent) {
+      await handleSendOtp()
+      return
+    }
+
+    if (!otpCode.trim()) {
+      setErrorKey("auth_error_empty_field")
       return
     }
 
     setSubmitting(true)
     try {
-      await register({ fullName, email, password })
+      await loginWithOtp(email, otpCode)
+      track("Auth Register Success", { method: "otp" })
       router.replace("/plants/diagnose")
     } catch (err) {
       setErrorKey(authErrorTranslationKey(err))
@@ -72,68 +106,66 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium text-slate-700">
-                {t("full_name")}
-              </label>
-              <input
-                id="fullName"
-                autoComplete="name"
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder={t("full_name_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-slate-700">
                 {t("email")}
               </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("email_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-              />
+              <div className="flex gap-2 items-center">
+                <input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  disabled={otpSent}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t("email_ph")}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400 disabled:bg-slate-50 disabled:text-slate-500"
+                />
+                {otpSent && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false)
+                      setOtpCode("")
+                      setSuccessMsg(null)
+                    }}
+                    className="text-xs text-emerald-700 font-semibold hover:underline shrink-0"
+                  >
+                    {t("change_email")}
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-slate-700">
-                {t("password")}
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("password_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
-                {t("confirm_password")}
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder={t("password_ph")}
-                className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-              />
-            </div>
+            {otpSent && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label htmlFor="otpCode" className="text-sm font-medium text-slate-700">
+                  {t("otp_code")}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="otpCode"
+                    type="text"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    required
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder={t("otp_ph")}
+                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400 text-center tracking-[0.25em] font-bold"
+                  />
+                  <Button
+                    type="button"
+                    disabled={cooldown > 0 || submitting}
+                    onClick={handleSendOtp}
+                    variant="outline"
+                    className="shrink-0 text-xs border-slate-300 hover:bg-slate-50 text-slate-700"
+                  >
+                    {cooldown > 0 ? `${cooldown}s` : t("send_otp")}
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {errorKey && (
               <div
@@ -142,6 +174,16 @@ export default function RegisterPage() {
               >
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {t(errorKey as any)}
+              </div>
+            )}
+
+            {successMsg && (
+              <div
+                role="alert"
+                className="rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-3 py-2"
+              >
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {t(successMsg as any)}
               </div>
             )}
 
@@ -155,7 +197,7 @@ export default function RegisterPage() {
               ) : (
                 <UserPlus className="h-4 w-4" />
               )}
-              {t("register_btn")}
+              {otpSent ? t("login_btn_otp") : t("send_otp")}
             </Button>
           </form>
 

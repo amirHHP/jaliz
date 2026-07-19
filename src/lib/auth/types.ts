@@ -94,6 +94,8 @@ export interface IAuthService {
   setUserActive(id: string, isActive: boolean): User
   deleteUser(id: string): void
   resetPassword(id: string, newPassword: string): Promise<void>
+  /** Let the signed-in user set or change their own password. */
+  setMyPassword(newPassword: string): Promise<void>
   /** Update mutable profile fields on a user. */
   updateProfile(id: string, patch: UserProfilePatch): User
   sendOtp(email: string): Promise<{ success: boolean }>

@@ -284,8 +284,27 @@ describe("admin operations", () => {
       code: "WEAK_PASSWORD",
     })
   })
-})
 
+  it("setMyPassword lets the signed-in user set a password and log in with it", async () => {
+    const { service, store } = await freshService()
+    const email = "otp-set-pw@example.com"
+    await service.sendOtp(email)
+    const users = JSON.parse(store.getItem("jaliz-users") || "[]")
+    const code = users.find((u: any) => u.email === email).otpCode
+    await service.loginWithOtp(email, code)
+    await service.setMyPassword("my-new-password")
+    service.logout()
+    const signed = await service.login(email, "my-new-password")
+    expect(signed.email).toBe(email)
+  })
+
+  it("setMyPassword requires a signed-in session", async () => {
+    const { service } = await freshService()
+    await expect(service.setMyPassword("password123")).rejects.toMatchObject({
+      code: "GENERIC",
+    })
+  })
+})
 describe("logout", () => {
   it("clears the session from the store", async () => {
     const { service, store } = await freshService()

@@ -367,6 +367,24 @@ export async function resetPasswordAction(id: string, newPassword: string): Prom
   });
 }
 
+export async function setMyPasswordAction(newPassword: string): Promise<AuthActionResult<void>> {
+  return runAuthAction(async () => {
+    const userId = await getSessionUserId();
+    if (!userId) throw new AuthError("GENERIC");
+
+    if (!newPassword) throw new AuthError("EMPTY_FIELD");
+    if (newPassword.length < MIN_PASSWORD_LENGTH) throw new AuthError("WEAK_PASSWORD");
+
+    const salt = generateSalt();
+    const passwordHash = await hashPassword(newPassword, salt);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { salt, passwordHash },
+    });
+  });
+}
+
 export async function updateUserRoleAction(id: string, role: string): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
   return runAuthAction(async () => {
     await requireAdmin();

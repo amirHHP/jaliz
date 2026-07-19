@@ -30,6 +30,7 @@ import {
   setUserActiveAction,
   deleteUserAction,
   resetPasswordAction,
+  setMyPasswordAction,
   sendOtpAction,
   loginWithOtpAction,
 } from "@/app/actions/auth"
@@ -54,6 +55,7 @@ interface AuthContextValue {
   setUserActive: (id: string, isActive: boolean) => Promise<User>
   deleteUser: (id: string) => Promise<void>
   resetPassword: (id: string, newPassword: string) => Promise<void>
+  setMyPassword: (newPassword: string) => Promise<void>
   listUsers: () => User[]
   sendOtp: (email: string) => Promise<{ success: boolean }>
   loginWithOtp: (email: string, code: string) => Promise<User>
@@ -193,6 +195,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bump()
   }, [bump])
 
+  const setMyPassword = useCallback(async (newPassword: string): Promise<void> => {
+    unwrapAuthResult(await setMyPasswordAction(newPassword))
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -213,10 +219,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUserActive,
       deleteUser,
       resetPassword,
+      setMyPassword,
       sendOtp,
       loginWithOtp,
     }),
-    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword, sendOtp, loginWithOtp],
+    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword, setMyPassword, sendOtp, loginWithOtp],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react"
 import { useLanguage } from "./LanguageProvider"
 import { useAuth } from "./AuthProvider"
-import { Settings, X, Loader2, CheckCircle2, MapPin, User, Camera, Trash2, Phone, Shield, ChevronLeft, ChevronRight } from "lucide-react"
+import { authErrorTranslationKey } from "@/lib/auth"
+import { Settings, X, Loader2, CheckCircle2, MapPin, User, Camera, Trash2, Phone, Shield, ChevronLeft, ChevronRight, Sun, Moon, Lock } from "lucide-react"
 import Link from "next/link"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useTheme } from "./ThemeProvider"
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -15,7 +17,8 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { language, t } = useLanguage()
-  const { status, user, updateMyProfile } = useAuth()
+  const { status, user, updateMyProfile, setMyPassword } = useAuth()
+  const { theme, setTheme, canChangeTheme } = useTheme()
   
   const [activeTab, setActiveTab] = useState<"profile" | "app">("profile")
   
@@ -26,6 +29,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [avatar, setAvatar] = useState<string | null>(null)
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   
   const [isLoading, setIsLoading] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -45,6 +50,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         setFullName(user.fullName || "")
         setPhone(user.phone || "")
         setAvatar(user.avatar || null)
+        setPassword("")
+        setConfirmPassword("")
         setActiveTab("profile")
       } else {
         setActiveTab("app")
@@ -104,11 +111,28 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           setIsLoading(false)
           return
         }
+        if (password || confirmPassword) {
+          if (password !== confirmPassword) {
+            setError(t("auth_error_password_mismatch"))
+            setIsLoading(false)
+            return
+          }
+          if (password.length < 6) {
+            setError(t("auth_error_weak_password"))
+            setIsLoading(false)
+            return
+          }
+        }
         await updateMyProfile({
           fullName: fullName.trim(),
           phone: phone.trim() || undefined,
           avatar: avatar,
         })
+        if (password) {
+          await setMyPassword(password)
+          setPassword("")
+          setConfirmPassword("")
+        }
         setSaved(true)
         setTimeout(() => {
           onClose()
@@ -116,7 +140,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
     } catch (err: any) {
       console.error("Failed to save settings:", err)
-      setError(t("auth_error_generic"))
+      setError(t(authErrorTranslationKey(err) as any))
     } finally {
       setIsLoading(false)
     }
@@ -128,20 +152,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <Card className="w-full max-w-md shadow-2xl border-slate-200 bg-white max-h-[95vh] flex flex-col">
-        <CardHeader className="flex flex-row justify-between items-center bg-slate-50 border-b border-slate-100 pb-4 shrink-0">
-          <CardTitle className="text-xl flex items-center gap-2 text-slate-800">
-            <Settings className="h-5 w-5 text-slate-500" />
+      <Card className="w-full max-w-md shadow-2xl border-border bg-card max-h-[95vh] flex flex-col">
+        <CardHeader className="flex flex-row justify-between items-center bg-slate-50 dark:bg-slate-900/50 border-b border-border pb-4 shrink-0">
+          <CardTitle className="text-xl flex items-center gap-2 text-foreground">
+            <Settings className="h-5 w-5 text-muted" />
             {t("settings")}
           </CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-500 hover:bg-slate-200 hover:text-slate-800 -mr-2">
+          <Button variant="ghost" size="icon" onClick={onClose} className="text-muted hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-foreground -mr-2">
             <X className="h-5 w-5" />
           </Button>
         </CardHeader>
 
         {/* Tab Selection if Authenticated */}
         {isAuthenticated && (
-          <div className="flex border-b border-slate-100 bg-slate-50/50 shrink-0">
+          <div className="flex border-b border-border bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
             <button
               onClick={() => {
                 setActiveTab("profile")
@@ -150,8 +174,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               }}
               className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${
                 activeTab === "profile"
-                  ? "border-emerald-600 text-emerald-700 bg-white"
-                  : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-card"
+                  : "border-transparent text-muted hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/50"
               }`}
             >
               {t("edit_profile")}
@@ -164,8 +188,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               }}
               className={`flex-1 py-3 text-sm font-semibold border-b-2 transition-all ${
                 activeTab === "app"
-                  ? "border-emerald-600 text-emerald-700 bg-white"
-                  : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                  ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-card"
+                  : "border-transparent text-muted hover:text-foreground hover:bg-slate-50 dark:hover:bg-slate-800/50"
               }`}
             >
               {t("settings")}
@@ -268,12 +292,81 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-left"
                 />
               </div>
+
+              {/* Optional password */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Lock className="h-4 w-4 text-slate-400" />
+                    {t("settings_set_password")}
+                  </label>
+                  <p className="text-xs text-slate-500 mt-1">{t("settings_set_password_desc")}</p>
+                </div>
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value)
+                    setSaved(false)
+                  }}
+                  placeholder={t("password_ph")}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <input
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value)
+                    setSaved(false)
+                  }}
+                  placeholder={t("confirm_password")}
+                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+              </div>
             </div>
           ) : (
             /* App settings / Location */
             <div className="space-y-6">
+              {canChangeTheme && (
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Sun className="h-4 w-4 text-emerald-600" />
+                    {t("theme_label")}
+                  </label>
+                  <p className="text-xs text-muted">{t("theme_desc")}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTheme("light")}
+                      className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
+                        theme === "light"
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                          : "border-border bg-input text-foreground hover:border-emerald-500"
+                      }`}
+                    >
+                      <Sun className="h-4 w-4" />
+                      {t("theme_light")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTheme("dark")}
+                      className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-all ${
+                        theme === "dark"
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                          : "border-border bg-input text-foreground hover:border-emerald-500"
+                      }`}
+                    >
+                      <Moon className="h-4 w-4" />
+                      {t("theme_dark")}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-emerald-600" />
                   {t("user_location_label")}
                 </label>
@@ -285,19 +378,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     setSaved(false)
                   }}
                   placeholder={t("user_location_ph")}
-                  className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="surface-input flex h-10 w-full px-3 py-2 text-sm"
                 />
               </div>
 
               {/* Privacy Policy Link */}
-              <div className="border-t border-slate-100 pt-4 space-y-2">
-                <span className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">
+              <div className="border-t border-border pt-4 space-y-2">
+                <span className="text-xs font-semibold text-muted block uppercase tracking-wider">
                   {language === "fa" ? "قوانین و حریم خصوصی" : "Rules & Privacy"}
                 </span>
                 <Link
                   href="/privacy"
                   onClick={onClose}
-                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/20 text-sm text-slate-700 hover:text-emerald-700 transition-all font-medium"
+                  className="flex items-center justify-between p-3 rounded-xl border border-border hover:border-emerald-500 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 text-sm text-foreground hover:text-emerald-700 dark:hover:text-emerald-400 transition-all font-medium"
                 >
                   <span className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-emerald-600" />
@@ -314,7 +407,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           )}
         </CardContent>
 
-        <CardFooter className="bg-slate-50/50 border-t border-slate-100 pt-4 pb-4 flex justify-between items-center shrink-0">
+        <CardFooter className="bg-slate-50/50 dark:bg-slate-900/30 border-t border-border pt-4 pb-4 flex justify-between items-center shrink-0">
           <div>
             {saved && (
               <span className="text-emerald-600 text-sm flex items-center gap-1 animate-in fade-in">

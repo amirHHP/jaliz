@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
 import { BottomNav } from "@/components/BottomNav";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -64,15 +65,32 @@ export default function RootLayout({
     >
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('jaliz-theme');
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <LanguageProvider>
           <AuthProvider>
-            <MarketplaceProvider>
-              {children}
-              <BottomNav />
-              <InstallPrompt />
-            </MarketplaceProvider>
+            <ThemeProvider>
+              <MarketplaceProvider>
+                {children}
+                <BottomNav />
+                <InstallPrompt />
+              </MarketplaceProvider>
+            </ThemeProvider>
           </AuthProvider>
         </LanguageProvider>
         <SpeedInsights />

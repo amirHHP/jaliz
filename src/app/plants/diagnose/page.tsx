@@ -14,6 +14,19 @@ import {
 import { Button } from "@/components/ui/button"
 import { diagnosePlantAction } from "@/app/actions/ai"
 import { createUserPlantAction, addPlantStatusLogAction, getUserPlantsAction } from "@/app/actions/plants"
+import {
+  RELATIVE_DATE_OPTIONS,
+  matchRelativeDateOption,
+  relativeDateOptionToString,
+  toLocalDateString,
+  type RelativeDateOption,
+} from "@/lib/relative-date"
+
+const RELATIVE_DATE_LABEL_KEYS: Record<RelativeDateOption, "relative_date_today" | "relative_date_3days" | "relative_date_week"> = {
+  today: "relative_date_today",
+  "3days": "relative_date_3days",
+  week: "relative_date_week",
+}
 
 interface DiagnosisResult {
   name: string
@@ -92,9 +105,9 @@ export default function SmartDiagnosisPage() {
     potType: "Plastic",
     growingMedium: "Soil",
     hasDrainage: true,
-    lastWatered: new Date().toISOString().split("T")[0],
+    lastWatered: toLocalDateString(),
     recentlyReplanted: false,
-    lastSoilChange: "",
+    lastSoilChange: toLocalDateString(),
     health: "Excellent",
     image: "",
     careTips: "",
@@ -216,9 +229,9 @@ export default function SmartDiagnosisPage() {
         potType: data.potType || "Plastic",
         growingMedium: data.growingMedium || "Soil",
         hasDrainage: data.hasDrainage !== undefined ? data.hasDrainage : true,
-        lastWatered: new Date().toISOString().split("T")[0],
+        lastWatered: toLocalDateString(),
         recentlyReplanted: false,
-        lastSoilChange: "",
+        lastSoilChange: toLocalDateString(),
         health: data.health || "Good",
         image: imageBase64,
         careTips: data.careTips || "",
@@ -765,34 +778,84 @@ export default function SmartDiagnosisPage() {
                 </h4>
 
                 <div className="bg-sky-50/50 border border-sky-100 rounded-2xl p-4 space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-sky-950">
-                        {t("last_watered")}
-                      </label>
-                      <input 
-                        type="date" 
-                        value={draft.lastWatered} 
-                        onChange={(e) => updateDraft("lastWatered", e.target.value)} 
-                        className="flex h-9 w-full rounded-lg border-0 ring-1 ring-sky-200 bg-white px-3 text-xs text-sky-950 shadow-sm focus:outline-none" 
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-sky-950 flex justify-between">
-                        <span>{language === "fa" ? "دوره آبیاری" : "Interval"}</span>
-                        <span className="bg-sky-200 text-sky-800 px-1.5 py-0.25 rounded font-bold text-[9px]">{draft.wateringInterval} {language === "fa" ? "روز" : "Days"}</span>
-                      </label>
-                      <input 
-                        type="range" 
-                        min="1" 
-                        max="30" 
-                        value={draft.wateringInterval} 
-                        onChange={(e) => updateDraft("wateringInterval", parseInt(e.target.value) || 7)} 
-                        className="w-full accent-sky-500 mt-2.5" 
-                      />
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-sky-950">
+                      {t("last_watered")}
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {RELATIVE_DATE_OPTIONS.map((option) => {
+                        const selected = matchRelativeDateOption(draft.lastWatered) === option
+                        return (
+                          <button
+                            type="button"
+                            key={option}
+                            onClick={() => updateDraft("lastWatered", relativeDateOptionToString(option))}
+                            className={`rounded-lg px-1.5 py-2 text-[10px] font-semibold transition-all ${
+                              selected
+                                ? "bg-sky-600 text-white shadow-sm"
+                                : "bg-white text-sky-800 ring-1 ring-sky-200 hover:bg-sky-50"
+                            }`}
+                          >
+                            {t(RELATIVE_DATE_LABEL_KEYS[option])}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-sky-950 flex justify-between">
+                      <span>{t("watering_interval_label")}</span>
+                      <span className="bg-sky-200 text-sky-800 px-1.5 py-0.25 rounded font-bold text-[9px]">
+                        {draft.wateringInterval} {t("watering_interval_days")}
+                      </span>
+                    </label>
+                    <div className="flex items-start gap-2 rounded-xl bg-white/80 border border-sky-100 px-3 py-2.5">
+                      <Info className="h-3.5 w-3.5 text-sky-500 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-sky-800 leading-relaxed">
+                        {t("watering_interval_locked_hint")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Soil Change */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {t("last_soil_change")}
+                </h4>
+
+                <div className="bg-amber-50/50 border border-amber-100/60 rounded-2xl p-4 space-y-3">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {RELATIVE_DATE_OPTIONS.map((option) => {
+                      const selected = matchRelativeDateOption(draft.lastSoilChange) === option
+                      return (
+                        <button
+                          type="button"
+                          key={option}
+                          onClick={() => updateDraft("lastSoilChange", relativeDateOptionToString(option))}
+                          className={`rounded-lg px-1.5 py-2 text-[10px] font-semibold transition-all ${
+                            selected
+                              ? "bg-amber-600 text-white shadow-sm"
+                              : "bg-white text-amber-900 ring-1 ring-amber-200 hover:bg-amber-50"
+                          }`}
+                        >
+                          {t(RELATIVE_DATE_LABEL_KEYS[option])}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {draft.soilChangeTips && (
+                    <div className="text-[11px] text-amber-800 bg-white/70 rounded-xl p-3 border border-amber-100/50 leading-relaxed flex gap-2">
+                      <Sprout className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold block mb-0.5">{language === "fa" ? "توصیه تعویض خاک هوش مصنوعی:" : "AI Soil Advice:"}</span>
+                        {draft.soilChangeTips}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -7,16 +7,23 @@ import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { useMarketplaceInbox } from "@/components/MarketplaceProvider"
 
+type NavTab = {
+  name: string
+  href: string
+  icon: typeof Leaf
+  active: boolean
+  badge?: number
+  featured?: boolean
+}
+
 export function BottomNav() {
   const pathname = usePathname()
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const { status, user } = useAuth()
-  const { getUnreadCount, revision } = useMarketplaceInbox()
+  const { getUnreadCount } = useMarketplaceInbox()
 
-  const isAuthenticated = status === "authenticated"
   const unreadCount = user ? getUnreadCount(user.id) : 0
 
-  // Don't show bottom nav if not authenticated, or on auth/admin/new-plant/store-scan pages
   if (
     status !== "authenticated" ||
     pathname === "/login" ||
@@ -29,104 +36,95 @@ export function BottomNav() {
     return null
   }
 
-  // Build tabs: always include marketplace, add plant-specific tabs only for authenticated users
-  const tabs = [
-    ...(isAuthenticated
-      ? [
-          {
-            name: t("my_plants"),
-            href: "/",
-            icon: Leaf,
-            active: pathname === "/",
-          },
-          {
-            name: (t as any)("schedule"),
-            href: "/schedule",
-            icon: CalendarDays,
-            active: pathname?.startsWith("/schedule"),
-          },
-          {
-            name: t("marketplace"),
-            href: "/marketplace",
-            icon: Store,
-            active: pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats"),
-          },
-          {
-            name: (t as any)("chats"),
-            href: "/marketplace/chats",
-            icon: MessageCircle,
-            active: pathname?.startsWith("/marketplace/chats"),
-          },
-        ]
-      : [
-          {
-            name: t("marketplace"),
-            href: "/",
-            icon: Store,
-            active: pathname === "/" || (pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")),
-          },
-        ]),
+  const tabs: NavTab[] = [
+    {
+      name: t("nav_my_plants"),
+      href: "/",
+      icon: Leaf,
+      active: pathname === "/",
+    },
+    {
+      name: t("nav_schedule"),
+      href: "/schedule",
+      icon: CalendarDays,
+      active: Boolean(pathname?.startsWith("/schedule")),
+    },
+    {
+      name: t("nav_smart_detect"),
+      href: "/plants/diagnose",
+      icon: Sparkles,
+      active: false,
+      featured: true,
+    },
+    {
+      name: t("nav_marketplace"),
+      href: "/marketplace",
+      icon: Store,
+      active: Boolean(
+        pathname?.startsWith("/marketplace") && !pathname?.startsWith("/marketplace/chats")
+      ),
+    },
+    {
+      name: t("nav_chats"),
+      href: "/marketplace/chats",
+      icon: MessageCircle,
+      active: Boolean(pathname?.startsWith("/marketplace/chats")),
+      badge: unreadCount,
+    },
   ]
 
-  // Smart detect tab (separate for special styling)
-  const smartDetectTab = isAuthenticated
-    ? {
-        name: (t as any)("smart_detect"),
-        href: "/plants/diagnose",
-        icon: Sparkles,
-      }
-    : null
-
-  // For unauthenticated: show full-width marketplace tab
-  const gridCols = isAuthenticated ? "grid-cols-5" : "grid-cols-1"
-
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full h-16 bg-card border-t border-border md:hidden pb-safe">
-      <div className={`grid h-full max-w-lg ${gridCols} mx-auto font-medium`}>
+    <nav className="fixed bottom-0 left-0 z-50 w-full h-16 bg-card border-t border-border md:hidden pb-safe">
+      <div className="grid h-full max-w-lg grid-cols-5 mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = tab.active
+
+          if (tab.featured) {
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                prefetch={false}
+                id="smart-detect-bottom"
+                className="relative flex flex-col items-center justify-center gap-0.5 px-1"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-md ring-2 ring-card -mt-3">
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
+                </span>
+                <span className="w-full truncate text-center text-[10px] leading-none font-semibold text-emerald-600 dark:text-emerald-400">
+                  {tab.name}
+                </span>
+              </Link>
+            )
+          }
+
           return (
             <Link
               key={tab.href}
               href={tab.href}
               prefetch={false}
-              className={`relative inline-flex flex-col items-center justify-center px-5 hover:bg-slate-50 dark:hover:bg-slate-800 group ${
-                isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted hover:text-emerald-600 dark:hover:text-emerald-400"
+              className={`relative flex flex-col items-center justify-center gap-0.5 px-1 ${
+                isActive
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-muted hover:text-emerald-600 dark:hover:text-emerald-400"
               }`}
             >
-              <div className="relative">
-                <Icon
-                  className={`w-6 h-6 mb-1 ${
-                    isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted group-hover:text-emerald-500 dark:group-hover:text-emerald-400"
-                  }`}
-                />
-                {tab.href === "/marketplace/chats" && unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none">
-                    {unreadCount}
+              <span className="relative flex h-7 w-7 items-center justify-center">
+                <Icon className="h-5 w-5" />
+                {tab.badge != null && tab.badge > 0 && (
+                  <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none">
+                    {tab.badge}
                   </span>
                 )}
-              </div>
-              <span className="text-[10px] sm:text-xs text-center">{tab.name}</span>
+              </span>
+              <span className="w-full truncate text-center text-[10px] leading-none">
+                {tab.name}
+              </span>
             </Link>
           )
         })}
-        {smartDetectTab && (
-          <Link
-            key="smart-detect"
-            href={smartDetectTab.href}
-            prefetch={false}
-            id="smart-detect-bottom"
-            className="inline-flex flex-col items-center justify-center px-2 group"
-          >
-            <div className="w-9 h-9 -mt-5 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg ring-2 ring-card group-hover:scale-110 transition-transform">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-[9px] mt-0.5 text-emerald-600 font-bold">{smartDetectTab.name}</span>
-          </Link>
-        )}
       </div>
-    </div>
+    </nav>
   )
 }
-

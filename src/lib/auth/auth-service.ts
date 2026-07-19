@@ -361,6 +361,13 @@ export class LocalAuthService implements IAuthService {
     this.writeUsers(users)
   }
 
+  async setMyPassword(newPassword: string): Promise<void> {
+    if (!this.currentUser) {
+      throw new AuthError("GENERIC")
+    }
+    await this.resetPassword(this.currentUser.id, newPassword)
+  }
+
   // ------------------------------------------------------------------
   // Internals
   // ------------------------------------------------------------------
