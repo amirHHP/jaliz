@@ -865,7 +865,7 @@ export function PlantModal({ plant, initialLogs, onClose, onSave, onDelete }: Pl
         </div>
 
         {/* ── Footer actions ─────────────────────────────────────────────────── */}
-        <div className="shrink-0 border-t border-slate-100 px-6 py-4 flex items-center justify-between gap-3 bg-white">
+        <div className="shrink-0 border-t border-slate-100 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2 bg-white">
           {!isEditing ? (
             <>
               {/* Delete side */}
@@ -895,36 +895,39 @@ export function PlantModal({ plant, initialLogs, onClose, onSave, onDelete }: Pl
                   variant="ghost"
                   size="sm"
                   onClick={() => setConfirmDelete(true)}
-                  className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-1.5"
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-1.5 shrink-0"
                 >
                   <Trash2 className="h-4 w-4" />
                   {language === "fa" ? "حذف گیاه" : "Delete plant"}
                 </Button>
               )}
 
-              {/* Edit side */}
-              <div className="flex items-center gap-2">
+              {/* Edit / share — share is icon-only on narrow screens so edit stays inside the modal */}
+              <div className="flex items-center gap-1.5 min-w-0">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleShare}
                   disabled={isSharing}
-                  className="gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  aria-label={t("share_plant" as never)}
+                  title={t("share_plant" as never)}
+                  className="shrink-0 gap-1.5 border-emerald-200 text-emerald-700 hover:bg-emerald-50 px-2.5 sm:px-3"
                 >
                   {isSharing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Share2 className="h-4 w-4" />
                   )}
-                  {t("share_plant" as never)}
+                  <span className="hidden sm:inline">{t("share_plant" as never)}</span>
                 </Button>
-               <Button
-                onClick={() => setIsEditing(true)}
-                className="gap-2"
-              >
-                <Pencil className="h-4 w-4" />
-                {language === "fa" ? "ویرایش اطلاعات" : "Edit info"}
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  className="gap-1.5 shrink-0"
+                >
+                  <Pencil className="h-4 w-4" />
+                  {language === "fa" ? "ویرایش اطلاعات" : "Edit info"}
+                </Button>
               </div>
             </>
           ) : (

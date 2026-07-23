@@ -810,13 +810,19 @@ export default function SmartDiagnosisPage() {
                         {draft.wateringInterval} {t("watering_interval_days")}
                       </span>
                     </label>
-                    <div className="flex items-start gap-2 rounded-xl bg-white/80 border border-sky-100 px-3 py-2.5">
-                      <Info className="h-3.5 w-3.5 text-sky-500 shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-sky-800 leading-relaxed">
-                        {t("watering_interval_locked_hint")}
-                      </p>
-                    </div>
                   </div>
+
+                  {draft.wateringTips && (
+                    <div className="text-[11px] text-sky-800 bg-white/70 rounded-xl p-3 border border-sky-100/50 leading-relaxed flex gap-2">
+                      <Droplets className="h-4.5 w-4.5 text-sky-500 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold block mb-0.5">
+                          {language === "fa" ? "توصیه آبیاری هوش مصنوعی:" : "AI Watering Advice:"}
+                        </span>
+                        {draft.wateringTips}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
