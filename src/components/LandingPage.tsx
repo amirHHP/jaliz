@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import {
   Camera,
@@ -31,9 +32,13 @@ export function LandingPage() {
       id: "welcome",
       content: (
         <div className="flex flex-col items-center text-center px-6 w-full max-w-md mx-auto">
-          <img
-            src="/hero-character.png"
+          <Image
+            src="/hero-character.jpg"
             alt=""
+            width={288}
+            height={288}
+            priority
+            sizes="(max-width: 640px) 256px, 288px"
             className="w-64 h-64 sm:w-72 sm:h-72 object-contain mb-6 drop-shadow-xl animate-in fade-in zoom-in-95 duration-500"
           />
           <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">

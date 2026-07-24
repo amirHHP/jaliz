@@ -1,27 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
-import { Printer, QrCode, ArrowLeft, Leaf, Camera, Sparkles, BookOpen, AlertCircle } from "lucide-react"
+import { Printer, QrCode, ArrowLeft, Leaf, Camera, Sparkles, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { renderQrSvg } from "@/lib/qr"
 
 export default function PrintStandPage() {
-  const { t, language } = useLanguage()
+  const { language } = useLanguage()
   const router = useRouter()
   
   const [storeName, setStoreName] = useState("سبزین")
-  const [origin, setOrigin] = useState("http://localhost:3000")
+  // SSR-friendly default so the QR is in the first paint; refine on mount.
+  const [origin, setOrigin] = useState("https://jaliz.app")
   const isRtl = language === "fa"
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setOrigin(window.location.origin)
-    }
+    setOrigin(window.location.origin)
   }, [])
 
   const qrDataUrl = `${origin}/store-scan?store=${encodeURIComponent(storeName)}`
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrDataUrl)}`
+  const qrSvg = useMemo(() => renderQrSvg(qrDataUrl), [qrDataUrl])
 
   const handlePrint = () => {
     window.print()
@@ -147,13 +147,11 @@ export default function PrintStandPage() {
               {/* Left Side: Dynamic QR Code */}
               <div className="flex flex-col items-center gap-2">
                 <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-xl shadow-slate-100 flex items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={qrImageUrl}
-                    alt="QR Code to Scan"
-                    width={180}
-                    height={180}
-                    className="w-44 h-44 object-contain"
+                  <div
+                    className="w-44 h-44 [&_svg]:w-full [&_svg]:h-full"
+                    dangerouslySetInnerHTML={{ __html: qrSvg }}
+                    aria-label="QR Code to Scan"
+                    role="img"
                   />
                 </div>
                 <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-wider flex items-center gap-1">

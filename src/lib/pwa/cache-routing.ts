@@ -10,7 +10,7 @@ export function isImmutableStaticPath(pathname: string): boolean {
   if (/\.(?:woff2?|ttf|otf|eot)$/i.test(pathname)) return true
   if (
     pathname === "/manifest.json" ||
-    pathname === "/hero-character.png" ||
+    pathname === "/hero-character.jpg" ||
     pathname === "/offline.html"
   ) {
     return true

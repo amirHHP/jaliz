@@ -1,8 +1,8 @@
 // Jaliz Service Worker — multi-cache strategies for a more local-app feel
-const SHELL_CACHE = 'jaliz-shell-v2'
-const STATIC_CACHE = 'jaliz-static-v2'
-const PAGES_CACHE = 'jaliz-pages-v2'
-const IMAGE_CACHE = 'jaliz-images-v2'
+const SHELL_CACHE = 'jaliz-shell-v3'
+const STATIC_CACHE = 'jaliz-static-v3'
+const PAGES_CACHE = 'jaliz-pages-v3'
+const IMAGE_CACHE = 'jaliz-images-v3'
 
 const ALL_CACHES = [SHELL_CACHE, STATIC_CACHE, PAGES_CACHE, IMAGE_CACHE]
 const CACHE_PREFIX = 'jaliz-'
@@ -19,7 +19,7 @@ const PRECACHE_URLS = [
   '/icons/icon-512x512.png',
   '/icons/icon-maskable-192x192.png',
   '/icons/icon-maskable-512x512.png',
-  '/hero-character.png',
+  '/hero-character.jpg',
   '/marketplace',
   '/login',
   '/plants/diagnose',
@@ -93,7 +93,7 @@ function isImmutableStatic(url) {
   if (/\.(?:woff2?|ttf|otf|eot)$/i.test(url.pathname)) return true
   if (
     url.pathname === '/manifest.json' ||
-    url.pathname === '/hero-character.png' ||
+    url.pathname === '/hero-character.jpg' ||
     url.pathname === '/offline.html'
   ) {
     return true

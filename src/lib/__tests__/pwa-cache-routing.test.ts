@@ -23,7 +23,7 @@ describe("isImmutableStaticPath", () => {
 
 describe("isImagePath", () => {
   it("detects by extension or destination", () => {
-    expect(isImagePath("/hero-character.png")).toBe(true)
+    expect(isImagePath("/hero-character.jpg")).toBe(true)
     expect(isImagePath("/foo", "image")).toBe(true)
     expect(isImagePath("/sw.js")).toBe(false)
   })
