@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   Globe,
+  History,
   Leaf,
   LogIn,
   LogOut,
@@ -220,6 +221,15 @@ export function Header() {
                     <SettingsIcon className="h-4 w-4 text-slate-500" />
                     {t("settings")}
                   </button>
+                  <Link
+                    href="/changelog"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                  >
+                    <History className="h-4 w-4 text-slate-500" />
+                    {t("changelog")}
+                  </Link>
                   {isAdmin && (
                     <Link
                       href="/admin"
@@ -395,6 +405,14 @@ export function Header() {
               <SettingsIcon className="h-4 w-4" />
               {t("settings")}
             </button>
+            <Link
+              href="/changelog"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+            >
+              <History className="h-4 w-4" />
+              {t("changelog")}
+            </Link>
           </div>
         </nav>
       </div>
