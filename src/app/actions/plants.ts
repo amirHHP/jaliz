@@ -7,21 +7,13 @@ import {
 } from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/app/actions/auth";
-import { isSubscriptionActive } from "@/lib/subscription";
+import { userHasActiveSubscription } from "@/lib/subscription-status";
 
 const MAX_STATUS_LOG_ADVICE_CHARS = 80_000;
 const MAX_STATUS_LOG_IMAGE_CHARS = 550_000;
 /** Base64 plant photos in create/update must stay under Server Action / DB practical limits */
 const MAX_PLANT_IMAGE_CHARS = 750_000;
 const MAX_PLANT_TIPS_CHARS = 50_000;
-
-async function userHasActiveSubscription(userId: string): Promise<boolean> {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { subscriptionExpiresAt: true },
-  });
-  return isSubscriptionActive(user?.subscriptionExpiresAt);
-}
 
 function asDbString(value: unknown, maxLen: number): string | null {
   if (value === undefined || value === null) return null;

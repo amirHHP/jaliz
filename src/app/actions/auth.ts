@@ -13,6 +13,7 @@ import {
 import { AdminCreateUserInput, AdminUpdateUserInput, RegisterInput, AuthError } from "@/lib/auth/types";
 import { UserRole } from "@/lib/auth/types";
 import { sendOtpEmail } from "@/lib/email/send-otp-email";
+import { getSubscriptionExpiresAtForUser } from "@/lib/subscription-status";
 
 const SESSION_KEY = "jaliz_session";
 
@@ -64,7 +65,11 @@ export async function getCurrentUser() {
     return null;
   }
 
-  return toPublicUser(user);
+  const subscriptionExpiresAt = await getSubscriptionExpiresAtForUser(user.id);
+  return {
+    ...toPublicUser(user),
+    subscriptionExpiresAt: subscriptionExpiresAt?.toISOString() ?? null,
+  };
 }
 
 export async function registerAction(input: RegisterInput): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Migration: watering-reminder subscription fields + Payment table.
+ * Migration: Payment table for watering-reminder subscriptions.
  *
  * Usage:
  *   TURSO_DATABASE_URL="libsql://..." TURSO_AUTH_TOKEN="..." node scripts/migrate-subscription.mjs
@@ -56,6 +56,7 @@ async function createPaymentTableIfMissing() {
       "description" TEXT NOT NULL DEFAULT '',
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "paidAt" DATETIME,
+      "expiresAt" DATETIME,
       CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
     )
   `)
@@ -69,12 +70,14 @@ async function createPaymentTableIfMissing() {
     const msg = err.message || String(err)
     if (!msg.includes("already exists")) throw err
   }
+
+  await addColumnIfMissing("Payment", "expiresAt", "DATETIME")
 }
 
 try {
-  await addColumnIfMissing("User", "subscriptionExpiresAt", "DATETIME")
   await createPaymentTableIfMissing()
   console.log("✅ Subscription migration complete.")
+  console.log("Note: User.subscriptionExpiresAt is no longer required for auth.")
 } catch (err) {
   console.error("❌ Subscription migration failed:", err.message || err)
   process.exit(1)

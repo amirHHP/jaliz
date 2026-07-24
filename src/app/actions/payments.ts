@@ -7,6 +7,7 @@ import {
   SUBSCRIPTION_PRICE_RIAL,
   nextSubscriptionExpiry,
 } from "@/lib/subscription"
+import { getSubscriptionExpiresAtForUser } from "@/lib/subscription-status"
 import {
   getSiteUrl,
   requestZarinpalPayment,
@@ -50,15 +51,23 @@ export async function createSubscriptionPaymentAction(): Promise<CreateSubscript
     return { ok: false, error: "درگاه پرداخت درخواست را رد کرد. دوباره تلاش کنید." }
   }
 
-  await prisma.payment.create({
-    data: {
-      userId,
-      authority: zarinpal.authority,
-      amount: SUBSCRIPTION_PRICE_RIAL,
-      status: "pending",
-      description: SUBSCRIPTION_DESCRIPTION_FA,
-    },
-  })
+  try {
+    await prisma.payment.create({
+      data: {
+        userId,
+        authority: zarinpal.authority,
+        amount: SUBSCRIPTION_PRICE_RIAL,
+        status: "pending",
+        description: SUBSCRIPTION_DESCRIPTION_FA,
+      },
+    })
+  } catch (err) {
+    console.error("Payment create error:", err)
+    return {
+      ok: false,
+      error: "جدول پرداخت هنوز روی دیتابیس آماده نیست. بعد از مایگریشن دوباره تلاش کنید.",
+    }
+  }
 
   return { ok: true, paymentUrl: zarinpalStartPayUrl(zarinpal.authority) }
 }
@@ -81,7 +90,6 @@ export async function verifySubscriptionPayment(
 
   const payment = await prisma.payment.findUnique({
     where: { authority },
-    include: { user: true },
   })
 
   if (!payment) {
@@ -92,7 +100,10 @@ export async function verifySubscriptionPayment(
     return {
       ok: true,
       alreadyPaid: true,
-      expiresAt: payment.user.subscriptionExpiresAt?.toISOString() || new Date().toISOString(),
+      expiresAt:
+        payment.expiresAt?.toISOString() ||
+        (await getSubscriptionExpiresAtForUser(payment.userId))?.toISOString() ||
+        new Date().toISOString(),
     }
   }
 
@@ -123,22 +134,18 @@ export async function verifySubscriptionPayment(
     return { ok: false, error: "پرداخت تأیید نشد." }
   }
 
-  const expiresAt = nextSubscriptionExpiry(payment.user.subscriptionExpiresAt)
+  const currentExpiresAt = await getSubscriptionExpiresAtForUser(payment.userId)
+  const expiresAt = nextSubscriptionExpiry(currentExpiresAt)
 
-  await prisma.$transaction([
-    prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: "paid",
-        refId: String(verify.refId),
-        paidAt: new Date(),
-      },
-    }),
-    prisma.user.update({
-      where: { id: payment.userId },
-      data: { subscriptionExpiresAt: expiresAt },
-    }),
-  ])
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: "paid",
+      refId: String(verify.refId),
+      paidAt: new Date(),
+      expiresAt,
+    },
+  })
 
   return { ok: true, expiresAt: expiresAt.toISOString() }
 }
