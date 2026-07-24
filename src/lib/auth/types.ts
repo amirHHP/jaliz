@@ -15,6 +15,8 @@ export interface User {
   phone?: string | null
   /** Base64 profile photo data URL */
   avatar?: string | null
+  /** ISO timestamp when the watering-reminder subscription ends, if any. */
+  subscriptionExpiresAt?: string | null
 }
 
 /** Mutable fields a user is allowed to update on their own profile. */

@@ -43,6 +43,7 @@ interface AuthContextValue {
   isAdmin: boolean
   revision: number
   users: User[]
+  refreshUser: () => Promise<User | null>
   refreshUsers: () => Promise<void>
   register: (input: RegisterInput) => Promise<User>
   login: (email: string, password: string) => Promise<User>
@@ -131,6 +132,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return users.find((u) => u.id === id)
   }, [users])
 
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    try {
+      const u = await getCurrentUser()
+      if (u) {
+        setUser(u)
+        setStatus("authenticated")
+      } else {
+        setUser(null)
+        setStatus("unauthenticated")
+      }
+      return u
+    } catch (err) {
+      console.error("Failed to refresh current user", err)
+      return null
+    }
+  }, [])
+
   const refreshUsers = useCallback(async () => {
     if (user?.role !== "admin") return
     try {
@@ -206,6 +224,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAdmin: user?.role === "admin",
       revision,
       users,
+      refreshUser,
       refreshUsers,
       register,
       login,
@@ -223,7 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sendOtp,
       loginWithOtp,
     }),
-    [status, user, revision, users, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword, setMyPassword, sendOtp, loginWithOtp],
+    [status, user, revision, users, refreshUser, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword, setMyPassword, sendOtp, loginWithOtp],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

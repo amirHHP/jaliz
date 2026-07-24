@@ -13,7 +13,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:migrate-otp": "node scripts/migrate-otp-auth.mjs"
+    "db:migrate-otp": "node scripts/migrate-otp-auth.mjs",
+    "db:migrate-subscription": "node scripts/migrate-subscription.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

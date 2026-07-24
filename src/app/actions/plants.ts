@@ -7,12 +7,21 @@ import {
 } from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/app/actions/auth";
+import { isSubscriptionActive } from "@/lib/subscription";
 
 const MAX_STATUS_LOG_ADVICE_CHARS = 80_000;
 const MAX_STATUS_LOG_IMAGE_CHARS = 550_000;
 /** Base64 plant photos in create/update must stay under Server Action / DB practical limits */
 const MAX_PLANT_IMAGE_CHARS = 750_000;
 const MAX_PLANT_TIPS_CHARS = 50_000;
+
+async function userHasActiveSubscription(userId: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { subscriptionExpiresAt: true },
+  });
+  return isSubscriptionActive(user?.subscriptionExpiresAt);
+}
 
 function asDbString(value: unknown, maxLen: number): string | null {
   if (value === undefined || value === null) return null;
@@ -39,6 +48,7 @@ export async function getUserPlantsAction(options?: { includeStatusLogs?: boolea
 export async function getWateringLogAction(dateStr: string) {
   const userId = await getSessionUserId();
   if (!userId) return null;
+  if (!(await userHasActiveSubscription(userId))) return null;
 
   const log = await prisma.wateringLog.findFirst({
     where: {
@@ -52,6 +62,7 @@ export async function getWateringLogAction(dateStr: string) {
 export async function updatePlantsLastWateredAction(plantIds: string[], dateStr: string) {
   const userId = await getSessionUserId();
   if (!userId) return;
+  if (!(await userHasActiveSubscription(userId))) return;
 
   const lastWatered = new Date(dateStr);
 
@@ -79,6 +90,7 @@ export async function updatePlantsLastWateredAction(plantIds: string[], dateStr:
 export async function markWateringDoneAction(dateStr: string) {
   const userId = await getSessionUserId();
   if (!userId) return;
+  if (!(await userHasActiveSubscription(userId))) return;
 
   await prisma.wateringLog.upsert({
     where: {

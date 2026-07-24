@@ -82,5 +82,8 @@ export function toPublicUser(user: PrismaUser): User {
     ...publicUser,
     role: publicUser.role as UserRole,
     createdAt: publicUser.createdAt.toISOString(),
+    subscriptionExpiresAt: publicUser.subscriptionExpiresAt
+      ? publicUser.subscriptionExpiresAt.toISOString()
+      : null,
   }
 }
