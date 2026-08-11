@@ -7,7 +7,7 @@ describe("zarinpal client", () => {
     vi.resetModules()
     fetchMock.mockReset()
     vi.stubGlobal("fetch", fetchMock)
-    process.env.ZARINPAL_MERCHANT_ID = "f7ca2a9d-f8bc-43ca-a72c-a13addf1e507"
+    process.env.ZARINPAL_MERCHANT_ID = "ad39dd80-569a-4ca9-9ba7-b73ddbd128ce"
     process.env.NEXT_PUBLIC_SITE_URL = "https://jaliz.ir"
   })
 
@@ -69,6 +69,35 @@ describe("zarinpal client", () => {
   })
 
   it("returns failure when zarinpal rejects the request", async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({
+        data: {},
+        errors: {
+          code: -14,
+          message: "The callback URL domain does not match the registered terminal domain.",
+          validations: [],
+        },
+      }),
+    })
+
+    const { requestZarinpalPayment, zarinpalErrorMessageFa } = await import("@/lib/zarinpal")
+    const result = await requestZarinpalPayment({
+      amountRial: 990_000,
+      description: "test",
+      callbackUrl: "https://jaliz.ir/payments/callback",
+    })
+
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.code).toBe(-14)
+      expect(result.message).toMatch(/callback URL domain/i)
+      expect(zarinpalErrorMessageFa(result.code, result.message)).toMatch(/دامنه/)
+    }
+  })
+
+  it("returns failure when zarinpal rejects with data.code", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       json: async () => ({

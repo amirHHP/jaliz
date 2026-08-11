@@ -5,7 +5,7 @@ const ZARINPAL_START_PAY_URL = "https://www.zarinpal.com/pg/StartPay"
 export function getZarinpalMerchantId(): string {
   return (
     process.env.ZARINPAL_MERCHANT_ID?.trim() ||
-    "f7ca2a9d-f8bc-43ca-a72c-a13addf1e507"
+    "ad39dd80-569a-4ca9-9ba7-b73ddbd128ce"
   )
 }
 
@@ -20,8 +20,8 @@ export function zarinpalStartPayUrl(authority: string): string {
 }
 
 type ZarinpalEnvelope<T> = {
-  data?: T & { code?: number; message?: string }
-  errors?: unknown
+  data?: (T & { code?: number; message?: string }) | Record<string, never>
+  errors?: { code?: number; message?: string; validations?: unknown } | unknown[] | null
 }
 
 export type ZarinpalRequestResult =
@@ -31,6 +31,51 @@ export type ZarinpalRequestResult =
 export type ZarinpalVerifyResult =
   | { ok: true; code: 100 | 101; refId: number; cardPan?: string }
   | { ok: false; code: number; message: string }
+
+function readZarinpalError(result: ZarinpalEnvelope<unknown>): { code: number; message: string } {
+  const errors = result.errors
+  if (errors && !Array.isArray(errors) && typeof errors === "object") {
+    const obj = errors as { code?: number; message?: string }
+    if (obj.message || obj.code != null) {
+      return {
+        code: obj.code ?? -1,
+        message: obj.message || "ZarinPal request failed",
+      }
+    }
+  }
+  const data = result.data
+  if (data && typeof data === "object" && "message" in data) {
+    return {
+      code: typeof data.code === "number" ? data.code : -1,
+      message: String(data.message || "ZarinPal request failed"),
+    }
+  }
+  return { code: -1, message: "ZarinPal request failed" }
+}
+
+/** Map common ZarinPal codes to clear Persian copy for the UI. */
+export function zarinpalErrorMessageFa(code: number, fallback: string): string {
+  switch (code) {
+    case -9:
+      return "خطای اعتبارسنجی درگاه پرداخت."
+    case -10:
+      return "ایپی یا مرچنت‌کد درگاه معتبر نیست."
+    case -11:
+      return "مرچنت‌کد فعال نیست. وضعیت ترمینال را در پنل زرین‌پال بررسی کنید."
+    case -12:
+      return "تلاش زیاد؛ کمی بعد دوباره تلاش کنید."
+    case -14:
+      return "دامنه callback با دامنه ثبت‌شده در پنل زرین‌پال یکی نیست. در Vercel مقدار NEXT_PUBLIC_SITE_URL را روی همان دامنه بگذارید."
+    case -15:
+      return "درگاه در انتظار تایید یا تعلیق است."
+    case -16:
+      return "سطح تایید مرچنت برای این درگاه کافی نیست."
+    case -17:
+      return "محدودیت دسترسی به درگاه برای این مرچنت."
+    default:
+      return fallback || "درگاه پرداخت درخواست را رد کرد."
+  }
+}
 
 async function postZarinpal<T>(
   url: string,
@@ -46,11 +91,15 @@ async function postZarinpal<T>(
     cache: "no-store",
   })
 
-  if (!res.ok) {
-    throw new Error(`ZarinPal HTTP ${res.status}`)
+  let json: ZarinpalEnvelope<T>
+  try {
+    json = (await res.json()) as ZarinpalEnvelope<T>
+  } catch {
+    throw new Error(`ZarinPal HTTP ${res.status} (invalid JSON)`)
   }
 
-  return (await res.json()) as ZarinpalEnvelope<T>
+  // ZarinPal often returns business errors with HTTP 4xx + errors in the body.
+  return json
 }
 
 export async function requestZarinpalPayment(input: {
@@ -74,19 +123,21 @@ export async function requestZarinpalPayment(input: {
     fee?: number
   }>(ZARINPAL_REQUEST_URL, payload)
 
-  const code = result.data?.code ?? -1
-  if (code === 100 && result.data?.authority) {
+  const data = result.data
+  const code = data && typeof data === "object" && "code" in data ? Number(data.code) : -1
+  if (code === 100 && data && "authority" in data && data.authority) {
     return {
       ok: true,
-      authority: result.data.authority,
-      fee: result.data.fee ?? 0,
+      authority: String(data.authority),
+      fee: typeof data.fee === "number" ? data.fee : 0,
     }
   }
 
+  const err = readZarinpalError(result)
   return {
     ok: false,
-    code,
-    message: result.data?.message || "ZarinPal request failed",
+    code: err.code !== -1 ? err.code : code,
+    message: err.message,
   }
 }
 
@@ -103,29 +154,30 @@ export async function verifyZarinpalPayment(input: {
     authority: input.authority,
   })
 
-  const code = result.data?.code ?? -1
-  if ((code === 100 || code === 101) && result.data?.ref_id != null) {
+  const data = result.data
+  const code = data && typeof data === "object" && "code" in data ? Number(data.code) : -1
+  if ((code === 100 || code === 101) && data && "ref_id" in data && data.ref_id != null) {
     return {
       ok: true,
-      code,
-      refId: result.data.ref_id,
-      cardPan: result.data.card_pan,
+      code: code as 100 | 101,
+      refId: Number(data.ref_id),
+      cardPan: typeof data.card_pan === "string" ? data.card_pan : undefined,
     }
   }
 
-  // Already-verified responses sometimes omit ref_id on 101 depending on API version
   if (code === 101) {
     return {
       ok: true,
       code: 101,
-      refId: result.data?.ref_id ?? 0,
-      cardPan: result.data?.card_pan,
+      refId: data && "ref_id" in data && data.ref_id != null ? Number(data.ref_id) : 0,
+      cardPan: data && "card_pan" in data && typeof data.card_pan === "string" ? data.card_pan : undefined,
     }
   }
 
+  const err = readZarinpalError(result)
   return {
     ok: false,
-    code,
-    message: result.data?.message || "ZarinPal verify failed",
+    code: err.code !== -1 ? err.code : code,
+    message: err.message,
   }
 }

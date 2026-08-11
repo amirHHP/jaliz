@@ -12,6 +12,7 @@ import {
   getSiteUrl,
   requestZarinpalPayment,
   verifyZarinpalPayment,
+  zarinpalErrorMessageFa,
   zarinpalStartPayUrl,
 } from "@/lib/zarinpal"
 
@@ -47,8 +48,14 @@ export async function createSubscriptionPaymentAction(): Promise<CreateSubscript
   }
 
   if (!zarinpal.ok) {
-    console.error("ZarinPal request rejected:", zarinpal)
-    return { ok: false, error: "درگاه پرداخت درخواست را رد کرد. دوباره تلاش کنید." }
+    console.error("ZarinPal request rejected:", zarinpal, "callback:", callbackUrl)
+    return {
+      ok: false,
+      error: zarinpalErrorMessageFa(
+        zarinpal.code,
+        zarinpal.message || "درگاه پرداخت درخواست را رد کرد. دوباره تلاش کنید.",
+      ),
+    }
   }
 
   try {
