@@ -3,10 +3,7 @@ const ZARINPAL_VERIFY_URL = "https://api.zarinpal.com/pg/v4/payment/verify.json"
 const ZARINPAL_START_PAY_URL = "https://www.zarinpal.com/pg/StartPay"
 
 export function getZarinpalMerchantId(): string {
-  return (
-    process.env.ZARINPAL_MERCHANT_ID?.trim() ||
-    "ad39dd80-569a-4ca9-9ba7-b73ddbd128ce"
-  )
+  return process.env.ZARINPAL_MERCHANT_ID?.trim() || ""
 }
 
 export function getSiteUrl(): string {

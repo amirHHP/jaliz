@@ -7,7 +7,7 @@ describe("zarinpal client", () => {
     vi.resetModules()
     fetchMock.mockReset()
     vi.stubGlobal("fetch", fetchMock)
-    process.env.ZARINPAL_MERCHANT_ID = "ad39dd80-569a-4ca9-9ba7-b73ddbd128ce"
+    process.env.ZARINPAL_MERCHANT_ID = "f7ca2a9d-f8bc-43ca-a72c-a13addf1e507"
     process.env.NEXT_PUBLIC_SITE_URL = "https://jaliz.ir"
   })
 
