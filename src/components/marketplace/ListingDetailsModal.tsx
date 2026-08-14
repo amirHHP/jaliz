@@ -261,32 +261,45 @@ export function ListingDetailsModal({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
-      className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
     >
-      <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden my-4 sm:my-8 relative">
-        {/* Floating prominent close button - always visible */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 end-4 z-50 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-slate-900/80 hover:bg-slate-950 text-white backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          aria-label={t("cancel" as never)}
-          title={language === "fa" ? "بستن (Esc)" : "Close (Esc)"}
-        >
-          <X className="h-5 w-5 sm:h-6 sm:w-6 text-white stroke-[2.5]" />
-        </button>
+      <div className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col relative my-auto animate-in zoom-in-95 duration-200">
+        {/* Sticky Top Header Bar - always visible, prevents top cropping */}
+        <div className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-lg border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
+              <TypeIcon className="h-3.5 w-3.5" />
+              {t(TYPE_TRANSLATION_KEY[listing.type] as never)}
+            </span>
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+              {listing.title}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition shrink-0 cursor-pointer shadow-sm border border-slate-200 dark:border-slate-700"
+            aria-label={t("cancel" as never)}
+            title={language === "fa" ? "بستن (Esc)" : "Close (Esc)"}
+          >
+            <X className="h-4 w-4 text-slate-700 dark:text-slate-200" />
+            <span>{language === "fa" ? "بستن" : "Close"}</span>
+          </button>
+        </div>
 
         {/* Report Violation Overlay */}
         {showReportModal && (
-          <div className="absolute inset-0 z-[60] bg-white/95 backdrop-blur-sm p-6 flex flex-col justify-center items-center">
+          <div className="absolute inset-0 z-[60] bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-6 flex flex-col justify-center items-center">
             <div className="w-full max-w-md space-y-5">
               <div className="text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 mb-3">
-                  <AlertTriangle className="h-6 w-6 text-amber-600" />
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 dark:bg-amber-950/60 mb-3">
+                  <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   {language === "fa" ? "گزارش تخلف آگهی" : "Report Listing"}
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {language === "fa" 
                     ? "لطفاً علت گزارش تخلف این آگهی را مشخص کنید. گزارش شما توسط تیم جالیز بررسی خواهد شد."
                     : "Please select the reason for reporting this listing. It will be reviewed by the Jaliz team."}
@@ -305,7 +318,7 @@ export function ListingDetailsModal({
                     ].map((reason) => (
                       <label 
                         key={reason.id} 
-                        className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-sm text-slate-700 font-medium transition-colors"
+                        className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer text-sm text-slate-700 dark:text-slate-300 font-medium transition-colors"
                       >
                         <input 
                           type="radio" 
@@ -358,10 +371,10 @@ export function ListingDetailsModal({
                 </div>
               ) : (
                 <div className="text-center space-y-4 py-4 animate-in zoom-in-95">
-                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100">
-                    <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 dark:bg-emerald-950/60">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <p className="text-sm font-medium text-slate-800 leading-relaxed">
+                  <p className="text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
                     {language === "fa" 
                       ? "گزارش شما با موفقیت ثبت شد و در اسرع وقت بررسی خواهد شد. با تشکر از همکاری شما!"
                       : "Your report has been submitted and will be reviewed shortly. Thank you for your support!"}
@@ -381,40 +394,43 @@ export function ListingDetailsModal({
             </div>
           </div>
         )}
-        {/* Hero image with close button */}
-        <div className="relative h-80 sm:h-[380px] bg-slate-950 overflow-hidden flex items-center justify-center">
-          {listing.image ? (
-            <>
-              {/* Blurred background image */}
-              <img
-                src={listing.image}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
-              />
-              {/* Main crisp image, fully contained */}
-              <img
-                src={listing.image}
-                alt={listing.title}
-                className="relative max-w-full max-h-full object-contain z-10"
-              />
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100 dark:bg-slate-800">
-              <ImageIcon className="h-12 w-12" />
-            </div>
-          )}
 
-          {listing.status === "completed" && (
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-20">
-              <span className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-md">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                {t("mp_completed_badge" as never)}
-              </span>
-            </div>
-          )}
-        </div>
+        {/* Scrollable Body Content */}
+        <div className="overflow-y-auto flex-1 overscroll-contain">
+          {/* Hero image container */}
+          <div className="relative h-64 sm:h-[340px] bg-slate-950 overflow-hidden flex items-center justify-center">
+            {listing.image ? (
+              <>
+                {/* Blurred background image */}
+                <img
+                  src={listing.image}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
+                />
+                {/* Main crisp image, fully contained */}
+                <img
+                  src={listing.image}
+                  alt={listing.title}
+                  className="relative max-w-full max-h-full object-contain z-10"
+                />
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100 dark:bg-slate-800">
+                <ImageIcon className="h-12 w-12" />
+              </div>
+            )}
 
-        <div className="p-6 space-y-6">
+            {listing.status === "completed" && (
+              <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-20">
+                <span className="inline-flex items-center gap-1.5 bg-white text-emerald-700 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-md">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {t("mp_completed_badge" as never)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="p-5 sm:p-7 space-y-6">
           {/* Header --------------------------------------------------- */}
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-2">
@@ -732,6 +748,7 @@ export function ListingDetailsModal({
           </div>
         </div>
       </div>
+    </div>
 
       {/* Buy Online Modal */}
       {showBuyModal && (
