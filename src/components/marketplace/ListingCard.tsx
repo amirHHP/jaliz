@@ -1,9 +1,10 @@
 "use client"
 
-import { CheckCircle2, ImageIcon, MapPin } from "lucide-react"
+import { CheckCircle2, CreditCard, ImageIcon, MapPin, ShoppingBag } from "lucide-react"
 
 import { Listing } from "@/lib/marketplace"
 import { useLanguage } from "@/components/LanguageProvider"
+import { useCart } from "./CartProvider"
 
 import {
   MODE_BADGE_CLASS,
@@ -25,6 +26,8 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
   // The translation key cast keeps the existing `t` signature happy. All
   // referenced keys are defined in LanguageProvider.tsx for both locales.
   const { t, language } = useLanguage()
+  const { addItem, isItemInCart } = useCart()
+  const inCart = isItemInCart(listing.id)
   const TypeIcon = TYPE_ICON[listing.type]
   const ModeIcon = MODE_ICON[listing.mode]
   const isCompleted = listing.status === "completed"
@@ -76,6 +79,13 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
           </span>
         </div>
 
+        {listing.mode === "sell" && !isCompleted && (
+          <div className="absolute top-3 end-3 inline-flex items-center gap-1 text-[9px] font-bold bg-emerald-600/90 backdrop-blur-sm text-white px-2 py-0.5 rounded-full shadow-sm">
+            <CreditCard className="h-2.5 w-2.5" />
+            <span>{language === "fa" ? "خرید آنلاین" : "Buy Online"}</span>
+          </div>
+        )}
+
         {isCompleted && (
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
             <span className="inline-flex items-center gap-1.5 bg-card text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-md">
@@ -94,7 +104,7 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
           {listing.description}
         </p>
 
-        <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between text-[10px] sm:text-xs text-muted gap-1.5 sm:gap-2">
+        <div className="mt-3 flex items-center justify-between text-[10px] sm:text-xs text-muted gap-1.5 sm:gap-2">
           <div className="flex items-center gap-1 truncate">
             {listing.location && (
               <>
@@ -103,13 +113,33 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
               </>
             )}
           </div>
-          <span
-            className={`font-semibold ${
-              listing.mode === "sell" ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"
-            } shrink-0 sm:ms-2`}
-          >
-            {priceLine}
-          </span>
+          <div className="flex items-center gap-1.5 shrink-0 sm:ms-2">
+            <span
+              className={`font-semibold ${
+                listing.mode === "sell" ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"
+              }`}
+            >
+              {priceLine}
+            </span>
+
+            {listing.mode === "sell" && !isCompleted && typeof listing.price === "number" && listing.price > 0 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  addItem(listing, ownerName || "فروشگاه")
+                }}
+                className={`h-7 w-7 rounded-lg flex items-center justify-center transition shadow-xs ${
+                  inCart
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-emerald-600 hover:text-white"
+                }`}
+                title={t("cart_add_btn" as never)}
+              >
+                <ShoppingBag className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
         {ownerName && (

@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   Shield,
+  ShoppingBag,
   Sparkles,
   User,
   UserPlus,
@@ -20,6 +21,7 @@ import {
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { useMarketplaceInbox } from "@/components/MarketplaceProvider"
+import { useCart } from "@/components/marketplace/CartProvider"
 import { SettingsModal } from "@/components/SettingsModal"
 import { Settings as SettingsIcon } from "lucide-react"
 import { PromoBanner } from "@/components/PromoBanner"
@@ -56,10 +58,10 @@ export function Header() {
   const { language, setLanguage, t } = useLanguage()
   const { status, user, isAdmin, logout } = useAuth()
   const { getUnreadCount, revision } = useMarketplaceInbox()
+  const { itemCount, setIsCartOpen } = useCart()
   const pathname = usePathname() ?? "/"
 
   const unreadCount = user ? getUnreadCount(user.id) : 0
-
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -159,8 +161,21 @@ export function Header() {
           </Link>
         )}
 
-        <div className="flex items-center gap-3">
-
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Cart Button */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:text-emerald-700 dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            aria-label={t("cart_title" as never)}
+            title={t("cart_title" as never)}
+          >
+            <ShoppingBag className="h-5 w-5" />
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -end-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-black text-white px-1 shadow-sm animate-in zoom-in">
+                {itemCount}
+              </span>
+            )}
+          </button>
 
           {/* Auth area. Render a stable placeholder while loading to avoid
               hydration mismatches between server and client. */}

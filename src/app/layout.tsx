@@ -4,6 +4,9 @@ import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
+import { CartProvider } from "@/components/marketplace/CartProvider";
+import { CartConflictModal } from "@/components/marketplace/CartConflictModal";
+import { CartDrawer } from "@/components/marketplace/CartDrawer";
 import { BottomNav } from "@/components/BottomNav";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -86,9 +89,13 @@ export default function RootLayout({
           <AuthProvider>
             <ThemeProvider>
               <MarketplaceProvider>
-                {children}
-                <BottomNav />
-                <InstallPrompt />
+                <CartProvider>
+                  {children}
+                  <CartConflictModal />
+                  <CartDrawer />
+                  <BottomNav />
+                  <InstallPrompt />
+                </CartProvider>
               </MarketplaceProvider>
             </ThemeProvider>
           </AuthProvider>

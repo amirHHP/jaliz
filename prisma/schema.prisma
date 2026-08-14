@@ -34,18 +34,24 @@ model User {
 }
 
 model Payment {
-  id          String    @id @default(uuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  authority   String    @unique
-  amount      Int // amount in Rials (ZarinPal)
-  status      String    @default("pending") // pending | paid | failed | cancelled
-  refId       String?
-  description String    @default("")
-  createdAt   DateTime  @default(now())
-  paidAt      DateTime?
+  id           String              @id @default(uuid())
+  userId       String
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  authority    String              @unique
+  amount       Int // amount in Rials (ZarinPal)
+  status       String              @default("pending") // pending | paid | failed | cancelled
+  refId        String?
+  description  String              @default("")
+  type         String              @default("subscription") // "subscription" | "marketplace"
+  listingId    String?
+  listing      MarketplaceListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  buyerPhone   String?
+  buyerAddress String?
+  buyerNotes   String?
+  createdAt    DateTime            @default(now())
+  paidAt       DateTime?
   /** When status=paid, subscription end time granted by this payment. */
-  expiresAt   DateTime?
+  expiresAt    DateTime?
 }
 
 model UserPlant {
@@ -114,6 +120,7 @@ model MarketplaceListing {
   conversations MarketplaceConversation[]
   messages      MarketplaceMessage[]
   reports       MarketplaceReport[]
+  payments      Payment[]
 }
 
 model MarketplaceConversation {

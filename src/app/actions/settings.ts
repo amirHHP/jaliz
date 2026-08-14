@@ -65,3 +65,37 @@ export async function getAllProviderKeys() {
   const gapgptModel = await getGlobalSetting("ai-model-gapgpt") || "";
   return { geminiKey, sotoonKey, gapgptKey, geminiModel, sotoonModel, gapgptModel };
 }
+
+const DEFAULT_SHIPPING_FEE_TOMAN = 150000;
+const SHIPPING_FEE_SETTING_KEY = "marketplace_shipping_fee";
+
+/**
+ * Returns the store shipping fee in Tomans.
+ * Defaults to 150,000 Tomans if not customized in the Admin Panel.
+ */
+export async function getShippingFeeAction(): Promise<number> {
+  try {
+    const raw = await getGlobalSetting(SHIPPING_FEE_SETTING_KEY);
+    if (!raw) return DEFAULT_SHIPPING_FEE_TOMAN;
+    const parsed = parseInt(raw, 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_SHIPPING_FEE_TOMAN;
+  } catch {
+    return DEFAULT_SHIPPING_FEE_TOMAN;
+  }
+}
+
+/**
+ * Admin-only: sets the global store shipping fee in Tomans.
+ */
+export async function setShippingFeeAction(feeToman: number): Promise<{ ok: boolean; error?: string }> {
+  if (typeof feeToman !== "number" || feeToman < 0 || !Number.isFinite(feeToman)) {
+    return { ok: false, error: "مبلغ هزینه ارسال باید یک عدد معتبر باشد." };
+  }
+  try {
+    await setGlobalSetting(SHIPPING_FEE_SETTING_KEY, Math.round(feeToman).toString());
+    return { ok: true };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || "خطا در ذخیره تنظیمات هزینه ارسال" };
+  }
+}
+

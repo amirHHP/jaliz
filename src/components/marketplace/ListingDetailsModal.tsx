@@ -8,6 +8,7 @@ import { track } from "@vercel/analytics"
 import {
   CheckCircle2,
   ChevronLeft,
+  CreditCard,
   ImageIcon,
   MapPin,
   MessageCircle,
@@ -20,14 +21,17 @@ import {
   X,
   AlertTriangle,
   Loader2,
+  ShoppingBag,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useMarketplace } from "@/components/MarketplaceProvider"
+import { useCart } from "./CartProvider"
 import { getListingOwnerNameAction, createListingReportAction } from "@/app/actions/marketplace"
 import { Conversation, Listing, Message } from "@/lib/marketplace"
+import { BuyListingModal } from "./BuyListingModal"
 
 import {
   MODE_BADGE_CLASS,
@@ -115,6 +119,11 @@ export function ListingDetailsModal({
   const [reportReason, setReportReason] = useState("")
   const [reportSubmitted, setReportSubmitted] = useState(false)
   const [reporting, setReporting] = useState(false)
+
+  // ----- Buy Online & Cart state --------------------------------------------
+  const [showBuyModal, setShowBuyModal] = useState(false)
+  const { addItem, setIsCartOpen } = useCart()
+  const [justAddedToCart, setJustAddedToCart] = useState(false)
 
   // ----- Conversation state -------------------------------------------------
   const [conversation, setConversation] = useState<Conversation | null>(null)
@@ -512,7 +521,69 @@ export function ListingDetailsModal({
               />
             </div>
           ) : isAuthenticated ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
+              {/* Online Purchase CTA for for-sale items */}
+              {listing.mode === "sell" && listing.status === "active" && typeof listing.price === "number" && listing.price > 0 && (
+                <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">
+                        {t("mp_buy_online_badge" as never)}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {language === "fa" ? "پرداخت امن درگاه بانکی شاپرک + تحویل تضمین‌شده" : "Secure payment via banking gateway + guaranteed delivery"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        const res = addItem(listing, ownerName || "فروشگاه")
+                        if (res.success) {
+                          setJustAddedToCart(true)
+                          setTimeout(() => setJustAddedToCart(false), 2500)
+                          track("Marketplace Add to Cart", { listingId: listing.id })
+                        }
+                      }}
+                      className={`font-bold px-4 py-2.5 rounded-xl border text-xs transition-all gap-1.5 ${
+                        justAddedToCart
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-500 dark:bg-emerald-950 dark:text-emerald-300"
+                          : "border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                      }`}
+                    >
+                      {justAddedToCart ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <span>{t("cart_added_toast" as never)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="h-4 w-4" />
+                          <span>{t("cart_add_btn" as never)}</span>
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={() => {
+                        setShowBuyModal(true)
+                        track("Marketplace Clicked Buy Online", { listingId: listing.id })
+                      }}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 hover:scale-[1.02] transition-all gap-2 text-xs"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>{t("mp_action_buy_online" as never)}</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-2 items-center">
                 {phone ? (
                   <>
@@ -565,32 +636,69 @@ export function ListingDetailsModal({
               />
             </div>
           ) : (
-            <div className="rounded-md bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-600 flex items-center justify-between">
-              <span>{t("mp_action_sign_in_to_contact" as never)}</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setShowReportModal(true)
-                    track("Marketplace Report Clicked", { listingId: listing.id })
-                  }}
-                  className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5"
-                >
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  {language === "fa" ? "گزارش تخلف" : "Report"}
-                </Button>
-                <Link
-                  href={`/login?redirect=/marketplace`}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5"
-                >
-                  {t("sign_in" as never)}
-                </Link>
+            <div className="space-y-3">
+              {/* Online Purchase CTA for unauthenticated visitor */}
+              {listing.mode === "sell" && listing.status === "active" && typeof listing.price === "number" && listing.price > 0 && (
+                <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">
+                        {t("mp_buy_online_badge" as never)}
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {language === "fa" ? "پرداخت امن درگاه بانکی شاپرک + تحویل تضمین‌شده" : "Secure payment via banking gateway + guaranteed delivery"}
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/login?redirect=/marketplace/${listing.id}`}
+                    className="w-full sm:w-auto inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 hover:scale-[1.02] transition-all gap-2 text-sm"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>{t("mp_action_buy_online" as never)}</span>
+                  </Link>
+                </div>
+              )}
+
+              <div className="rounded-md bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-600 flex items-center justify-between">
+                <span>{t("mp_action_sign_in_to_contact" as never)}</span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setShowReportModal(true)
+                      track("Marketplace Report Clicked", { listingId: listing.id })
+                    }}
+                    className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {language === "fa" ? "گزارش تخلف" : "Report"}
+                  </Button>
+                  <Link
+                    href={`/login?redirect=/marketplace/${listing.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5"
+                  >
+                    {t("sign_in" as never)}
+                  </Link>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Buy Online Modal */}
+      {showBuyModal && (
+        <BuyListingModal
+          listing={listing}
+          ownerName={ownerName}
+          onClose={() => setShowBuyModal(false)}
+        />
+      )}
     </div>
   )
 }

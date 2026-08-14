@@ -23,6 +23,7 @@ import {
   X,
   Key,
   Globe,
+  Truck,
 } from "lucide-react"
 
 import { Header } from "@/components/Header"
@@ -31,7 +32,7 @@ import { useLanguage } from "@/components/LanguageProvider"
 import { Button } from "@/components/ui/button"
 import { authErrorTranslationKey } from "@/lib/auth"
 import type { AdminCreateUserInput, AdminUpdateUserInput, User, UserRole } from "@/lib/auth/types"
-import { getAiConfig, setGlobalSetting, getAllProviderKeys } from "@/app/actions/settings"
+import { getAiConfig, setGlobalSetting, getAllProviderKeys, getShippingFeeAction, setShippingFeeAction } from "@/app/actions/settings"
 import { fetchModelsAction } from "@/app/actions/ai"
 import { getMarketplaceReportsAction, deleteReportAction, deleteListingByAdminAction } from "@/app/actions/marketplace"
 import { AlertTriangle, Flag, Trash2 as TrashIcon, Check as CheckIcon } from "lucide-react"
@@ -137,12 +138,23 @@ export default function AdminPage() {
   const [aiError, setAiError] = useState<string | null>(null)
   const [aiSaved, setAiSaved] = useState(false)
 
-  // Load existing AI settings on mount — per-provider keys
+  // Store Shipping Fee state
+  const [shippingFee, setShippingFee] = useState("150000")
+  const [shippingLoading, setShippingLoading] = useState(false)
+  const [shippingSaved, setShippingSaved] = useState(false)
+  const [shippingError, setShippingError] = useState<string | null>(null)
+
+  // Load existing AI and Store settings on mount
   useEffect(() => {
     async function loadConfig() {
       try {
-        const config = await getAiConfig()
-        const keys = await getAllProviderKeys()
+        const [config, keys, fee] = await Promise.all([
+          getAiConfig(),
+          getAllProviderKeys(),
+          getShippingFeeAction(),
+        ])
+
+        setShippingFee(fee.toString())
 
         if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon" | "gapgpt")
 
@@ -167,11 +179,34 @@ export default function AdminPage() {
           try { setAiModels(JSON.parse(storedModels)) } catch {}
         }
       } catch (err) {
-        console.error("Failed to load AI config", err)
+        console.error("Failed to load config", err)
       }
     }
     loadConfig()
   }, [])
+
+  const handleShippingSave = async () => {
+    const parsed = parseInt(shippingFee, 10)
+    if (isNaN(parsed) || parsed < 0) {
+      setShippingError(language === "fa" ? "لطفاً یک مبلغ معتبر به تومان وارد کنید." : "Please enter a valid amount in Tomans.")
+      return
+    }
+    setShippingLoading(true)
+    setShippingError(null)
+    try {
+      const res = await setShippingFeeAction(parsed)
+      if (!res.ok) {
+        setShippingError(res.error || "Failed to save")
+      } else {
+        setShippingSaved(true)
+        setTimeout(() => setShippingSaved(false), 3000)
+      }
+    } catch (err: any) {
+      setShippingError(err?.message || "Failed to save")
+    } finally {
+      setShippingLoading(false)
+    }
+  }
 
   const fetchAiModels = async (keyOverride?: string, providerOverride?: string) => {
     const key = keyOverride || aiApiKey.trim()
@@ -613,6 +648,68 @@ export default function AdminPage() {
                 <Key className="h-4 w-4" />
                 {t("admin_ai_save")}
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Marketplace Store & Shipping Fee Configuration */}
+        <div className="bg-white border border-emerald-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+          <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100">
+            <div className="h-9 w-9 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <Truck className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                {language === "fa" ? "تنظیمات فروشگاه و هزینه ارسال" : "Marketplace Store & Shipping Settings"}
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {language === "fa" ? "تنظیم هزینه ارسال سفارش‌های سبد خرید فروشگاه" : "Delivery fee charged on marketplace cart orders"}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-slate-700 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Truck className="h-4 w-4 text-emerald-600" />
+                  {language === "fa" ? "هزینه ارسال پیش‌فرض سفارشات (تومان)" : "Default Shipping Fee (Tomans)"}
+                </span>
+                {shippingFee && !isNaN(parseInt(shippingFee, 10)) && (
+                  <span className="text-xs font-bold text-emerald-700">
+                    {parseInt(shippingFee, 10).toLocaleString(language === "fa" ? "fa-IR" : "en-US")} {language === "fa" ? "تومان" : "Tomans"}
+                  </span>
+                )}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={shippingFee}
+                  onChange={(e) => { setShippingFee(e.target.value); setShippingSaved(false) }}
+                  placeholder="150000"
+                  className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                />
+                <button
+                  type="button"
+                  onClick={handleShippingSave}
+                  disabled={shippingLoading || !shippingFee.trim()}
+                  className="inline-flex items-center gap-1.5 h-10 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
+                >
+                  {shippingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  {language === "fa" ? "ذخیره هزینه ارسال" : "Save Shipping Fee"}
+                </button>
+              </div>
+              {shippingError && (
+                <p className="text-xs text-red-500 mt-1">{shippingError}</p>
+              )}
+              {shippingSaved && (
+                <p className="text-xs text-emerald-600 flex items-center gap-1 mt-1 animate-in fade-in">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  {language === "fa" ? "هزینه ارسال با موفقیت ذخیره و در سیستم اعمال شد." : "Shipping fee updated successfully."}
+                </p>
+              )}
             </div>
           </div>
         </div>
