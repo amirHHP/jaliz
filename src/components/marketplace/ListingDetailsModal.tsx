@@ -165,6 +165,23 @@ export function ListingDetailsModal({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length])
 
+  // Close modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showReportModal) {
+          setShowReportModal(false)
+        } else if (showBuyModal) {
+          setShowBuyModal(false)
+        } else {
+          onClose()
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [onClose, showReportModal, showBuyModal])
+
   // ----- Owner actions ------------------------------------------------------
   const handleToggleCompleted = async () => {
     if (!user) return
@@ -240,8 +257,24 @@ export function ListingDetailsModal({
   const ownerName = (isOwner ? user?.fullName : owner?.fullName) || "—"
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden my-4 sm:my-8 relative">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+      className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200"
+    >
+      <div className="w-full max-w-3xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden my-4 sm:my-8 relative">
+        {/* Floating prominent close button - always visible */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 end-4 z-50 h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-slate-900/80 hover:bg-slate-950 text-white backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          aria-label={t("cancel" as never)}
+          title={language === "fa" ? "بستن (Esc)" : "Close (Esc)"}
+        >
+          <X className="h-5 w-5 sm:h-6 sm:w-6 text-white stroke-[2.5]" />
+        </button>
+
         {/* Report Violation Overlay */}
         {showReportModal && (
           <div className="absolute inset-0 z-[60] bg-white/95 backdrop-blur-sm p-6 flex flex-col justify-center items-center">
@@ -366,17 +399,10 @@ export function ListingDetailsModal({
               />
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100">
+            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-100 dark:bg-slate-800">
               <ImageIcon className="h-12 w-12" />
             </div>
           )}
-          <button
-            onClick={onClose}
-            className="absolute top-3 end-3 h-9 w-9 rounded-full bg-white/95 shadow flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-white transition z-20"
-            aria-label={t("cancel" as never)}
-          >
-            <X className="h-5 w-5" />
-          </button>
 
           {listing.status === "completed" && (
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center z-20">
@@ -688,6 +714,22 @@ export function ListingDetailsModal({
               </div>
             </div>
           )}
+
+          {/* Bottom Close Button */}
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl transition"
+            >
+              <X className="h-4 w-4" />
+              <span>{language === "fa" ? "بستن این آگهی" : "Close"}</span>
+            </Button>
+            <span className="text-[11px] text-slate-400">
+              {language === "fa" ? "کلید Esc یا کلیک بیرون از کادر" : "Press Esc or click outside to close"}
+            </span>
+          </div>
         </div>
       </div>
 
