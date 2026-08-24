@@ -11,6 +11,7 @@ import {
   SUBSCRIPTION_PRICE_TOMAN,
   isSubscriptionActive,
 } from "@/lib/subscription"
+import { plantNeedsWater } from "@/lib/watering"
 
 interface Plant {
   id: string
@@ -88,19 +89,7 @@ export function WateringSchedule() {
     if (status === "authenticated" && subscribed) loadData()
   }, [status, loadData, subscribed])
 
-  const needsWater = (plant: Plant) => {
-    if (plant.nextWateringDate) {
-      return new Date(plant.nextWateringDate) <= new Date()
-    }
-    const daysAgo = Math.floor((Date.now() - new Date(plant.lastWatered).getTime()) / (1000 * 3600 * 24))
-    let threshold = 7
-    if (plant.locationType === "Outdoor") threshold -= 2
-    if (plant.potType === "Terracotta") threshold -= 1
-    if (plant.potType === "Plastic") threshold += 1
-    if (plant.lightExposure === "Full Sun") threshold -= 2
-    if (plant.lightExposure === "Low Light") threshold += 2
-    return daysAgo >= Math.max(1, threshold)
-  }
+  const needsWater = (plant: Plant) => plantNeedsWater(plant)
 
   const plantsToWater = plants.filter(needsWater)
   const plantsSkip = plants.filter((p) => !needsWater(p))

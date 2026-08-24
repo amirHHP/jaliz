@@ -9,6 +9,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
+import { ShareProfileDialog } from "@/components/ShareProfileDialog"
 import { LandingPage } from "@/components/LandingPage"
 import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction, createUserPlantAction } from "@/app/actions/plants"
 
@@ -208,12 +209,15 @@ export function MyPlantsDashboard() {
             <h1 className="text-3xl font-bold text-foreground tracking-tight">{t("my_plants")}</h1>
             <span className="text-sm font-medium text-muted bg-slate-100/80 dark:bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-border">{plants.length}</span>
           </div>
-          <Button asChild className="gap-2">
-            <Link href="/plants/new">
-              <Plus className="h-4 w-4" />
-              {t("add_plant")}
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareProfileDialog />
+            <Button asChild className="gap-2">
+              <Link href="/plants/new">
+                <Plus className="h-4 w-4" />
+                {t("add_plant")}
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Scanned Plant Draft Banner */}

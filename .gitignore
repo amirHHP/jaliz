@@ -61,6 +61,8 @@ dev.log
 /prisma/dev.db-journal
 /prisma/dev.db-shm
 /prisma/dev.db-wal
+# Prisma resolves file:./prisma/dev.db relative to the schema dir → prisma/prisma/
+/prisma/prisma/
 
 # Android TWA build artifacts
 /android/app/

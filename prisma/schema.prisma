@@ -25,6 +25,7 @@ model User {
   // Relations
   plants        UserPlant[]
   wateringLogs  WateringLog[]
+  plantShares   PlantShare[]
   listings      MarketplaceListing[]
   messagesSent  MarketplaceMessage[] @relation("MessagesSent")
   messagesRecv  MarketplaceMessage[] @relation("MessagesReceived")
@@ -98,6 +99,17 @@ model WateringLog {
   logDate  DateTime
 
   @@unique([userId, logDate])
+}
+
+/** Revocable share link so a friend can view/care for plants while the owner is away */
+model PlantShare {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  ownerId   String
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  isActive  Boolean   @default(true)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model MarketplaceListing {
