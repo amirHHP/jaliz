@@ -115,22 +115,6 @@ export function ShareProfileDialog() {
     }
   }
 
-  const handleNativeShare = async () => {
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share({
-          title: t("share_profile_title"),
-          text: t("share_profile_desc"),
-          url: shareUrl,
-        })
-      } catch {
-        /* user cancelled */
-      }
-    } else {
-      void handleCopy()
-    }
-  }
-
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -177,7 +161,7 @@ export function ShareProfileDialog() {
                     {shareUrl}
                   </span>
                 </div>
-                <Button size="sm" variant="secondary" className="gap-1.5 shrink-0" onClick={handleNativeShare}>
+                <Button size="sm" variant="secondary" className="gap-1.5 shrink-0" onClick={() => void handleCopy()}>
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   <span>{copied ? t("share_copied") : t("share_copy_link")}</span>
                 </Button>
