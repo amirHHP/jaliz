@@ -72,10 +72,19 @@ export function ShareProfileDialog() {
     setNotice(null)
     try {
       const days = expiry === "never" ? null : Number(expiry)
-      const info = await savePlantShareAction(days)
-      setShare(info)
+      const result = await savePlantShareAction(days)
+      if (result.ok) {
+        setShare(result.share)
+      } else {
+        setNotice(
+          result.reason === "db_schema"
+            ? t("share_error_db_schema")
+            : t("share_error_generic")
+        )
+      }
     } catch (e) {
       console.error(e)
+      setNotice(t("share_error_generic"))
     } finally {
       setBusy(false)
     }
@@ -152,6 +161,11 @@ export function ShareProfileDialog() {
           </div>
         ) : share ? (
           <div className="space-y-4">
+            {notice && (
+              <p className="rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-3 py-2 text-xs font-medium text-red-700 dark:text-red-300">
+                {notice}
+              </p>
+            )}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-muted">
                 {t("share_link_label")}

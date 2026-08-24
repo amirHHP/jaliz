@@ -1,6 +1,7 @@
 "use server";
 
 import { randomBytes } from "crypto";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/app/actions/auth";
 import type { Prisma } from "@prisma/client";
@@ -14,6 +15,10 @@ export type PlantShareInfo = {
   token: string;
   expiresAt: string | null;
 };
+
+export type SavePlantShareResult =
+  | { ok: true; share: PlantShareInfo }
+  | { ok: false; reason: "auth" | "invalid_expiry" | "db_schema" | "unknown" };
 
 export type SharedPlant = {
   id: string;
@@ -54,6 +59,18 @@ function isShareUsable(
   return true;
 }
 
+/**
+ * Prisma signals a missing/outdated database schema with P2021 (table not
+ * found) or P2022 (column not found) — surfaced to users as a friendly
+ * message instead of an opaque 500.
+ */
+function isDbSchemaError(e: unknown): boolean {
+  return (
+    e instanceof PrismaClientKnownRequestError &&
+    (e.code === "P2021" || e.code === "P2022")
+  );
+}
+
 /* ------------------------------ Owner actions ----------------------------- */
 
 /** Returns the current usable share link info, or null if none exists. */
@@ -61,10 +78,16 @@ export async function getMyPlantShareAction(): Promise<PlantShareInfo | null> {
   const userId = await getSessionUserId();
   if (!userId) return null;
 
-  const share = await prisma.plantShare.findFirst({
-    where: { ownerId: userId },
-    orderBy: { createdAt: "desc" },
-  });
+  let share;
+  try {
+    share = await prisma.plantShare.findFirst({
+      where: { ownerId: userId },
+      orderBy: { createdAt: "desc" },
+    });
+  } catch (e) {
+    console.error("getMyPlantShareAction failed:", e);
+    return null;
+  }
 
   if (!share || !isShareUsable(share)) return null;
   return { token: share.token, expiresAt: toIso(share.expiresAt) };
@@ -76,44 +99,62 @@ export async function getMyPlantShareAction(): Promise<PlantShareInfo | null> {
  */
 export async function savePlantShareAction(
   expiresInDays: number | null
-): Promise<PlantShareInfo | null> {
+): Promise<SavePlantShareResult> {
   const userId = await getSessionUserId();
-  if (!userId) return null;
+  if (!userId) return { ok: false, reason: "auth" };
 
   let expiresAt: Date | null = null;
   if (expiresInDays !== null && expiresInDays !== undefined) {
     const days = Number(expiresInDays);
     if (!Number.isFinite(days) || days < MIN_EXPIRY_DAYS || days > MAX_EXPIRY_DAYS) {
-      throw new Error("Invalid expiry");
+      return { ok: false, reason: "invalid_expiry" };
     }
     expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + Math.floor(days));
   }
 
-  await prisma.plantShare.deleteMany({ where: { ownerId: userId } });
-  const share = await prisma.plantShare.create({
-    data: { token: generateShareToken(), ownerId: userId, expiresAt },
-  });
+  try {
+    await prisma.plantShare.deleteMany({ where: { ownerId: userId } });
+    const share = await prisma.plantShare.create({
+      data: { token: generateShareToken(), ownerId: userId, expiresAt },
+    });
 
-  return { token: share.token, expiresAt: toIso(share.expiresAt) };
+    return { ok: true, share: { token: share.token, expiresAt: toIso(share.expiresAt) } };
+  } catch (e) {
+    console.error("savePlantShareAction failed:", e);
+    return isDbSchemaError(e)
+      ? { ok: false, reason: "db_schema" }
+      : { ok: false, reason: "unknown" };
+  }
 }
 
 export async function revokePlantShareAction(): Promise<boolean> {
   const userId = await getSessionUserId();
   if (!userId) return false;
 
-  const result = await prisma.plantShare.deleteMany({ where: { ownerId: userId } });
-  return result.count > 0;
+  try {
+    const result = await prisma.plantShare.deleteMany({ where: { ownerId: userId } });
+    return result.count > 0;
+  } catch (e) {
+    console.error("revokePlantShareAction failed:", e);
+    return false;
+  }
 }
 
 /* ------------------------------ Guest actions ------------------------------ */
 
 async function getValidShare(token: string) {
   if (!token || token.length < 10 || token.length > 128) return null;
-  const share = await prisma.plantShare.findUnique({
-    where: { token },
-    include: { owner: { select: { id: true, fullName: true, isActive: true } } },
-  });
+  let share;
+  try {
+    share = await prisma.plantShare.findUnique({
+      where: { token },
+      include: { owner: { select: { id: true, fullName: true, isActive: true } } },
+    });
+  } catch (e) {
+    console.error("getValidShare failed:", e);
+    return null;
+  }
   if (!share || !isShareUsable(share) || !share.owner.isActive) return null;
   return share;
 }
@@ -122,23 +163,29 @@ export async function getSharedProfileAction(token: string): Promise<SharedProfi
   const share = await getValidShare(token);
   if (!share) return null;
 
-  const plants = await prisma.userPlant.findMany({
-    where: { userId: share.ownerId },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      type: true,
-      locationType: true,
-      lightExposure: true,
-      potType: true,
-      health: true,
-      image: true,
-      lastWatered: true,
-      nextWateringDate: true,
-      wateringInterval: true,
-    },
-  });
+  let plants;
+  try {
+    plants = await prisma.userPlant.findMany({
+      where: { userId: share.ownerId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        locationType: true,
+        lightExposure: true,
+        potType: true,
+        health: true,
+        image: true,
+        lastWatered: true,
+        nextWateringDate: true,
+        wateringInterval: true,
+      },
+    });
+  } catch (e) {
+    console.error("getSharedProfileAction failed:", e);
+    return null;
+  }
 
   return {
     ownerName: share.owner.fullName?.trim() || "",
@@ -163,17 +210,23 @@ export async function getSharedProfileAction(token: string): Promise<SharedProfi
 async function requireOwnedPlant(token: string, plantId: string) {
   const share = await getValidShare(token);
   if (!share) return null;
-  const plant = await prisma.userPlant.findFirst({
-    where: { id: plantId, userId: share.ownerId },
-    select: {
-      id: true,
-      name: true,
-      health: true,
-      lastWatered: true,
-      nextWateringDate: true,
-      wateringInterval: true,
-    },
-  });
+  let plant;
+  try {
+    plant = await prisma.userPlant.findFirst({
+      where: { id: plantId, userId: share.ownerId },
+      select: {
+        id: true,
+        name: true,
+        health: true,
+        lastWatered: true,
+        nextWateringDate: true,
+        wateringInterval: true,
+      },
+    });
+  } catch (e) {
+    console.error("requireOwnedPlant failed:", e);
+    return null;
+  }
   if (!plant) return null;
   return { share, plant };
 }
@@ -213,19 +266,24 @@ export async function sharedMarkWateredAction(
   const nextWateringDate = new Date(now);
   nextWateringDate.setDate(nextWateringDate.getDate() + interval);
 
-  const updated = await prisma.userPlant.update({
-    where: { id: plantId },
-    data: { lastWatered: now, nextWateringDate },
-    select: {
-      id: true,
-      name: true,
-      health: true,
-      lastWatered: true,
-      nextWateringDate: true,
-      wateringInterval: true,
-    },
-  });
-  return plantToShared(updated);
+  try {
+    const updated = await prisma.userPlant.update({
+      where: { id: plantId },
+      data: { lastWatered: now, nextWateringDate },
+      select: {
+        id: true,
+        name: true,
+        health: true,
+        lastWatered: true,
+        nextWateringDate: true,
+        wateringInterval: true,
+      },
+    });
+    return plantToShared(updated);
+  } catch (e) {
+    console.error("sharedMarkWateredAction failed:", e);
+    return null;
+  }
 }
 
 /** Guest marks every thirsty plant watered and completes the owner's day log. */
@@ -233,35 +291,40 @@ export async function sharedMarkAllWateredAction(token: string): Promise<number>
   const share = await getValidShare(token);
   if (!share) return 0;
 
-  const plants = await prisma.userPlant.findMany({
-    where: { userId: share.ownerId },
-    select: { id: true, wateringInterval: true },
-  });
-  if (plants.length === 0) return 0;
-
-  const now = new Date();
-  let count = 0;
-  for (const plant of plants) {
-    const interval = plant.wateringInterval || 7;
-    const nextWateringDate = new Date(now);
-    nextWateringDate.setDate(nextWateringDate.getDate() + interval);
-    await prisma.userPlant.update({
-      where: { id: plant.id },
-      data: { lastWatered: now, nextWateringDate },
+  try {
+    const plants = await prisma.userPlant.findMany({
+      where: { userId: share.ownerId },
+      select: { id: true, wateringInterval: true },
     });
-    count++;
+    if (plants.length === 0) return 0;
+
+    const now = new Date();
+    let count = 0;
+    for (const plant of plants) {
+      const interval = plant.wateringInterval || 7;
+      const nextWateringDate = new Date(now);
+      nextWateringDate.setDate(nextWateringDate.getDate() + interval);
+      await prisma.userPlant.update({
+        where: { id: plant.id },
+        data: { lastWatered: now, nextWateringDate },
+      });
+      count++;
+    }
+
+    // Complete the owner's daily watering checklist for today
+    await prisma.wateringLog.upsert({
+      where: {
+        userId_logDate: { userId: share.ownerId, logDate: now },
+      },
+      update: {},
+      create: { userId: share.ownerId, logDate: now },
+    });
+
+    return count;
+  } catch (e) {
+    console.error("sharedMarkAllWateredAction failed:", e);
+    return 0;
   }
-
-  // Complete the owner's daily watering checklist for today
-  await prisma.wateringLog.upsert({
-    where: {
-      userId_logDate: { userId: share.ownerId, logDate: now },
-    },
-    update: {},
-    create: { userId: share.ownerId, logDate: now },
-  });
-
-  return count;
 }
 
 const HEALTH_VALUES = ["Excellent", "Good", "Needs Attention"];
@@ -298,13 +361,18 @@ export async function sharedAddStatusLogAction(
     ...(imageDb ? { image: imageDb } : {}),
   };
 
-  await prisma.$transaction([
-    prisma.userPlant.update({
-      where: { id: plantId },
-      data: { health: healthValue },
-    }),
-    prisma.plantStatusLog.create({ data }),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.userPlant.update({
+        where: { id: plantId },
+        data: { health: healthValue },
+      }),
+      prisma.plantStatusLog.create({ data }),
+    ]);
+  } catch (e) {
+    console.error("sharedAddStatusLogAction failed:", e);
+    return null;
+  }
 
   return { ok: true };
 }

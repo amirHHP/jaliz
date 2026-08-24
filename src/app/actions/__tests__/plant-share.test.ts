@@ -73,13 +73,22 @@ describe("plant share server actions", () => {
       expect(await getMyPlantShareAction()).toEqual({ token: "tok-1234567890", expiresAt: expires.toISOString() })
     })
 
+    it("getMyPlantShareAction returns null when the db query fails", async () => {
+      mockGetSessionUserId.mockResolvedValue("owner-1")
+      mockPrisma.plantShare.findFirst.mockRejectedValue(new Error("boom"))
+      const { getMyPlantShareAction } = await import("../plant-share")
+      expect(await getMyPlantShareAction()).toBeNull()
+    })
+
     it("savePlantShareAction rotates the link and applies expiry days", async () => {
       mockGetSessionUserId.mockResolvedValue("owner-1")
       mockPrisma.plantShare.create.mockResolvedValue(usableShare())
       const { savePlantShareAction } = await import("../plant-share")
       const result = await savePlantShareAction(14)
       expect(mockPrisma.plantShare.deleteMany).toHaveBeenCalledWith({ where: { ownerId: "owner-1" } })
-      expect(result?.token).toBeTruthy()
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.share.token).toBeTruthy()
       const data = mockPrisma.plantShare.create.mock.calls[0][0].data
       expect(data.token).toBeTruthy()
       expect(data.expiresAt).toBeInstanceOf(Date)
@@ -91,16 +100,38 @@ describe("plant share server actions", () => {
       mockGetSessionUserId.mockResolvedValue("owner-1")
       mockPrisma.plantShare.create.mockResolvedValue(usableShare())
       const { savePlantShareAction } = await import("../plant-share")
-      await savePlantShareAction(null)
+      const result = await savePlantShareAction(null)
       const data = mockPrisma.plantShare.create.mock.calls[0][0].data
       expect(data.expiresAt).toBeNull()
+      expect(result.ok).toBe(true)
     })
 
-    it("savePlantShareAction rejects out-of-range expiry", async () => {
+    it("savePlantShareAction rejects out-of-range expiry without touching the db", async () => {
       mockGetSessionUserId.mockResolvedValue("owner-1")
       const { savePlantShareAction } = await import("../plant-share")
-      await expect(savePlantShareAction(0)).rejects.toThrow("Invalid expiry")
-      await expect(savePlantShareAction(9999)).rejects.toThrow("Invalid expiry")
+      expect(await savePlantShareAction(0)).toEqual({ ok: false, reason: "invalid_expiry" })
+      expect(await savePlantShareAction(9999)).toEqual({ ok: false, reason: "invalid_expiry" })
+      expect(mockPrisma.plantShare.deleteMany).not.toHaveBeenCalled()
+    })
+
+    it("savePlantShareAction maps a missing table to a db_schema failure", async () => {
+      mockGetSessionUserId.mockResolvedValue("owner-1")
+      const { PrismaClientKnownRequestError } = await import("@prisma/client/runtime/library")
+      mockPrisma.plantShare.deleteMany.mockRejectedValue(
+        new PrismaClientKnownRequestError("table does not exist", {
+          code: "P2021",
+          clientVersion: "test",
+        })
+      )
+      const { savePlantShareAction } = await import("../plant-share")
+      expect(await savePlantShareAction(14)).toEqual({ ok: false, reason: "db_schema" })
+    })
+
+    it("savePlantShareAction maps unexpected db failures to unknown", async () => {
+      mockGetSessionUserId.mockResolvedValue("owner-1")
+      mockPrisma.plantShare.deleteMany.mockRejectedValue(new Error("connection refused"))
+      const { savePlantShareAction } = await import("../plant-share")
+      expect(await savePlantShareAction(14)).toEqual({ ok: false, reason: "unknown" })
     })
 
     it("revokePlantShareAction reports whether anything was removed", async () => {
