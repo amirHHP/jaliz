@@ -13,7 +13,7 @@ export default function PrintStandPage() {
   
   const [storeName, setStoreName] = useState("سبزین")
   // SSR-friendly default so the QR is in the first paint; refine on mount.
-  const [origin, setOrigin] = useState("https://jaliz.app")
+  const [origin, setOrigin] = useState("https://jaliz.noxte.ir")
   const isRtl = language === "fa"
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function PrintStandPage() {
                   : "Watering schedule, plant health diagnosis, and hyper-local tips. Keep your plants thriving with Jaliz."}
               </p>
               <div className="border border-emerald-200/60 bg-white/80 py-1.5 px-3 rounded-full text-[10px] font-bold text-emerald-800 uppercase tracking-wider shadow-sm">
-                jaliz.app
+                jaliz.noxte.ir
               </div>
             </div>
           </div>
@@ -227,7 +227,7 @@ export default function PrintStandPage() {
             {/* Bottom branding footer */}
             <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider">
               <span>{isRtl ? "جالیز، همراه باصفای گیاهان شما" : "Jaliz, your plant care companion"}</span>
-              <span>www.jaliz.app</span>
+              <span>jaliz.noxte.ir</span>
             </div>
 
           </div>
