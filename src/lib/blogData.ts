@@ -1,27 +1,15 @@
 import { newBlogPosts } from "./blogPostsNew"
+import { applyBlogSeo, type BlogPost, type BlogPostInput } from "./blogTopics"
+import { seoBlogPosts } from "./blogPostsSeo"
 
-export interface BlogPost {
-  slug: string;
-  lang: "fa" | "en";
-  title: string;
-  description: string;
-  category: string;
-  categoryEn: string; // Internal mapping for filters
-  publishedAt: string;
-  readTime: string;
-  author: string;
-  content: string;
-  icon: string;
-  gradient: string;
-  keywords: string[];
-}
+export type { BlogPost, BlogCluster, BlogFaq, BlogPostInput } from "./blogTopics"
 
-const existingBlogPosts: BlogPost[] = [
+const existingBlogPosts: BlogPostInput[] = [
   {
     slug: "راهنمای-آبیاری-گیاهان-آپارتمانی",
     lang: "fa",
-    title: "راهنمای جامع آبیاری گیاهان آپارتمانی: چطور از آبیاری بیش از حد جلوگیری کنیم؟",
-    description: "یکی از اصلی‌ترین عوامل آسیب‌دیدگی گیاهان، اشتباه در میزان و زمان آبیاری است. در این مطلب ساده یاد می‌گیرید که چطور نیاز گیاه را تشخیص دهید.",
+    title: "راهنمای آبیاری گیاهان آپارتمانی",
+    description: "آبیاری گیاهان آپارتمانی زمان ثابت ندارد. با آزمون انگشت، وزن گلدان و زهکش بفهمید گیاه تشنه است یا ریشه در حال خفگی است و از پوسیدگی جلوگیری کنید.",
     category: "نگهداری",
     categoryEn: "care",
     publishedAt: "۱ تیر ۱۴۰۵",
@@ -66,13 +54,28 @@ const existingBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         اگر احساس کردید ریشه‌ها در حال خفه شدن هستند، بلافاصله آبیاری را متوقف کنید. گلدان را به محل پرنورتر با تهویه هوای بهتر منتقل کنید. مطمئن شوید سوراخ‌های زهکشی ته گلدان باز هستند و آب اضافی در زیرگلدانی باقی نمی‌ماند. در موارد شدیدتر، باید گیاه را از گلدان خارج کرده، ریشه‌های سیاه و پوسیده را هرس کنید و آن را در خاک جدید و گلدانی با زهکشی عالی بکارید.
       </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">آبیاری در فصل‌ها و فضاهای مختلف</h2>
+      <p class="text-slate-600 mb-4">
+        تابستان کنار پنجره جنوبی خاک را سریع خشک می‌کند؛ زمستان و گوشه کم‌نور برعکس عمل می‌کنند. برنامه فصل سرد را با <a href="/blog/مراقبت-زمستانی-گیاهان-آپارتمانی">مراقبت زمستانی</a> هماهنگ کنید. اگر چند روز خانه نیستید، به‌جای غرقاب کردن گلدان قبل از سفر، روش‌های کنترل‌شده را در <a href="/blog/نگهداری-گیاه-در-مسافرت">آبیاری در مسافرت</a> ببینید.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">جنس گلدان سرعت خشک شدن را عوض می‌کند</h2>
+      <p class="text-slate-600 mb-4">
+        سفال آب را از دیواره تبخیر می‌کند و برای گیاهان گوشتی مناسب‌تر است. پلاستیک رطوبت را نگه می‌دارد. انتخاب ظرف را با <a href="/blog/انتخاب-گلدان-سفالی-یا-پلاستیکی">گلدان سفالی یا پلاستیکی</a> و بافت خاک را با <a href="/blog/انتخاب-خاک-مناسب-گیاهان-آپارتمانی">خاک مناسب</a> جور کنید، وگرنه تقویم آبیاری بی‌معنا می‌شود.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">کی زردی برگ تقصیر آب است؟</h2>
+      <p class="text-slate-600 mb-4">
+        زردی نرم برگ پایین با خاک خیس معمولاً آبیاری زیاد است. نوک خشک کاغذی داستان دیگری است. برای جدا کردن علت‌ها <a href="/blog/علت-زرد-شدن-برگ-گیاهان">زرد شدن برگ</a> و <a href="/blog/علت-قهوه-ای-شدن-نوک-برگ">نوک قهوه‌ای</a> را کنار این راهنما بخوانید. در جالیز تاریخ آبیاری را ثبت کنید تا حدس نزنید.
+      </p>
     `
   },
   {
     slug: "watering-houseplants-guide",
     lang: "en",
-    title: "Houseplant Watering Guide: How to Prevent Overwatering",
-    description: "Overwatering is the number one cause of houseplant death. Learn how to tell when your plants are actually thirsty in this simple guide.",
+    title: "Houseplant Watering Guide",
+    description: "Houseplant watering has no weekly formula. Use the finger test, pot weight, and drainage to tell thirst from root rot and stop overwatering before it kills the plant.",
     category: "Care",
     categoryEn: "care",
     publishedAt: "June 22, 2026",
@@ -116,6 +119,21 @@ const existingBlogPosts: BlogPost[] = [
       <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Three Steps to Rescue an Overwatered Plant</h2>
       <p class="text-slate-600 mb-4">
         If you suspect roots are suffocating, stop watering immediately. Move the pot to a brighter spot with better ventilation. Ensure the drainage holes are clear and that excess water is emptied from the saucer. In severe cases, gently remove the plant, prune away mushy black roots, and repot in fresh, well-draining soil.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Seasons and Rooms Change the Schedule</h2>
+      <p class="text-slate-600 mb-4">
+        A south window in summer dries mix fast; winter and a dim corner do the opposite. Pair this with <a href="/blog/winter-houseplant-care">winter care</a>. If you leave town, do not flood the pot the night before—use the methods in <a href="/blog/watering-plants-while-away">watering plants while away</a>.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Pot Material Changes Drying Time</h2>
+      <p class="text-slate-600 mb-4">
+        Terracotta evaporates through the walls; plastic holds moisture. Match the container in <a href="/blog/terracotta-vs-plastic-pots">terracotta vs plastic pots</a> and the mix in the <a href="/blog/choosing-houseplant-soil">soil guide</a>, or any calendar is meaningless.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">When Yellowing Is a Water Problem</h2>
+      <p class="text-slate-600 mb-4">
+        Soft yellow lower leaves on wet soil usually mean overwatering. Crispy tips are a different story. Split the causes with <a href="/blog/why-plant-leaves-turn-yellow">yellow leaves</a> and <a href="/blog/brown-leaf-tips-guide">brown tips</a>. Log watering dates in Jaliz instead of guessing.
       </p>
     `
   },
@@ -533,8 +551,8 @@ const existingBlogPosts: BlogPost[] = [
   {
     slug: "علت-زرد-شدن-برگ-گیاهان",
     lang: "fa",
-    title: "راهنمای کاربردی عیب‌یابی و درمان زرد شدن برگ گیاهان آپارتمانی",
-    description: "زرد شدن برگ گیاه نشانه چیست؟ در این راهنمای کاربردی علل اصلی زردی برگ‌ها شامل آبیاری نامناسب، نور، آفات و کمبود مواد مغذی را به سرعت تشخیص داده و درمان کنید.",
+    title: "علت زرد شدن برگ گیاهان آپارتمانی",
+    description: "علت زرد شدن برگ گیاهان اغلب آبیاری، نور، کمبود آهن یا آفت است. با الگوی برگ پایین یا جوان علت را جدا کنید و درمان را بدون حدس زدن شروع کنید.",
     category: "نگهداری",
     categoryEn: "care",
     publishedAt: "۲۶ ژوئن ۲۰۲۶",
@@ -592,12 +610,22 @@ const existingBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         اگر زردی فقط به صورت تک برگ در پایین‌ترین قسمت گیاه رخ می‌دهد و برگ‌های بالای آن شاداب و در حال رشد هستند، این یک روند طبیعی پیری بیولوژیک است و جای نگرانی ندارد.
       </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">نوک قهوه‌ای را با زردی قاطی نکنید</h2>
+      <p class="text-slate-600 mb-4">
+        نوک خشک کاغذی معمولاً رطوبت کم، نمک کود یا کلر آب است، نه همان مکانیزم زردی نرم. راهنمای جدا: <a href="/blog/علت-قهوه-ای-شدن-نوک-برگ">نوک برگ قهوه‌ای</a>. رطوبت هوا را در <a href="/blog/راهنمای-رطوبت-گیاهان-آپارتمانی">رطوبت گیاهان آپارتمانی</a> تنظیم کنید.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">کود بعد از زردی؛ کی بله و کی نه</h2>
+      <p class="text-slate-600 mb-4">
+        اگر ریشه پوسیده است کود وضعیت را بدتر می‌کند. اول زهکش و آبیاری را درست کنید، بعد در فصل رشد از برنامه <a href="/blog/راهنمای-کوددهی-گیاهان-آپارتمانی">کوددهی</a> استفاده کنید. گونه را در جالیز ثبت کنید تا یادآور با فصل هماهنگ شود.
+      </p>
     `
   },
   {
     slug: "why-plant-leaves-turn-yellow",
     lang: "en",
-    title: "A Practical Guide to Diagnosing and Treating Yellow Houseplant Leaves",
+    title: "Yellow Houseplant Leaves",
     description: "Yellow leaves are a warning sign. Learn how to quickly diagnose the root cause—whether it is watering issues, light, nutrient deficiencies, or pests—and save your plant.",
     category: "Care",
     categoryEn: "care",
@@ -656,99 +684,119 @@ const existingBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         If only one or two oldest leaves at the very bottom turn yellow and drop while new growth at the top is healthy, this is natural aging. No treatment is needed.
       </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Do Not Confuse Brown Tips With Yellowing</h2>
+      <p class="text-slate-600 mb-4">
+        Dry papery tips are usually low humidity, fertilizer salts, or chlorine—not the same as soft yellowing. See <a href="/blog/brown-leaf-tips-guide">brown leaf tips</a> and the <a href="/blog/houseplant-humidity-guide">humidity guide</a>.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Fertilizer After Yellowing</h2>
+      <p class="text-slate-600 mb-4">
+        If roots are rotting, feed makes it worse. Fix drainage and watering first, then follow the <a href="/blog/houseplant-fertilizing-guide">fertilizing guide</a> in the growing season. Log the plant in Jaliz so reminders match the season.
+      </p>
     `
   },
   {
-    slug: "مقاوم-ترین-گیاهان-آپارتمانی",
+    slug: "گیاهان-آپارتمانی-نور-کم",
     lang: "fa",
-    title: "معرفی مقاوم‌ترین و جان‌سخت‌ترین گیاهان آپارتمانی دنیا",
-    description: "اگر نگران خراب شدن گیاهان خود هستید، با این ۵ گیاه فوق‌العاده مقاوم، براق و زیبا آشنا شوید که تقریباً در هر شرایطی زنده می‌مانند.",
+    title: "گیاهان آپارتمانی نور کم برای راهرو و اداره",
+    description: "پنجره شمالی، راهرو یا میز کار کم‌نور دارید؟ این راهنما گیاهان آپارتمانی مناسب نور کم را معرفی می‌کند و می‌گوید در سایه چقدر آب بدهید تا ریشه نپوسد.",
     category: "معرفی گیاهان",
     categoryEn: "plants",
     publishedAt: "۲۶ ژوئن ۲۰۲۶",
-    readTime: "۵ دقیقه",
+    readTime: "۸ دقیقه",
     author: "علی سبزواری",
     icon: "Sprout",
     gradient: "from-emerald-400 to-green-600",
-    keywords: ["مقاوم ترین گیاهان آپارتمانی", "زاموفیلیا", "سانسوریا", "گیاهان جان سخت", "جالیز"],
+    keywords: ["گیاهان آپارتمانی نور کم", "گیاه مناسب اداره", "پنجره شمالی", "زامیفولیا نور کم", "جالیز"],
     content: `
       <p class="lead text-lg text-slate-600 mb-6 font-medium">
-        در این مقاله می‌خواهیم مقاوم‌ترین و بی‌دردسرترین گیاهان آپارتمانی را به شما معرفی کنیم که حتی در شرایط نور کم یا فراموشی در آبیاری، باز هم زنده و سرسبز می‌مانند.
+        گیاهان آپارتمانی نور کم برای راهرو، اتاق شمالی و محیط اداری انتخاب می‌شوند، نه برای رقابت با فهرست تازه‌کارها. هدف این مطلب این است که در سایه واقعی زنده بمانند و در عین حال از آبیاری زیاد که در نور کم خطرناک‌تر است نجات پیدا کنند.
       </p>
-      
-      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">راز جان‌سخت بودن این گیاهان در چیست؟</h2>
-      <p class="text-slate-600 mb-4">
-        طبیعت به این گیاهان ابزارهای ویژه‌ای داده است تا در سخت‌ترین شرایط اقلیمی زنده بمانند:
-      </p>
-      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
-        <li><strong>ذخیره آب هوشمند:</strong> گیاهانی مثل سانسوریا منافذ برگ‌های خود را در طول روز کاملاً می‌بندند تا آب تبخیر نشود و در عوض شب‌ها که هوا خنک است نفس می‌کشند.</li>
-        <li><strong>غده‌های زیرزمینی:</strong> گیاهانی مثل زاموفیلیا غده‌هایی شبیه سیب‌زمینی (ریزوم) در زیر خاک دارند که آب را ذخیره کرده و هفته‌ها بی‌نیازی از آب را تضمین می‌کنند.</li>
-        <li><strong>لایه محافظ مومی:</strong> برگ‌های ضخیم و براق گیاهانی مثل برگ عبایی دارای لایه‌ای مومی هستند که جلوی هدر رفتن رطوبت را می‌گیرد.</li>
-      </ul>
 
-      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">معرفی ۵ قهرمان جان‌سخت آپارتمانی</h2>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">نور کم یعنی چه؟</h2>
+      <p class="text-slate-600 mb-4">
+        نور کم یعنی گیاه سایه مشخصی روی زمین نمی‌اندازد: فاصله چند متری از پنجره، پرده ضخیم، یا پنجره شمالی. اتاق بدون هیچ پنجره‌ای «نور کم» نیست؛ تاریکی است و حتی سانسوریا هم فقط مدتی دوام می‌آورد. جزئیات جهت پنجره را در <a href="/blog/راهنمای-نور-گیاهان-آپارتمانی">راهنمای نور گیاهان آپارتمانی</a> بخوانید.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">چرا در سایه آبیاری را کم کنیم؟</h2>
+      <p class="text-slate-600 mb-4">
+        فتوسنتز کند می‌شود، گیاه آب کمتری مصرف می‌کند و خاک دیرتر خشک می‌شود. همان برنامه‌ای که کنار پنجره جنوبی جواب می‌دهد، در راهرو ریشه را خفه می‌کند. قبل از آب، خاک را لمس کنید؛ روش‌ها در <a href="/blog/راهنمای-آبیاری-گیاهان-آپارتمانی">راهنمای آبیاری</a> آمده است.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">گیاهان مناسب راهرو و میز کار</h2>
       <ol class="list-decimal list-inside space-y-3 text-slate-600 mb-6 ps-4">
-        <li><strong>سانسوریا (Sansevieria):</strong> قهرمان شماره یک مقاومت و تصفیه هوا. این گیاه در تاریک‌ترین گوشه‌های خانه زنده می‌ماند و طبق تایید ناسا سموم هوا را فیلتر می‌کند. تنها راه کشتن آن آبیاری بیش از حد است.</li>
-        <li><strong>زاموفیلیا (ZZ Plant):</strong> سنگ صبور آپارتمان‌ها. با برگ‌های براق و چرمی که شبیه گیاهان مصنوعی است. در محیط‌های اداری تاریک رشد می‌کند و به خشکی طولانی خاک مقاوم است.</li>
-        <li><strong>پتوس (Pothos):</strong> رونده محبوب و بی‌ادعا. در هر نوری رشد می‌کند و ریشه‌های هوایی آن رطوبت را جذب می‌کنند.</li>
-        <li><strong>برگ عبایی (Cast Iron Plant):</strong> معروف به گیاه چدنی. با خاکی ضعیف، تاریکی زیاد، گرد و غبار و نوسانات دما کنار می‌آید. رشد کندی دارد و نیاز به کود کمی دارد.</li>
-        <li><strong>اسپاتی فیلوم (Peace Lily):</strong> گل صلح و شاخص زنده تشنگی. برعکس بقیه، خاک مرطوب را دوست دارد. وقتی تشنه می‌شود شل شده و می‌افتد و بلافاصله پس از آبیاری دوباره سرپا می‌شود.</li>
+        <li><strong>زامیفولیا:</strong> برگ براق و ریزوم ذخیره‌کننده آب. برای دفتر با نور مهتابی ملایم یکی از پایدارترین گزینه‌هاست. نگهداری دقیق‌تر در <a href="/blog/نگهداری-زامیفولیا">نگهداری زامیفولیا</a>.</li>
+        <li><strong>سانسوریا:</strong> برگ ایستاده، مناسب گوشه دیوار. رشد در سایه کند است اما شکل خود را حفظ می‌کند. جزئیات در <a href="/blog/نگهداری-سانسوریا">نگهداری سانسوریا</a>.</li>
+        <li><strong>برگ عبایی (Aspidistra):</strong> معروف به تحمل گرد و غبار و نوسان دمای راهرو. رشد خیلی کند است؛ انتظار جنگل نداشته باشید.</li>
+        <li><strong>پتوس سبز تیره (نه ابلق خیلی روشن):</strong> رونده روی قفسه کتاب. ابلق طلایی در نور کم سبز می‌شود. اگر می‌خواهید ابلق بماند، نور بیشتری بدهید؛ راهنمای گونه در <a href="/blog/نگهداری-پتوس">نگهداری پتوس</a>.</li>
+        <li><strong>آگلونما سبز:</strong> برای میز کار با نور غیرمستقیم ضعیف مناسب‌تر از گیاهان برگ نازک ابلق است. از کولر مستقیم دورش کنید.</li>
       </ol>
 
-      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">۳ قانون طلایی برای نگهداری از گیاهان جان‌سخت</h2>
-      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
-        <li><strong>قانون انگشت در خاک:</strong> قبل از آبیاری انگشت خود را تا بند دوم (۵ سانتی‌متر) در خاک فرو کنید. اگر کاملاً خشک بود آب بدهید.</li>
-        <li><strong>زهکشی عالی:</strong> گلدان حتماً باید سوراخ تخلیه آب داشته باشد و خاک سبک باشد تا ریشه‌ها خفه نشوند.</li>
-        <li><strong>غبارزدایی برگ‌ها:</strong> هر چند هفته یک بار با دستمال مرطوب برگ‌ها را تمیز کنید تا تنفس و فتوسنتز گیاه بهتر انجام شود.</li>
-      </ul>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">چه گیاهانی را به سایه نبرید؟</h2>
+      <p class="text-slate-600 mb-4">
+        مونسترا برای سوراخ شدن برگ، فیکوس لیراتا، ساکولنت آفتاب‌دوست و بیشتر گیاهان گل‌دار به نور روشن نیاز دارند. گذاشتن آن‌ها در راهرو فقط ساقه دراز و ریزش برگ می‌دهد. اگر بالکن دارید، سراغ <a href="/blog/گیاهان-مناسب-بالکن">گیاهان مناسب بالکن</a> بروید نه این فهرست.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">نور مصنوعی در اداره</h2>
+      <p class="text-slate-600 mb-4">
+        مهتابی اداری معمولاً برای زنده ماندن زامیفولیا کافی است اما برای رشد پتوس ابلق کافی نیست. اگر گیاه را روی میز دور از پنجره می‌گذارید، هفته‌ای چند ساعت آن را به نزدیک‌ترین پنجره جابه‌جا کنید یا از لامپ رشد کوچک استفاده کنید.
+      </p>
     `
   },
   {
-    slug: "most-resilient-houseplants",
+    slug: "low-light-houseplants",
     lang: "en",
-    title: "The Most Resilient and Hard-to-Kill Houseplants for Beginners",
-    description: "New to gardening or busy with work? Meet these 5 incredibly hardy, beautiful houseplants that survive almost any indoor environment with minimal care.",
+    title: "Low Light Houseplants for Hallways and Offices",
+    description: "North window, hallway, or a dim desk? This guide lists houseplants that tolerate low light and explains why you must water less in the shade so roots do not rot.",
     category: "Plants",
     categoryEn: "plants",
     publishedAt: "June 26, 2026",
-    readTime: "5 min",
+    readTime: "8 min",
     author: "Alex Green",
     icon: "Sprout",
     gradient: "from-emerald-400 to-green-600",
-    keywords: ["unkillable houseplants", "hard to kill plants", "snake plant care", "zz plant care", "jaliz"],
+    keywords: ["low light houseplants", "office plants", "north window plants", "zz plant low light", "jaliz"],
     content: `
       <p class="lead text-lg text-slate-600 mb-6 font-medium">
-        In this guide, we introduce the most resilient and low-maintenance houseplants that stay green and alive even in low light or when you forget to water them.
+        Low light houseplants belong in hallways, north rooms, and offices. This is not another beginner “unkillable” list. The goal is survival in real shade—and avoiding overwatering, which is deadlier when light is weak.
       </p>
-      
-      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">What Makes These Plants So Resilient?</h2>
-      <p class="text-slate-600 mb-4">
-        Nature has provided these plants with specific tools to survive extreme conditions:
-      </p>
-      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
-        <li><strong>Smart Water Retention:</strong> Plants like the Snake Plant close their pores during the day to prevent evaporation, breathing only at night when it's cooler.</li>
-        <li><strong>Underground Bulbs:</strong> Plants like the ZZ Plant have underground potato-like tubers (rhizomes) that store water, helping them go weeks without watering.</li>
-        <li><strong>Protective Waxy Layer:</strong> Waxy, thick leaves on plants like the Cast Iron Plant protect them from drying out in dry indoor air.</li>
-      </ul>
 
-      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Our Top 5 Unkillable Houseplant Heroes</h2>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">What Low Light Actually Means</h2>
+      <p class="text-slate-600 mb-4">
+        Low light means the plant barely casts a shadow: several meters from a window, a heavy curtain, or a north exposure. A windowless room is darkness, not low light; even a snake plant only persists there. Window direction is covered in the <a href="/blog/houseplant-light-guide">houseplant light guide</a>.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Water Less in the Shade</h2>
+      <p class="text-slate-600 mb-4">
+        Photosynthesis slows, plants drink less, and mix stays wet longer. A south-window schedule will rot roots in a corridor. Check the soil first; methods are in the <a href="/blog/watering-houseplants-guide">watering guide</a>.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Plants That Suit Hallways and Desks</h2>
       <ol class="list-decimal list-inside space-y-3 text-slate-600 mb-6 ps-4">
-        <li><strong>Snake Plant (Sansevieria):</strong> The ultimate survivor. Thrives in dark corners and is scientifically proven by NASA to filter indoor air toxins. Only overwatering can kill it.</li>
-        <li><strong>ZZ Plant (Zamioculcas Zamiifolia):</strong> The absolute champion of dark corridors. Features shiny, waxy leaves and handles long dry periods easily.</li>
-        <li><strong>Pothos:</strong> The beloved vining plant. Adapts to almost any light level, and its aerial roots absorb ambient humidity.</li>
-        <li><strong>Cast Iron Plant (Aspidistra Elatior):</strong> True to its name, it handles poor soil, low light, dust, and temperature drops. Requires very little fertilizer.</li>
-        <li><strong>Peace Lily (Spathiphyllum):</strong> The dramatic communicator. Unlike the others, it prefers moist soil. When thirsty, it visibly droops, bouncing back to life within hours of watering.</li>
+        <li><strong>ZZ plant:</strong> Waxy leaves and water-storing rhizomes. One of the steadiest choices under mild office fluorescents. Full care: <a href="/blog/zz-plant-care">ZZ plant care</a>.</li>
+        <li><strong>Snake plant:</strong> Upright leaves for a wall corner. Growth is slow in shade but the shape holds. See <a href="/blog/snake-plant-care">snake plant care</a>.</li>
+        <li><strong>Cast iron plant (Aspidistra):</strong> Tolerates dust and hallway temperature swings. Expect very slow growth.</li>
+        <li><strong>Dark-green pothos (not high-contrast variegation):</strong> Trails on a bookcase. Golden pothos reverts to green in dim rooms. Keep variegation with more light; species notes in <a href="/blog/pothos-care">pothos care</a>.</li>
+        <li><strong>Green aglaonema:</strong> Better on a weakly lit desk than thin variegated foliage. Keep it off the air-conditioner blast.</li>
       </ol>
 
-      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">3 Golden Rules for Easy Care</h2>
-      <ul class="list-disc list-inside space-y-2 text-slate-600 mb-6 ps-4">
-        <li><strong>The Soil Finger Test:</strong> Insert your finger 2 inches deep. Water only if the soil is completely dry.</li>
-        <li><strong>Good Drainage:</strong> Always use pots with drainage holes and light, aerated soil to prevent root suffocation.</li>
-        <li><strong>Dust the Leaves:</strong> Wipe the leaves with a damp cloth every few weeks so the plant can breathe and photosynthesize properly.</li>
-      </ul>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">What Not to Banish to the Hallway</h2>
+      <p class="text-slate-600 mb-4">
+        Monstera needs brightness to fenestrate; fiddle-leaf fig, sun-loving succulents, and most bloomers stretch and drop leaves in a corridor. If you have outdoor light, use the <a href="/blog/balcony-plants-iran">balcony plants</a> guide instead of this list.
+      </p>
+
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Office Artificial Light</h2>
+      <p class="text-slate-600 mb-4">
+        Typical office fluorescents can keep a ZZ plant alive but will not hold pothos variegation. If the desk is far from a window, rotate the plant to the nearest daylight a few hours a week or add a small grow lamp.
+      </p>
     `
   }
 ];
 
-export const blogPosts: BlogPost[] = [...newBlogPosts, ...existingBlogPosts]
+export const blogPosts: BlogPost[] = [
+  ...seoBlogPosts,
+  ...newBlogPosts,
+  ...existingBlogPosts,
+].map(applyBlogSeo)
 

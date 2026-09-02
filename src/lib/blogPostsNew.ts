@@ -1,6 +1,6 @@
-import type { BlogPost } from "./blogData"
+import type { BlogPostInput } from "./blogTopics"
 
-export const newBlogPosts: BlogPost[] = [
+export const newBlogPosts: BlogPostInput[] = [
   {
     slug: "راهنمای-رطوبت-گیاهان-آپارتمانی",
     lang: "fa",
@@ -40,6 +40,9 @@ export const newBlogPosts: BlogPost[] = [
       <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">نشانه‌های رطوبت بیش از حد</h2>
       <p class="text-slate-600 mb-4">
         هوای خیلی مرطوب همراه با تهویه ضعیف، زمینه رشد کپک روی خاک و بیماری‌های قارچی برگ را فراهم می‌کند. اگر روی خاک کپک سفید دیدید یا برگ‌ها لکه‌های نرم قهوه‌ای گرفتند، فاصله گلدان‌ها را بیشتر کنید و جریان هوا را بهبود دهید.
+      </p>
+      <p class="text-slate-600 mb-4">
+        کپک سطح خاک موضوع جداگانه است؛ آن را با <a href="/blog/قارچ-سفید-روی-خاک-گلدان">قارچ سفید روی خاک گلدان</a> درمان کنید، نه با غبارپاشی بیشتر. نوک خشک برگ‌های نخل و دراسنا را در <a href="/blog/علت-قهوه-ای-شدن-نوک-برگ">نوک قهوه‌ای برگ</a> ببینید.
       </p>
     `
   },
@@ -82,6 +85,9 @@ export const newBlogPosts: BlogPost[] = [
       <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Signs of Too Much Humidity</h2>
       <p class="text-slate-600 mb-4">
         Very humid air plus poor airflow encourages mold on soil and fungal leaf spots. If you see white mold or soft brown patches, space plants farther apart and improve ventilation.
+      </p>
+      <p class="text-slate-600 mb-4">
+        Surface mold is a separate problem; treat it with the <a href="/blog/white-mold-on-potting-soil">white mold on potting soil</a> guide, not with more misting. Crispy palm and dracaena tips belong in <a href="/blog/brown-leaf-tips-guide">brown leaf tips</a>.
       </p>
     `
   },
@@ -132,6 +138,10 @@ export const newBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         اگر این نشانه‌ها را دیدید، کود را قطع کنید و خاک را چند بار با آب فراوان آبشویی کنید تا نمک‌ها از زهکش خارج شوند.
       </p>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">کود جایگزین خاک تازه نیست</h2>
+      <p class="text-slate-600 mb-4">
+        اگر مخلوط گلدان فشرده و فقیر شده، اول <a href="/blog/راهنمای-تعویض-گلدان-و-خاک">تعویض گلدان</a> و <a href="/blog/انتخاب-خاک-مناسب-گیاهان-آپارتمانی">خاک سبک</a> را درست کنید. کود روی ریشه خفه فقط می‌سوزاند. در جالیز فصل رشد را با یادآور آبیاری هم‌زمان ببینید تا در زمستان تغذیه نکنید.
+      </p>
     `
   },
   {
@@ -181,6 +191,10 @@ export const newBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         Stop feeding and flush the pot thoroughly so excess salts drain out.
       </p>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Fertilizer Is Not Fresh Soil</h2>
+      <p class="text-slate-600 mb-4">
+        If the mix is compacted and spent, <a href="/blog/how-to-repot-plants">repot</a> and fix the <a href="/blog/choosing-houseplant-soil">soil mix</a> first. Feed on suffocating roots only burns them. In Jaliz, keep feeding aligned with watering reminders so you do not fertilize in winter.
+      </p>
     `
   },
   {
@@ -223,6 +237,10 @@ export const newBlogPosts: BlogPost[] = [
       <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">اگر پنجره کم دارید</h2>
       <p class="text-slate-600 mb-4">
         لامپ رشد با نور سفید کامل (حدود ۶۵۰۰ کلوین) را ۱۵ تا ۳۰ سانتی‌متر بالای گیاه، روزانه ۱۰ تا ۱۲ ساعت روشن کنید. لامپ معمولی اتاق جایگزین نور رشد نیست. گیاه را هر چند هفته کمی بچرخانید تا یک‌طرفه رشد نکند.
+      </p>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">نور کم برای انتخاب گونه، نه برای همه</h2>
+      <p class="text-slate-600 mb-4">
+        اگر فقط راهرو دارید، به‌جای زور زدن به مونسترا سراغ <a href="/blog/گیاهان-آپارتمانی-نور-کم">گیاهان آپارتمانی نور کم</a> بروید. بالکن آفتاب‌گیر داستان دیگری است: <a href="/blog/گیاهان-مناسب-بالکن">گیاه مناسب بالکن</a>.
       </p>
     `
   },
@@ -267,6 +285,10 @@ export const newBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         Use a full-spectrum grow light (around 6500K) 15–30 cm above the plant for 10–12 hours a day. Regular room bulbs are not a substitute. Rotate the pot every few weeks so it does not grow lopsided.
       </p>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Pick Species for the Light You Have</h2>
+      <p class="text-slate-600 mb-4">
+        If you only have a hallway, do not force a monstera; use <a href="/blog/low-light-houseplants">low light houseplants</a>. A sunny balcony is a different job: <a href="/blog/balcony-plants-iran">balcony plants</a>.
+      </p>
     `
   },
   {
@@ -308,6 +330,9 @@ export const newBlogPosts: BlogPost[] = [
         <li>قیچی و دست‌ها را بین گلدان‌ها بشویید.</li>
         <li>برگ‌های به‌شدت آلوده را حذف کنید؛ کمپوست خانگی جای مناسبی برای آن‌ها نیست.</li>
       </ul>
+      <p class="text-slate-600 mb-4">
+        پشه خاک را با خشک‌تر کردن سطح خاک کنترل کنید؛ اگر روی خاک کپک سفید هم هست <a href="/blog/قارچ-سفید-روی-خاک-گلدان">قارچ سفید روی خاک</a> را جدا بخوانید. زردی ناشی از مکیدن شیره را با <a href="/blog/علت-زرد-شدن-برگ-گیاهان">زرد شدن برگ</a> قاطی نکنید.
+      </p>
     `
   },
   {
@@ -349,6 +374,9 @@ export const newBlogPosts: BlogPost[] = [
         <li>Wash tools and hands between pots.</li>
         <li>Remove heavily infested leaves; don’t toss them into a home compost pile.</li>
       </ul>
+      <p class="text-slate-600 mb-4">
+        Control fungus gnats by drying the surface; if you also see white mold, read <a href="/blog/white-mold-on-potting-soil">white mold on potting soil</a> separately. Do not confuse sap-sucking stippling with the broader <a href="/blog/why-plant-leaves-turn-yellow">yellow leaf</a> guide.
+      </p>
     `
   },
   {
@@ -546,6 +574,10 @@ export const newBlogPosts: BlogPost[] = [
       <p class="text-slate-600 mb-4">
         یک لایه سنگ در کف، سطح ایستابی می‌سازد و گاهی زهکشی را بدتر می‌کند. مهم‌تر از سنگ کف، سوراخ زهکش باز و خودِ مخلوط خاک سبک است. اگر نگران خروج خاک هستید، یک تکه توری روی سوراخ بگذارید.
       </p>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">خاک را با گلدان و زمان تعویض هماهنگ کنید</h2>
+      <p class="text-slate-600 mb-4">
+        مخلوط سبک در گلدان بدون سوراخ باز هم می‌پوسد. ظرف را از <a href="/blog/انتخاب-گلدان-سفالی-یا-پلاستیکی">انتخاب گلدان</a> و زمان جابجایی را از <a href="/blog/راهنمای-تعویض-گلدان-و-خاک">تعویض گلدان</a> بگیرید. اگر سطح خاک سفید شد، اول آبیاری را کم کنید و <a href="/blog/قارچ-سفید-روی-خاک-گلدان">کپک خاک</a> را ببینید.
+      </p>
     `
   },
   {
@@ -588,6 +620,10 @@ export const newBlogPosts: BlogPost[] = [
       <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Do You Need Rocks in the Bottom?</h2>
       <p class="text-slate-600 mb-4">
         A rock layer can create a perched water table and worsen drainage. Open drainage holes and a light mix matter more. If soil is escaping, cover the hole with a scrap of mesh instead.
+      </p>
+      <h2 class="text-xl font-bold text-slate-800 mt-8 mb-4">Match Mix to Pot and Repot Timing</h2>
+      <p class="text-slate-600 mb-4">
+        A light mix still rots in a pot with no holes. Choose the container in <a href="/blog/terracotta-vs-plastic-pots">terracotta vs plastic</a> and the timing in the <a href="/blog/how-to-repot-plants">repotting guide</a>. If the surface turns white, water less and read <a href="/blog/white-mold-on-potting-soil">white mold on potting soil</a>.
       </p>
     `
   },

@@ -34,6 +34,7 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
     <div 
       className="min-h-screen bg-[#fcfaf8] selection:bg-emerald-200 selection:text-emerald-900"
       dir={isRtl ? "rtl" : "ltr"}
+      lang={post.lang}
     >
       <Header />
 
@@ -92,15 +93,33 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
         {/* Article Body */}
         <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden">
           <article 
+            lang={post.lang}
             className="p-6 sm:p-10 leading-relaxed text-slate-700 text-base sm:text-lg 
               [&>p]:mb-6 [&>p]:leading-relaxed
               [&>h2]:text-xl sm:[&>h2]:text-2xl [&>h2]:font-bold [&>h2]:text-slate-900 [&>h2]:mt-10 [&>h2]:mb-4 [&>h2]:pb-2 [&>h2]:border-b [&>h2]:border-slate-100
               [&>ul]:list-disc [&>ul]:ps-6 [&>ul]:mb-6 [&>ul]:space-y-2
               [&>ol]:list-decimal [&>ol]:ps-6 [&>ol]:mb-6 [&>ol]:space-y-2
               [&>li]:leading-relaxed
-              [&>strong]:font-semibold [&>strong]:text-slate-900"
+              [&>strong]:font-semibold [&>strong]:text-slate-900
+              [&>a]:text-emerald-700 [&>a]:font-semibold [&>a]:hover:underline"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
+
+          {post.faqs.length > 0 && (
+            <section className="px-6 sm:px-10 pb-8" aria-labelledby="blog-faq-heading">
+              <h2 id="blog-faq-heading" className="text-xl sm:text-2xl font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100">
+                {isRtl ? "پرسش‌های پرتکرار" : "Frequently asked questions"}
+              </h2>
+              <dl className="space-y-4">
+                {post.faqs.map((faq) => (
+                  <div key={faq.question} className="rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                    <dt className="font-bold text-slate-800 text-sm sm:text-base">{faq.question}</dt>
+                    <dd className="text-slate-600 text-sm leading-relaxed mt-2">{faq.answer}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
           
           {/* Article Source & Copyright Disclosure */}
           <div className="mx-6 sm:mx-10 mb-8 p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3 text-xs text-slate-500">
