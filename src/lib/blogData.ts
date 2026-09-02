@@ -1,3 +1,5 @@
+import { newBlogPosts } from "./blogPostsNew"
+
 export interface BlogPost {
   slug: string;
   lang: "fa" | "en";
@@ -14,7 +16,7 @@ export interface BlogPost {
   keywords: string[];
 }
 
-export const blogPosts: BlogPost[] = [
+const existingBlogPosts: BlogPost[] = [
   {
     slug: "راهنمای-آبیاری-گیاهان-آپارتمانی",
     lang: "fa",
@@ -747,4 +749,6 @@ export const blogPosts: BlogPost[] = [
     `
   }
 ];
+
+export const blogPosts: BlogPost[] = [...newBlogPosts, ...existingBlogPosts]
 

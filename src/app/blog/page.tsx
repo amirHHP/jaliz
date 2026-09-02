@@ -5,11 +5,10 @@ import Link from "next/link"
 import { useLanguage } from "@/components/LanguageProvider"
 import { Header } from "@/components/Header"
 import { blogPosts, BlogPost } from "@/lib/blogData"
+import { BlogIcon } from "@/components/BlogIcon"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
-  Droplets,
-  Sprout,
   BookOpen,
   Search,
   Calendar,
@@ -19,20 +18,6 @@ import {
   ArrowLeft,
   BookOpenCheck
 } from "lucide-react"
-
-// Dynamic icon resolver
-function BlogIcon({ name, className }: { name: string; className?: string }) {
-  switch (name) {
-    case "Droplets":
-      return <Droplets className={className} />;
-    case "Sprout":
-      return <Sprout className={className} />;
-    case "BookOpen":
-      return <BookOpen className={className} />;
-    default:
-      return <BookOpen className={className} />;
-  }
-}
 
 export default function BlogIndexPage() {
   const { language, t } = useLanguage()
