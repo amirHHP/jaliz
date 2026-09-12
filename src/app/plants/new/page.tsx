@@ -14,16 +14,29 @@ import { analyzePlantAction } from "@/app/actions/ai"
 import { createUserPlantAction } from "@/app/actions/plants"
 import {
   RELATIVE_DATE_OPTIONS,
+  RELATIVE_SOIL_DATE_OPTIONS,
   matchRelativeDateOption,
+  matchRelativeSoilDateOption,
   relativeDateOptionToString,
+  relativeSoilDateOptionToString,
   toLocalDateString,
   type RelativeDateOption,
+  type RelativeSoilDateOption,
 } from "@/lib/relative-date"
 
 const RELATIVE_DATE_LABEL_KEYS: Record<RelativeDateOption, "relative_date_today" | "relative_date_3days" | "relative_date_week"> = {
   today: "relative_date_today",
   "3days": "relative_date_3days",
   week: "relative_date_week",
+}
+
+const RELATIVE_SOIL_DATE_LABEL_KEYS: Record<
+  RelativeSoilDateOption,
+  "relative_soil_recent" | "relative_soil_few_months" | "relative_soil_year_ago"
+> = {
+  recent: "relative_soil_recent",
+  few_months: "relative_soil_few_months",
+  year_ago: "relative_soil_year_ago",
 }
 
 interface PlantDraft {
@@ -554,7 +567,7 @@ export default function NewPlantPage() {
                   <div className="space-y-1.5 col-span-1">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <Sprout className="h-3.5 w-3.5 text-emerald-500" />
-                      {language === "fa" ? "تعویض خاک اخیر؟" : "Repotted recently?"}
+                      {language === "fa" ? "تعویض گلدان اخیر؟" : "Repotted recently?"}
                     </label>
                     <div className="flex bg-slate-100 rounded-xl p-0.5 h-10">
                       <button 
@@ -562,7 +575,7 @@ export default function NewPlantPage() {
                         onClick={() => updateDraft("recentlyReplanted", true)} 
                         className={`flex-1 rounded-lg text-xs font-semibold transition-colors ${draft.recentlyReplanted ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                       >
-                        {language === "fa" ? "بله" : "خیر"}
+                        {language === "fa" ? "بله" : "Yes"}
                       </button>
                       <button 
                         type="button" 
@@ -677,23 +690,26 @@ export default function NewPlantPage() {
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-amber-700" />
-                      {t("last_soil_change")}
+                      {language === "fa" ? "خاکش کی عوض شده؟" : t("last_soil_change")}
                     </label>
                     <div className="grid grid-cols-3 gap-1.5">
-                      {RELATIVE_DATE_OPTIONS.map((option) => {
-                        const selected = matchRelativeDateOption(draft.lastSoilChange) === option
+                      {RELATIVE_SOIL_DATE_OPTIONS.map((option) => {
+                        const selected = matchRelativeSoilDateOption(draft.lastSoilChange) === option
                         return (
                           <button
                             type="button"
                             key={option}
-                            onClick={() => updateDraft("lastSoilChange", relativeDateOptionToString(option))}
+                            onClick={() => {
+                              updateDraft("lastSoilChange", relativeSoilDateOptionToString(option))
+                              updateDraft("recentlyReplanted", option === "recent")
+                            }}
                             className={`rounded-lg px-1.5 py-2 text-[10px] font-semibold transition-all ${
                               selected
                                 ? "bg-amber-600 text-white shadow-sm"
                                 : "bg-white text-amber-900 ring-1 ring-amber-200 hover:bg-amber-50"
                             }`}
                           >
-                            {t(RELATIVE_DATE_LABEL_KEYS[option])}
+                            {t(RELATIVE_SOIL_DATE_LABEL_KEYS[option])}
                           </button>
                         )
                       })}

@@ -33,6 +33,8 @@ import {
   setMyPasswordAction,
   sendOtpAction,
   loginWithOtpAction,
+  grantUsersSubscriptionAction,
+  revokeUsersSubscriptionAction,
 } from "@/app/actions/auth"
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated"
@@ -60,6 +62,8 @@ interface AuthContextValue {
   listUsers: () => User[]
   sendOtp: (email: string) => Promise<{ success: boolean }>
   loginWithOtp: (email: string, code: string) => Promise<User>
+  grantUsersSubscription: (userIds: string[], durationDays: number, reason?: string) => Promise<void>
+  revokeUsersSubscription: (userIds: string[]) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -217,6 +221,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     unwrapAuthResult(await setMyPasswordAction(newPassword))
   }, [])
 
+  const grantUsersSubscription = useCallback(
+    async (userIds: string[], durationDays: number, reason?: string): Promise<void> => {
+      unwrapAuthResult(await grantUsersSubscriptionAction(userIds, durationDays, reason))
+      await refreshUsers()
+      if (user && userIds.includes(user.id)) {
+        await refreshUser()
+      }
+    },
+    [user, refreshUsers, refreshUser],
+  )
+
+  const revokeUsersSubscription = useCallback(
+    async (userIds: string[]): Promise<void> => {
+      unwrapAuthResult(await revokeUsersSubscriptionAction(userIds))
+      await refreshUsers()
+      if (user && userIds.includes(user.id)) {
+        await refreshUser()
+      }
+    },
+    [user, refreshUsers, refreshUser],
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
       status,
@@ -241,8 +267,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setMyPassword,
       sendOtp,
       loginWithOtp,
+      grantUsersSubscription,
+      revokeUsersSubscription,
     }),
-    [status, user, revision, users, refreshUser, refreshUsers, register, login, logout, updateMyProfile, getUser, listUsers, createUser, updateUser, updateUserRole, setUserActive, deleteUser, resetPassword, setMyPassword, sendOtp, loginWithOtp],
+    [
+      status,
+      user,
+      revision,
+      users,
+      refreshUser,
+      refreshUsers,
+      register,
+      login,
+      logout,
+      updateMyProfile,
+      getUser,
+      listUsers,
+      createUser,
+      updateUser,
+      updateUserRole,
+      setUserActive,
+      deleteUser,
+      resetPassword,
+      setMyPassword,
+      sendOtp,
+      loginWithOtp,
+      grantUsersSubscription,
+      revokeUsersSubscription,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

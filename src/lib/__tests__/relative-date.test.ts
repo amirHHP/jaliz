@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest"
 import {
   dateStringDaysAgo,
   matchRelativeDateOption,
+  matchRelativeSoilDateOption,
   relativeDateOptionToString,
+  relativeSoilDateOptionToString,
   toLocalDateString,
 } from "../relative-date"
 
@@ -31,5 +33,19 @@ describe("relative-date", () => {
     expect(matchRelativeDateOption("2026-07-12", fixed)).toBe("week")
     expect(matchRelativeDateOption("2026-01-01", fixed)).toBeNull()
     expect(matchRelativeDateOption("", fixed)).toBeNull()
+  })
+
+  it("maps relative soil options to date strings", () => {
+    expect(relativeSoilDateOptionToString("recent", fixed)).toBe("2026-07-19")
+    expect(relativeSoilDateOptionToString("few_months", fixed)).toBe("2026-04-20")
+    expect(relativeSoilDateOptionToString("year_ago", fixed)).toBe("2025-07-19")
+  })
+
+  it("matches a date string back to a relative soil option", () => {
+    expect(matchRelativeSoilDateOption("2026-07-19", fixed)).toBe("recent")
+    expect(matchRelativeSoilDateOption("2026-07-05", fixed)).toBe("recent")
+    expect(matchRelativeSoilDateOption("2026-04-20", fixed)).toBe("few_months")
+    expect(matchRelativeSoilDateOption("2025-07-19", fixed)).toBe("year_ago")
+    expect(matchRelativeSoilDateOption("", fixed)).toBeNull()
   })
 })

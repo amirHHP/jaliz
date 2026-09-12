@@ -14,6 +14,7 @@ import { AdminCreateUserInput, AdminUpdateUserInput, RegisterInput, AuthError } 
 import { UserRole } from "@/lib/auth/types";
 import { sendOtpEmail } from "@/lib/email/send-otp-email";
 import { getSubscriptionExpiresAtForUser } from "@/lib/subscription-status";
+import { nextSubscriptionExpiry } from "@/lib/subscription";
 
 const SESSION_KEY = "jaliz_session";
 
@@ -266,7 +267,29 @@ export async function listUsersAction(): Promise<AuthActionResult<Awaited<Return
       orderBy: { createdAt: "asc" }
     });
 
-    return users.map(toPublicUser);
+    const payments = await prisma.payment.findMany({
+      where: {
+        userId: { in: users.map((u) => u.id) },
+        status: "paid",
+        expiresAt: { not: null },
+      },
+      select: { userId: true, expiresAt: true },
+    });
+
+    const expiryMap = new Map<string, Date>();
+    for (const p of payments) {
+      if (p.expiresAt) {
+        const existing = expiryMap.get(p.userId);
+        if (!existing || p.expiresAt.getTime() > existing.getTime()) {
+          expiryMap.set(p.userId, p.expiresAt);
+        }
+      }
+    }
+
+    return users.map((u) => ({
+      ...toPublicUser(u),
+      subscriptionExpiresAt: expiryMap.get(u.id)?.toISOString() ?? null,
+    }));
   });
 }
 
@@ -431,5 +454,75 @@ export async function deleteUserAction(id: string): Promise<AuthActionResult<voi
     if (id === currentUser.id) {
       await logoutAction();
     }
+  });
+}
+
+export async function grantUsersSubscriptionAction(
+  userIds: string[],
+  durationDays: number,
+  reason?: string
+): Promise<AuthActionResult<{ count: number }>> {
+  return runAuthAction(async () => {
+    await requireAdmin();
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      throw new AuthError("EMPTY_FIELD");
+    }
+    if (typeof durationDays !== "number" || durationDays <= 0) {
+      throw new AuthError("GENERIC");
+    }
+
+    const now = new Date();
+    const isPermanent = durationDays >= 36500; // >= 100 years
+
+    for (const userId of userIds) {
+      let expiresAt: Date;
+      if (isPermanent) {
+        expiresAt = new Date("2099-12-31T23:59:59.999Z");
+      } else {
+        const currentExpiresAt = await getSubscriptionExpiresAtForUser(userId);
+        expiresAt = nextSubscriptionExpiry(currentExpiresAt, now, durationDays);
+      }
+
+      const authority = `admin_grant_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await prisma.payment.create({
+        data: {
+          userId,
+          authority,
+          amount: 0,
+          status: "paid",
+          type: "subscription",
+          description: reason?.trim() || "دسترسی اعطا شده توسط مدیر",
+          paidAt: now,
+          expiresAt,
+        },
+      });
+    }
+
+    return { count: userIds.length };
+  });
+}
+
+export async function revokeUsersSubscriptionAction(
+  userIds: string[]
+): Promise<AuthActionResult<{ count: number }>> {
+  return runAuthAction(async () => {
+    await requireAdmin();
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      throw new AuthError("EMPTY_FIELD");
+    }
+
+    const now = new Date();
+    const result = await prisma.payment.updateMany({
+      where: {
+        userId: { in: userIds },
+        status: "paid",
+        expiresAt: { gt: now },
+      },
+      data: {
+        expiresAt: now,
+      },
+    });
+
+    return { count: result.count };
   });
 }

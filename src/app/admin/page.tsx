@@ -24,6 +24,7 @@ import {
   Key,
   Globe,
   Truck,
+  Droplets,
 } from "lucide-react"
 
 import { Header } from "@/components/Header"
@@ -32,6 +33,7 @@ import { useLanguage } from "@/components/LanguageProvider"
 import { Button } from "@/components/ui/button"
 import { authErrorTranslationKey } from "@/lib/auth"
 import type { AdminCreateUserInput, AdminUpdateUserInput, User, UserRole } from "@/lib/auth/types"
+import { isSubscriptionActive } from "@/lib/subscription"
 import { getAiConfig, setGlobalSetting, getAllProviderKeys, getShippingFeeAction, setShippingFeeAction } from "@/app/actions/settings"
 import { fetchModelsAction } from "@/app/actions/ai"
 import { getMarketplaceReportsAction, deleteReportAction, deleteListingByAdminAction } from "@/app/actions/marketplace"
@@ -40,6 +42,12 @@ import { AlertTriangle, Flag, Trash2 as TrashIcon, Check as CheckIcon } from "lu
 interface ResetTarget {
   id: string
   name: string
+}
+
+interface IrrigationTarget {
+  userIds: string[]
+  label: string
+  currentExpiry?: string | null
 }
 
 export default function AdminPage() {
@@ -55,6 +63,8 @@ export default function AdminPage() {
     setUserActive,
     deleteUser,
     resetPassword,
+    grantUsersSubscription,
+    revokeUsersSubscription,
     users,
     refreshUsers,
   } = useAuth()
@@ -63,6 +73,8 @@ export default function AdminPage() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<User | null>(null)
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
+  const [irrigationTarget, setIrrigationTarget] = useState<IrrigationTarget | null>(null)
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
 
@@ -370,6 +382,37 @@ export default function AdminPage() {
     const confirmed = window.confirm(t("admin_confirm_delete"))
     if (!confirmed) return
     safeRun(() => deleteUser(u.id))
+  }
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((u) => selectedUserIds.includes(u.id))
+
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      const filteredIds = new Set(filtered.map((u) => u.id))
+      setSelectedUserIds((prev) => prev.filter((id) => !filteredIds.has(id)))
+    } else {
+      const filteredIds = filtered.map((u) => u.id)
+      setSelectedUserIds((prev) => Array.from(new Set([...prev, ...filteredIds])))
+    }
+  }
+
+  const handleToggleSelectUser = (id: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    )
+  }
+
+  const handleBatchRevoke = async () => {
+    if (selectedUserIds.length === 0) return
+    const confirmed = window.confirm(t("admin_irrigation_revoke_confirm"))
+    if (!confirmed) return
+    await safeRun(async () => {
+      await revokeUsersSubscription(selectedUserIds)
+      setSelectedUserIds([])
+      setFlash(t("admin_irrigation_revoke_success"))
+      setTimeout(() => setFlash(null), 3000)
+    })
   }
 
   // Loading or auth-redirect states.
@@ -784,13 +827,75 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* Batch Actions Bar */}
+          {selectedUserIds.length > 0 && (
+            <div className="mx-4 mt-4 p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-emerald-600 text-white text-xs font-bold">
+                  {selectedUserIds.length}
+                </span>
+                <span className="text-sm font-semibold text-emerald-900">
+                  {t("admin_batch_selected").replace("{count}", String(selectedUserIds.length))}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    setIrrigationTarget({
+                      userIds: selectedUserIds,
+                      label: t("admin_batch_selected").replace(
+                        "{count}",
+                        String(selectedUserIds.length),
+                      ),
+                    })
+                  }
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-8 text-xs font-semibold"
+                >
+                  <Droplets className="h-3.5 w-3.5" />
+                  {t("admin_batch_unlock_irrigation")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBatchRevoke}
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 gap-1.5 h-8 text-xs font-semibold"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  {t("admin_batch_lock_irrigation")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedUserIds([])}
+                  className="text-slate-500 hover:text-slate-700 h-8 text-xs"
+                >
+                  {t("cancel")}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-start bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                  <th className="w-10 px-4 py-3 text-start">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      onChange={handleToggleSelectAll}
+                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      title={allFilteredSelected ? t("cancel") : undefined}
+                    />
+                  </th>
                   <th className="text-start font-semibold px-4 py-3">{t("admin_col_user")}</th>
                   <th className="text-start font-semibold px-4 py-3">{t("admin_col_role")}</th>
                   <th className="text-start font-semibold px-4 py-3">{t("admin_col_status")}</th>
+                  <th className="text-start font-semibold px-4 py-3">{t("admin_col_irrigation")}</th>
                   <th className="text-start font-semibold px-4 py-3">{t("admin_col_joined")}</th>
                   <th className="text-end font-semibold px-4 py-3">{t("admin_col_actions")}</th>
                 </tr>
@@ -798,15 +903,35 @@ export default function AdminPage() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                    <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
                       {t("admin_no_users")}
                     </td>
                   </tr>
                 ) : (
                   filtered.map((u) => {
                     const isSelf = u.id === currentUser?.id
+                    const isSelected = selectedUserIds.includes(u.id)
+                    const isIrrigationActive = isSubscriptionActive(u.subscriptionExpiresAt)
+                    const isLifetime =
+                      isIrrigationActive &&
+                      u.subscriptionExpiresAt &&
+                      new Date(u.subscriptionExpiresAt).getFullYear() >= 2090
+
                     return (
-                      <tr key={u.id} className="border-t border-slate-100 hover:bg-slate-50/50">
+                      <tr
+                        key={u.id}
+                        className={`border-t border-slate-100 hover:bg-slate-50/50 transition-colors ${
+                          isSelected ? "bg-emerald-50/40" : ""
+                        }`}
+                      >
+                        <td className="w-10 px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleToggleSelectUser(u.id)}
+                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center flex-shrink-0">
@@ -853,6 +978,31 @@ export default function AdminPage() {
                             {u.isActive ? t("admin_status_active") : t("admin_status_inactive")}
                           </span>
                         </td>
+                        <td className="px-4 py-3">
+                          {isIrrigationActive ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <Droplets className="h-3.5 w-3.5 text-emerald-600" />
+                              {isLifetime ? (
+                                t("admin_irrigation_lifetime")
+                              ) : (
+                                <span>
+                                  {t("admin_irrigation_active")}{" "}
+                                  <span className="text-[11px] font-normal text-emerald-700/80">
+                                    ({new Date(u.subscriptionExpiresAt!).toLocaleDateString(
+                                      language === "fa" ? "fa-IR" : undefined,
+                                      { year: "numeric", month: "numeric", day: "numeric" },
+                                    )})
+                                  </span>
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                              <Lock className="h-3 w-3 text-slate-400" />
+                              {t("admin_irrigation_locked")}
+                            </span>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-slate-500 text-xs">
                           {new Date(u.createdAt).toLocaleDateString(
                             language === "fa" ? "fa-IR" : undefined,
@@ -861,6 +1011,19 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-1">
+                            <IconButton
+                              title={t("admin_action_irrigation")}
+                              onClick={() =>
+                                setIrrigationTarget({
+                                  userIds: [u.id],
+                                  label: u.fullName || u.email,
+                                  currentExpiry: u.subscriptionExpiresAt,
+                                })
+                              }
+                              variant={isIrrigationActive ? "success" : "default"}
+                            >
+                              <Droplets className="h-4 w-4" />
+                            </IconButton>
                             <IconButton
                               title={t("admin_action_edit")}
                               onClick={() => setEditTarget(u)}
@@ -1107,6 +1270,37 @@ export default function AdminPage() {
           }}
         />
       )}
+
+      {irrigationTarget && (
+        <IrrigationAccessModal
+          target={irrigationTarget}
+          onClose={() => setIrrigationTarget(null)}
+          onGrant={async (userIds, durationDays, reason) => {
+            try {
+              await grantUsersSubscription(userIds, durationDays, reason)
+              setIrrigationTarget(null)
+              setSelectedUserIds((prev) => prev.filter((id) => !userIds.includes(id)))
+              setFlash(t("admin_irrigation_grant_success"))
+              setTimeout(() => setFlash(null), 3000)
+              return null
+            } catch (err) {
+              return authErrorTranslationKey(err)
+            }
+          }}
+          onRevoke={async (userIds) => {
+            try {
+              await revokeUsersSubscription(userIds)
+              setIrrigationTarget(null)
+              setSelectedUserIds((prev) => prev.filter((id) => !userIds.includes(id)))
+              setFlash(t("admin_irrigation_revoke_success"))
+              setTimeout(() => setFlash(null), 3000)
+              return null
+            } catch (err) {
+              return authErrorTranslationKey(err)
+            }
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -1144,13 +1338,15 @@ function IconButton({
   onClick: () => void
   disabled?: boolean
   title?: string
-  variant?: "default" | "danger"
+  variant?: "default" | "danger" | "success"
 }) {
   const base =
     "inline-flex items-center justify-center h-8 w-8 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
   const palette =
     variant === "danger"
       ? "text-red-500 hover:bg-red-50 hover:text-red-600"
+      : variant === "success"
+      ? "text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
       : "text-slate-500 hover:bg-slate-100 hover:text-slate-700"
   return (
     <button
@@ -1440,6 +1636,267 @@ function ResetPasswordModal({ target, onClose, onSubmit }: ResetPasswordModalPro
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {t("admin_reset_btn")}
             </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+interface IrrigationAccessModalProps {
+  target: IrrigationTarget
+  onClose: () => void
+  onGrant: (userIds: string[], durationDays: number, reason?: string) => Promise<string | null>
+  onRevoke: (userIds: string[]) => Promise<string | null>
+}
+
+function IrrigationAccessModal({
+  target,
+  onClose,
+  onGrant,
+  onRevoke,
+}: IrrigationAccessModalProps) {
+  const { t, language } = useLanguage()
+  const isSingle = target.userIds.length === 1
+  const isCurrentlyActive = isSubscriptionActive(target.currentExpiry)
+  const isLifetime =
+    isCurrentlyActive &&
+    target.currentExpiry &&
+    new Date(target.currentExpiry).getFullYear() >= 2090
+
+  const [selectedDuration, setSelectedDuration] = useState<string>("30")
+  const [customDays, setCustomDays] = useState<string>("14")
+  const [reason, setReason] = useState<string>("")
+  const [submitting, setSubmitting] = useState(false)
+  const [errorKey, setErrorKey] = useState<string | null>(null)
+
+  const durationOptions = [
+    { value: "30", label: t("admin_irrigation_1m") },
+    { value: "90", label: t("admin_irrigation_3m") },
+    { value: "180", label: t("admin_irrigation_6m") },
+    { value: "365", label: t("admin_irrigation_1y") },
+    { value: "permanent", label: t("admin_irrigation_permanent") },
+    { value: "custom", label: t("admin_irrigation_custom") },
+  ]
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setErrorKey(null)
+
+    let days = 30
+    if (selectedDuration === "permanent") {
+      days = 36500
+    } else if (selectedDuration === "custom") {
+      days = parseInt(customDays, 10)
+      if (isNaN(days) || days <= 0) {
+        setErrorKey("EMPTY_FIELD")
+        setSubmitting(false)
+        return
+      }
+    } else {
+      days = parseInt(selectedDuration, 10) || 30
+    }
+
+    const err = await onGrant(target.userIds, days, reason)
+    if (err) {
+      setErrorKey(err)
+      setSubmitting(false)
+    }
+  }
+
+  const handleRevoke = async () => {
+    const confirmed = window.confirm(t("admin_irrigation_revoke_confirm"))
+    if (!confirmed) return
+
+    setSubmitting(true)
+    setErrorKey(null)
+    const err = await onRevoke(target.userIds)
+    if (err) {
+      setErrorKey(err)
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 bg-emerald-50/50 border-b border-emerald-100">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700">
+              <Droplets className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                {t("admin_irrigation_modal_title")}
+              </h2>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-700 transition p-1"
+            aria-label={t("cancel")}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-xs text-slate-600">
+            {t("admin_irrigation_modal_desc")}
+          </p>
+
+          {/* Target Info Card */}
+          <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+                {isSingle ? <UserIcon className="h-4 w-4 text-emerald-700" /> : <Users className="h-4 w-4 text-emerald-700" />}
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-slate-900 truncate">
+                  {target.label}
+                </div>
+              </div>
+            </div>
+
+            {isSingle && (
+              <div>
+                {isCurrentlyActive ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                    <Droplets className="h-3 w-3" />
+                    {isLifetime
+                      ? t("admin_irrigation_lifetime")
+                      : t("admin_irrigation_until").replace(
+                          "{date}",
+                          new Date(target.currentExpiry!).toLocaleDateString(
+                            language === "fa" ? "fa-IR" : undefined,
+                            { year: "numeric", month: "numeric", day: "numeric" },
+                          ),
+                        )}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-200 text-slate-600">
+                    <Lock className="h-3 w-3" />
+                    {t("admin_irrigation_locked")}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Duration Options */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-slate-700">
+              {t("admin_irrigation_duration_label")}
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {durationOptions.map((opt) => {
+                const isSelected = selectedDuration === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setSelectedDuration(opt.value)}
+                    className={`px-3 py-2.5 rounded-xl border text-xs font-medium text-center transition-all flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
+                      isSelected
+                        ? "border-emerald-500 bg-emerald-50/80 text-emerald-900 ring-2 ring-emerald-500/20 shadow-xs font-semibold"
+                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Custom days input if custom selected */}
+          {selectedDuration === "custom" && (
+            <div className="space-y-1.5 animate-in fade-in duration-150">
+              <label className="text-xs font-medium text-slate-700">
+                {t("admin_irrigation_custom")}
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={36500}
+                required
+                value={customDays}
+                onChange={(e) => setCustomDays(e.target.value)}
+                placeholder={t("admin_irrigation_custom_days_ph")}
+                className={formControlClass}
+              />
+            </div>
+          )}
+
+          {/* Reason / Note */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-700">
+              {t("admin_irrigation_reason_label")}
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={t("admin_irrigation_reason_ph")}
+              className={formControlClass}
+            />
+          </div>
+
+          {errorKey && (
+            <div
+              role="alert"
+              className="rounded-md bg-red-50 border border-red-200 text-red-700 text-xs px-3 py-2"
+            >
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {t(errorKey as any)}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+            <div>
+              {isSingle && isCurrentlyActive && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={submitting}
+                  onClick={handleRevoke}
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 text-xs font-medium"
+                >
+                  <Lock className="h-3.5 w-3.5 me-1" />
+                  {t("admin_irrigation_revoke_btn")}
+                </Button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 ms-auto">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-slate-600 text-xs"
+              >
+                {t("cancel")}
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting}
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs font-semibold"
+              >
+                {submitting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Droplets className="h-3.5 w-3.5" />
+                )}
+                {t("admin_irrigation_confirm_btn")}
+              </Button>
+            </div>
           </div>
         </form>
       </div>

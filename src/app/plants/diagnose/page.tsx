@@ -16,16 +16,29 @@ import { diagnosePlantAction } from "@/app/actions/ai"
 import { createUserPlantAction, addPlantStatusLogAction, getUserPlantsAction } from "@/app/actions/plants"
 import {
   RELATIVE_DATE_OPTIONS,
+  RELATIVE_SOIL_DATE_OPTIONS,
   matchRelativeDateOption,
+  matchRelativeSoilDateOption,
   relativeDateOptionToString,
+  relativeSoilDateOptionToString,
   toLocalDateString,
   type RelativeDateOption,
+  type RelativeSoilDateOption,
 } from "@/lib/relative-date"
 
 const RELATIVE_DATE_LABEL_KEYS: Record<RelativeDateOption, "relative_date_today" | "relative_date_3days" | "relative_date_week"> = {
   today: "relative_date_today",
   "3days": "relative_date_3days",
   week: "relative_date_week",
+}
+
+const RELATIVE_SOIL_DATE_LABEL_KEYS: Record<
+  RelativeSoilDateOption,
+  "relative_soil_recent" | "relative_soil_few_months" | "relative_soil_year_ago"
+> = {
+  recent: "relative_soil_recent",
+  few_months: "relative_soil_few_months",
+  year_ago: "relative_soil_year_ago",
 }
 
 interface DiagnosisResult {
@@ -829,25 +842,28 @@ export default function SmartDiagnosisPage() {
               {/* Soil Change */}
               <div className="space-y-3">
                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  {t("last_soil_change")}
+                  {language === "fa" ? "خاکش کی عوض شده؟" : t("last_soil_change")}
                 </h4>
 
                 <div className="bg-amber-50/50 border border-amber-100/60 rounded-2xl p-4 space-y-3">
                   <div className="grid grid-cols-3 gap-1.5">
-                    {RELATIVE_DATE_OPTIONS.map((option) => {
-                      const selected = matchRelativeDateOption(draft.lastSoilChange) === option
+                    {RELATIVE_SOIL_DATE_OPTIONS.map((option) => {
+                      const selected = matchRelativeSoilDateOption(draft.lastSoilChange) === option
                       return (
                         <button
                           type="button"
                           key={option}
-                          onClick={() => updateDraft("lastSoilChange", relativeDateOptionToString(option))}
+                          onClick={() => {
+                            updateDraft("lastSoilChange", relativeSoilDateOptionToString(option))
+                            updateDraft("recentlyReplanted", option === "recent")
+                          }}
                           className={`rounded-lg px-1.5 py-2 text-[10px] font-semibold transition-all ${
                             selected
                               ? "bg-amber-600 text-white shadow-sm"
                               : "bg-white text-amber-900 ring-1 ring-amber-200 hover:bg-amber-50"
                           }`}
                         >
-                          {t(RELATIVE_DATE_LABEL_KEYS[option])}
+                          {t(RELATIVE_SOIL_DATE_LABEL_KEYS[option])}
                         </button>
                       )
                     })}
