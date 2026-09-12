@@ -125,12 +125,13 @@ export default function AdminPage() {
   }
 
   // AI API key state — separate keys per provider
-  const [aiProvider, setAiProvider] = useState<"gemini" | "sotoon" | "gapgpt">("gemini")
+  const [aiProvider, setAiProvider] = useState<"gemini" | "sotoon" | "gapgpt" | "tokenbazaar">("gemini")
   const [geminiApiKey, setGeminiApiKey] = useState("")
   const [sotoonApiKey, setSotoonApiKey] = useState("")
   const [gapgptApiKey, setGapgptApiKey] = useState("")
-  const aiApiKey = aiProvider === "gemini" ? geminiApiKey : aiProvider === "sotoon" ? sotoonApiKey : gapgptApiKey
-  const setAiApiKey = aiProvider === "gemini" ? setGeminiApiKey : aiProvider === "sotoon" ? setSotoonApiKey : setGapgptApiKey
+  const [tokenbazaarApiKey, setTokenbazaarApiKey] = useState("")
+  const aiApiKey = aiProvider === "gemini" ? geminiApiKey : aiProvider === "sotoon" ? sotoonApiKey : aiProvider === "gapgpt" ? gapgptApiKey : tokenbazaarApiKey
+  const setAiApiKey = aiProvider === "gemini" ? setGeminiApiKey : aiProvider === "sotoon" ? setSotoonApiKey : aiProvider === "gapgpt" ? setGapgptApiKey : setTokenbazaarApiKey
   const [aiModels, setAiModels] = useState<{name: string; inputTokenLimit: number; outputTokenLimit: number}[]>([])
   const [aiSelectedModel, setAiSelectedModel] = useState("")
   const [aiModelSearch, setAiModelSearch] = useState("")
@@ -156,18 +157,21 @@ export default function AdminPage() {
 
         setShippingFee(fee.toString())
 
-        if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon" | "gapgpt")
+        if (config.provider) setAiProvider(config.provider as "gemini" | "sotoon" | "gapgpt" | "tokenbazaar")
 
         // Load each provider's key independently
         if (keys.geminiKey) setGeminiApiKey(keys.geminiKey)
         if (keys.sotoonKey) setSotoonApiKey(keys.sotoonKey)
         if (keys.gapgptKey) setGapgptApiKey(keys.gapgptKey)
+        if (keys.tokenbazaarKey) setTokenbazaarApiKey(keys.tokenbazaarKey)
 
         // Set selected model for current provider
         if (config.provider === "sotoon" && keys.sotoonModel) {
           setAiSelectedModel(keys.sotoonModel)
         } else if (config.provider === "gapgpt" && keys.gapgptModel) {
           setAiSelectedModel(keys.gapgptModel)
+        } else if (config.provider === "tokenbazaar" && keys.tokenbazaarModel) {
+          setAiSelectedModel(keys.tokenbazaarModel)
         } else if (keys.geminiModel) {
           setAiSelectedModel(keys.geminiModel)
         }
@@ -251,7 +255,7 @@ export default function AdminPage() {
 
   // When provider changes, load cached models and selected model for that provider
   useEffect(() => {
-    const key = aiProvider === "gemini" ? geminiApiKey : aiProvider === "sotoon" ? sotoonApiKey : gapgptApiKey
+    const key = aiProvider === "gemini" ? geminiApiKey : aiProvider === "sotoon" ? sotoonApiKey : aiProvider === "gapgpt" ? gapgptApiKey : tokenbazaarApiKey
     setAiModels([])
     setAiSelectedModel("")
 
@@ -266,7 +270,7 @@ export default function AdminPage() {
     async function loadProviderModel() {
       try {
         const keys = await getAllProviderKeys()
-        const model = aiProvider === "gemini" ? keys.geminiModel : aiProvider === "sotoon" ? keys.sotoonModel : keys.gapgptModel
+        const model = aiProvider === "gemini" ? keys.geminiModel : aiProvider === "sotoon" ? keys.sotoonModel : aiProvider === "gapgpt" ? keys.gapgptModel : keys.tokenbazaarModel
         if (model) setAiSelectedModel(model)
       } catch {}
     }
@@ -504,11 +508,11 @@ export default function AdminPage() {
                 <Globe className="h-4 w-4 text-emerald-600" />
                 {t("admin_ai_provider_label")}
               </label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => { setAiProvider("sotoon"); setAiSaved(false) }}
-                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                  className={`h-10 rounded-lg border text-sm font-medium transition ${
                     aiProvider === "sotoon"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
                       : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -519,7 +523,7 @@ export default function AdminPage() {
                 <button
                   type="button"
                   onClick={() => { setAiProvider("gapgpt"); setAiSaved(false) }}
-                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                  className={`h-10 rounded-lg border text-sm font-medium transition ${
                     aiProvider === "gapgpt"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
                       : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -529,8 +533,19 @@ export default function AdminPage() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => { setAiProvider("tokenbazaar"); setAiSaved(false) }}
+                  className={`h-10 rounded-lg border text-sm font-medium transition ${
+                    aiProvider === "tokenbazaar"
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
+                      : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  🪙 {t("admin_ai_provider_tokenbazaar")}
+                </button>
+                <button
+                  type="button"
                   onClick={() => { setAiProvider("gemini"); setAiSaved(false) }}
-                  className={`flex-1 h-10 rounded-lg border text-sm font-medium transition ${
+                  className={`h-10 rounded-lg border text-sm font-medium transition ${
                     aiProvider === "gemini"
                       ? "border-emerald-500 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-200"
                       : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -540,7 +555,13 @@ export default function AdminPage() {
                 </button>
               </div>
               <p className="text-[11px] text-slate-400 mt-1">
-                {aiProvider === "sotoon" ? t("admin_ai_provider_sotoon_hint") : aiProvider === "gapgpt" ? t("admin_ai_provider_gapgpt_hint") : t("admin_ai_provider_gemini_hint")}
+                {aiProvider === "sotoon"
+                  ? t("admin_ai_provider_sotoon_hint")
+                  : aiProvider === "gapgpt"
+                  ? t("admin_ai_provider_gapgpt_hint")
+                  : aiProvider === "tokenbazaar"
+                  ? t("admin_ai_provider_tokenbazaar_hint")
+                  : t("admin_ai_provider_gemini_hint")}
               </p>
             </div>
 
@@ -556,7 +577,15 @@ export default function AdminPage() {
                   dir="ltr"
                   value={aiApiKey}
                   onChange={(e) => { setAiApiKey(e.target.value); setAiSaved(false) }}
-                  placeholder={aiProvider === "gemini" ? t("admin_ai_key_ph") : aiProvider === "sotoon" ? t("admin_ai_key_ph_sotoon") : t("admin_ai_key_ph_gapgpt")}
+                  placeholder={
+                    aiProvider === "gemini"
+                      ? t("admin_ai_key_ph")
+                      : aiProvider === "sotoon"
+                      ? t("admin_ai_key_ph_sotoon")
+                      : aiProvider === "gapgpt"
+                      ? t("admin_ai_key_ph_gapgpt")
+                      : t("admin_ai_key_ph_tokenbazaar")
+                  }
                   className="flex h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
                 <button

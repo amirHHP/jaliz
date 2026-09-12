@@ -10,6 +10,7 @@ function getApiBase() {
 
 const SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1";
 const GAPGPT_BASE_URL = "https://api.gapgpt.app/v1";
+const TOKENBAZAAR_BASE_URL = "https://api.tokenbazaar.ai/v1";
 
 // Static fallback models for each provider
 const GEMINI_FALLBACK_MODELS = [
@@ -25,6 +26,14 @@ const OPENAI_FALLBACK_MODELS = [
   { name: "gpt-4o", inputTokenLimit: 128000, outputTokenLimit: 16384 },
   { name: "gpt-4o-mini", inputTokenLimit: 128000, outputTokenLimit: 16384 },
   { name: "gpt-4-turbo", inputTokenLimit: 128000, outputTokenLimit: 4096 },
+  { name: "gpt-3.5-turbo", inputTokenLimit: 16385, outputTokenLimit: 4096 },
+];
+
+const TOKENBAZAAR_FALLBACK_MODELS = [
+  { name: "glm-5.3-flash", inputTokenLimit: 128000, outputTokenLimit: 16384 },
+  { name: "glm-4-flash", inputTokenLimit: 128000, outputTokenLimit: 4096 },
+  { name: "gpt-4o", inputTokenLimit: 128000, outputTokenLimit: 16384 },
+  { name: "gpt-4o-mini", inputTokenLimit: 128000, outputTokenLimit: 16384 },
   { name: "gpt-3.5-turbo", inputTokenLimit: 16385, outputTokenLimit: 4096 },
 ];
 
@@ -46,9 +55,17 @@ async function callLlmDirect({
   image?: string | null;
   temperature?: number;
 }): Promise<string> {
-  if (provider === "sotoon" || provider === "gapgpt") {
-    const baseUrl = provider === "gapgpt" ? GAPGPT_BASE_URL : SOTOON_BASE_URL;
-    const providerLabel = provider === "gapgpt" ? "GapGPT" : "Sotoon";
+  if (provider === "sotoon" || provider === "gapgpt" || provider === "tokenbazaar") {
+    const baseUrl = provider === "gapgpt"
+      ? GAPGPT_BASE_URL
+      : provider === "tokenbazaar"
+      ? TOKENBAZAAR_BASE_URL
+      : SOTOON_BASE_URL;
+    const providerLabel = provider === "gapgpt"
+      ? "GapGPT"
+      : provider === "tokenbazaar"
+      ? "TokenBazaar"
+      : "Sotoon";
 
     const messages: any[] = [];
     if (image && image.startsWith("data:")) {
@@ -214,7 +231,7 @@ export async function analyzePlantAction(formData: { image?: string, name?: stri
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = formData.model_name || globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = formData.model_name || globalModel || (provider === "tokenbazaar" ? "glm-5.3-flash" : provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       return { error: "API key is required. Please set it in admin settings." };
@@ -280,7 +297,7 @@ export async function getWeatherAdviceAction(data: { latitude: number, longitude
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = globalModel || (provider === "tokenbazaar" ? "glm-5.3-flash" : provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       if (data.language === "fa") {
@@ -408,9 +425,17 @@ export async function fetchModelsAction(api_key: string, provider?: string): Pro
   try {
     const effectiveProvider = provider || "gemini";
 
-    if (effectiveProvider === "sotoon" || effectiveProvider === "gapgpt") {
-      const baseUrl = effectiveProvider === "gapgpt" ? GAPGPT_BASE_URL : SOTOON_BASE_URL;
-      const providerLabel = effectiveProvider === "gapgpt" ? "GapGPT" : "Sotoon Intelligence";
+    if (effectiveProvider === "sotoon" || effectiveProvider === "gapgpt" || effectiveProvider === "tokenbazaar") {
+      const baseUrl = effectiveProvider === "gapgpt"
+        ? GAPGPT_BASE_URL
+        : effectiveProvider === "tokenbazaar"
+        ? TOKENBAZAAR_BASE_URL
+        : SOTOON_BASE_URL;
+      const providerLabel = effectiveProvider === "gapgpt"
+        ? "GapGPT"
+        : effectiveProvider === "tokenbazaar"
+        ? "TokenBazaar"
+        : "Sotoon Intelligence";
 
       try {
         const resp = await fetch(`${baseUrl}/models`, {
@@ -442,7 +467,7 @@ export async function fetchModelsAction(api_key: string, provider?: string): Pro
       }
 
       // Fallback to static list
-      return { models: OPENAI_FALLBACK_MODELS };
+      return { models: effectiveProvider === "tokenbazaar" ? TOKENBAZAAR_FALLBACK_MODELS : OPENAI_FALLBACK_MODELS };
     }
 
     // Gemini — call the REST API directly
@@ -500,7 +525,7 @@ export async function getStatusAdviceAction(data: {
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = globalModel || (provider === "tokenbazaar" ? "glm-5.3-flash" : provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       return { error: "API key is required. Please set it in admin settings." };
@@ -615,7 +640,7 @@ export async function diagnosePlantAction(formData: {
   try {
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
-    const model_name = formData.model_name || globalModel || (provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
+    const model_name = formData.model_name || globalModel || (provider === "tokenbazaar" ? "glm-5.3-flash" : provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");
 
     if (!api_key) {
       return { error: "API key is required. Please set it in admin settings." };

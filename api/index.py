@@ -19,6 +19,7 @@ weather_agent = WeatherAgent()
 
 SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1"
 GAPGPT_BASE_URL = "https://api.gapgpt.app/v1"
+TOKENBAZAAR_BASE_URL = "https://api.tokenbazaar.ai/v1"
 
 class PlantInfo(BaseModel):
     name: str
@@ -76,15 +77,23 @@ def health_check():
 
 @app.post("/api/models")
 def list_models(request: ModelsRequest):
-    if request.provider in ("sotoon", "gapgpt"):
-        base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
-        provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon Intelligence"
-        # OpenAI-compatible provider models
+    if request.provider in ("sotoon", "gapgpt", "tokenbazaar"):
+        if request.provider == "gapgpt":
+            base_url = GAPGPT_BASE_URL
+            provider_label = "GapGPT"
+        elif request.provider == "tokenbazaar":
+            base_url = TOKENBAZAAR_BASE_URL
+            provider_label = "TokenBazaar"
+        else:
+            base_url = SOTOON_BASE_URL
+            provider_label = "Sotoon Intelligence"
+
+        # OpenAI-compatible provider models fallback
         models = [
             {
-                "name": "ibm-granite/granite-4.0-h-micro",
+                "name": "glm-5.3-flash" if request.provider == "tokenbazaar" else "ibm-granite/granite-4.0-h-micro",
                 "inputTokenLimit": 128000,
-                "outputTokenLimit": 4096
+                "outputTokenLimit": 16384 if request.provider == "tokenbazaar" else 4096
             },
             {
                 "name": "gpt-4o",
@@ -108,7 +117,7 @@ def list_models(request: ModelsRequest):
             }
         ]
 
-        # Try to fetch actual models from the Sotoon API
+        # Try to fetch actual models from the provider API
         try:
             resp = requests.get(
                 f"{base_url}/models",
@@ -133,7 +142,7 @@ def list_models(request: ModelsRequest):
                 raise HTTPException(status_code=resp.status_code, detail=f"Invalid API key for {provider_label}")
             else:
                 # Other API errors, fall back to static list if needed but log it
-                print(f"Sotoon API returned status {resp.status_code}: {resp.text}")
+                print(f"{provider_label} API returned status {resp.status_code}: {resp.text}")
         except HTTPException:
             raise
         except Exception as e:
@@ -247,11 +256,18 @@ def analyze_plant(request: PlantAnalysisRequest):
         }}
         """
 
-        if request.provider in ("sotoon", "gapgpt"):
+        if request.provider in ("sotoon", "gapgpt", "tokenbazaar"):
             # Use OpenAI-compatible API
             import requests as req
-            base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
-            provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon"
+            if request.provider == "gapgpt":
+                base_url = GAPGPT_BASE_URL
+                provider_label = "GapGPT"
+            elif request.provider == "tokenbazaar":
+                base_url = TOKENBAZAAR_BASE_URL
+                provider_label = "TokenBazaar"
+            else:
+                base_url = SOTOON_BASE_URL
+                provider_label = "Sotoon"
 
             messages = [{"role": "user", "content": prompt}]
 
@@ -263,7 +279,8 @@ def analyze_plant(request: PlantAnalysisRequest):
                     {"type": "image_url", "image_url": {"url": request.image}}
                 ]}]
 
-            model_name = request.model_name or "gpt-4o"
+            default_model = "glm-5.3-flash" if request.provider == "tokenbazaar" else "gpt-4o"
+            model_name = request.model_name or default_model
             resp = req.post(
                 f"{base_url}/chat/completions",
                 headers={
@@ -358,17 +375,25 @@ def diagnose_plant(request: PlantDiagnosisRequest):
         }}
         """
 
-        if request.provider in ("sotoon", "gapgpt"):
+        if request.provider in ("sotoon", "gapgpt", "tokenbazaar"):
             import requests as req
-            base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
-            provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon"
+            if request.provider == "gapgpt":
+                base_url = GAPGPT_BASE_URL
+                provider_label = "GapGPT"
+            elif request.provider == "tokenbazaar":
+                base_url = TOKENBAZAAR_BASE_URL
+                provider_label = "TokenBazaar"
+            else:
+                base_url = SOTOON_BASE_URL
+                provider_label = "Sotoon"
 
             messages = [{"role": "user", "content": [
                 {"type": "text", "text": prompt},
                 {"type": "image_url", "image_url": {"url": request.image}}
             ]}]
 
-            model_name = request.model_name or "gpt-4o"
+            default_model = "glm-5.3-flash" if request.provider == "tokenbazaar" else "gpt-4o"
+            model_name = request.model_name or default_model
             resp = req.post(
                 f"{base_url}/chat/completions",
                 headers={
@@ -515,9 +540,17 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
                 contents.append({"mime_type": mime_type, "data": image_data})
             return contents
 
-        if request.provider in ("sotoon", "gapgpt"):
+        if request.provider in ("sotoon", "gapgpt", "tokenbazaar"):
             import requests as req
-            base_url = GAPGPT_BASE_URL if request.provider == "gapgpt" else SOTOON_BASE_URL
+            if request.provider == "gapgpt":
+                base_url = GAPGPT_BASE_URL
+                provider_label = "GapGPT"
+            elif request.provider == "tokenbazaar":
+                base_url = TOKENBAZAAR_BASE_URL
+                provider_label = "TokenBazaar"
+            else:
+                base_url = SOTOON_BASE_URL
+                provider_label = "Sotoon"
 
             messages: list = []
             if request.image and request.image.startswith("data:"):
@@ -533,7 +566,8 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
             else:
                 messages = [{"role": "user", "content": prompt}]
 
-            model_name = request.model_name or "gpt-4o"
+            default_model = "glm-5.3-flash" if request.provider == "tokenbazaar" else "gpt-4o"
+            model_name = request.model_name or default_model
             resp = req.post(
                 f"{base_url}/chat/completions",
                 headers={
@@ -548,7 +582,6 @@ Return ONLY valid JSON (no markdown fences) with this exact shape:
                 timeout=90,
             )
             if resp.status_code != 200:
-                provider_label = "GapGPT" if request.provider == "gapgpt" else "Sotoon"
                 raise HTTPException(
                     status_code=resp.status_code,
                     detail=f"{provider_label} API error: {resp.text}",

@@ -7,6 +7,7 @@ from typing import List, Dict
 
 SOTOON_BASE_URL = "https://api.intelligence.sotoon.ir/inference/v1"
 GAPGPT_BASE_URL = "https://api.gapgpt.app/v1"
+TOKENBAZAAR_BASE_URL = "https://api.tokenbazaar.ai/v1"
 
 class WeatherAgent:
     def __init__(self):
@@ -39,10 +40,19 @@ class WeatherAgent:
             return "🌱 Note: Please enter your API key in Settings to get expert advice."
 
         # Initialize the LLM based on provider
-        if provider in ("sotoon", "gapgpt"):
-            base_url = GAPGPT_BASE_URL if provider == "gapgpt" else SOTOON_BASE_URL
+        if provider in ("sotoon", "gapgpt", "tokenbazaar"):
+            if provider == "gapgpt":
+                base_url = GAPGPT_BASE_URL
+                default_model = "gpt-4o"
+            elif provider == "tokenbazaar":
+                base_url = TOKENBAZAAR_BASE_URL
+                default_model = "glm-5.3-flash"
+            else:
+                base_url = SOTOON_BASE_URL
+                default_model = "gpt-4o"
+
             llm = ChatOpenAI(
-                model=model_name or "gpt-4o",
+                model=model_name or default_model,
                 api_key=effective_key,
                 base_url=base_url,
                 temperature=0.7

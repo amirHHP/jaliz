@@ -34,8 +34,15 @@ export async function getAiConfig() {
   const providerApiKey = await getGlobalSetting(`ai-api-key-${provider}`);
   const providerModel = await getGlobalSetting(`ai-model-${provider}`);
 
-  // Fallback chain: provider-specific -> shared legacy -> old gemini-specific
+  // Fallback chain: provider-specific -> env fallback -> shared legacy -> old gemini-specific
+  const envKey = provider === "tokenbazaar"
+    ? process.env.TOKENBAZAAR_API_KEY
+    : provider === "gemini"
+    ? process.env.GEMINI_API_KEY
+    : undefined;
+
   const apiKey = providerApiKey
+    || envKey
     || await getGlobalSetting("ai-api-key")
     || await getGlobalSetting("gemini-api-key");
 
@@ -57,13 +64,17 @@ export async function getAllProviderKeys() {
     || "";
   const sotoonKey = await getGlobalSetting("ai-api-key-sotoon") || "";
   const gapgptKey = await getGlobalSetting("ai-api-key-gapgpt") || "";
+  const tokenbazaarKey = await getGlobalSetting("ai-api-key-tokenbazaar")
+    || process.env.TOKENBAZAAR_API_KEY
+    || "";
   const geminiModel = await getGlobalSetting("ai-model-gemini")
     || await getGlobalSetting("ai-model")
     || await getGlobalSetting("gemini-model")
     || "";
   const sotoonModel = await getGlobalSetting("ai-model-sotoon") || "";
   const gapgptModel = await getGlobalSetting("ai-model-gapgpt") || "";
-  return { geminiKey, sotoonKey, gapgptKey, geminiModel, sotoonModel, gapgptModel };
+  const tokenbazaarModel = await getGlobalSetting("ai-model-tokenbazaar") || "";
+  return { geminiKey, sotoonKey, gapgptKey, tokenbazaarKey, geminiModel, sotoonModel, gapgptModel, tokenbazaarModel };
 }
 
 const DEFAULT_SHIPPING_FEE_TOMAN = 150000;
