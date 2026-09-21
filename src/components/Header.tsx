@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import {
   Globe,
   History,
-  Leaf,
   LogIn,
   LogOut,
   Menu,
@@ -109,9 +109,13 @@ export function Header() {
         <PromoBanner />
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 text-emerald-700">
-          <div className="p-2 bg-emerald-100 rounded-xl shadow-sm">
-            <Leaf className="h-6 w-6 text-emerald-600" />
-          </div>
+          <Image
+            src="/logo-icon.jpg"
+            alt="جالیز"
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-xl shadow-sm object-contain"
+          />
           <span className="text-xl font-bold tracking-tight text-foreground">
             {t("app_title")}
           </span>

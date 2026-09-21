@@ -19,7 +19,10 @@ const PRECACHE_URLS = [
   '/icons/icon-512x512.png',
   '/icons/icon-maskable-192x192.png',
   '/icons/icon-maskable-512x512.png',
-  '/hero-character.jpg',
+  '/logo-vertical.jpg',
+  '/logo-horizontal.jpg',
+  '/logo-icon.jpg',
+  '/logo-icon-dark.jpg',
   '/marketplace',
   '/login',
   '/plants/diagnose',
@@ -93,7 +96,10 @@ function isImmutableStatic(url) {
   if (/\.(?:woff2?|ttf|otf|eot)$/i.test(url.pathname)) return true
   if (
     url.pathname === '/manifest.json' ||
-    url.pathname === '/hero-character.jpg' ||
+    url.pathname === '/logo-vertical.jpg' ||
+    url.pathname === '/logo-horizontal.jpg' ||
+    url.pathname === '/logo-icon.jpg' ||
+    url.pathname === '/logo-icon-dark.jpg' ||
     url.pathname === '/offline.html'
   ) {
     return true

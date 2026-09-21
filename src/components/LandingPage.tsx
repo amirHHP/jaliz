@@ -33,8 +33,8 @@ export function LandingPage() {
       content: (
         <div className="flex flex-col items-center text-center px-6 w-full max-w-md mx-auto">
           <Image
-            src="/hero-character.jpg"
-            alt=""
+            src="/logo-vertical.jpg"
+            alt="جالیز - دستیار هوشمند گیاهان آپارتمانی شما"
             width={288}
             height={288}
             priority
