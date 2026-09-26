@@ -17,7 +17,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { language, t } = useLanguage()
-  const { status, user, updateMyProfile, setMyPassword } = useAuth()
+  const { status, user, updateMyProfile, setMyPassword, refreshUser } = useAuth()
   const { theme, setTheme, canChangeTheme } = useTheme()
   
   const [activeTab, setActiveTab] = useState<"profile" | "app">("profile")
@@ -324,6 +324,68 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   placeholder={t("confirm_password")}
                   className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
+              </div>
+
+              {/* Shop Connection (Customer Club) */}
+              <div className="space-y-3 pt-4 border-t border-slate-100">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-slate-400" />
+                    {language === "fa" ? "باشگاه مشتریان" : "Customer Club"}
+                  </label>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {language === "fa" 
+                      ? "اگر کد فروشگاه گل و گیاه خود را دارید، اینجا وارد کنید تا عضو باشگاه مشتریان آنها شوید." 
+                      : "If you have a shop code, enter it here to join their customer club."}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    id="shopCodeInput"
+                    placeholder={language === "fa" ? "کد فروشگاه" : "Shop Code"}
+                    className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={async () => {
+                      const codeInput = document.getElementById("shopCodeInput") as HTMLInputElement;
+                      const code = codeInput?.value;
+                      if (!code) {
+                        setError(language === "fa" ? "کد فروشگاه را وارد کنید" : "Enter shop code");
+                        return;
+                      }
+                      if (user?.shop) {
+                        const message = language === "fa"
+                          ? `شما در حال حاضر عضو فروشگاه ${user.shop.name} هستید. آیا مطمئنید که می‌خواهید آن را تغییر دهید؟`
+                          : `You are currently a member of ${user.shop.name}. Are you sure you want to change it?`;
+                        if (!window.confirm(message)) {
+                          return;
+                        }
+                      }
+                      setIsLoading(true);
+                      setError(null);
+                      try {
+                        const { joinShopAction } = await import("@/app/actions/shop");
+                        const res = await joinShopAction(code);
+                        if (res.success) {
+                          await refreshUser();
+                          setSaved(true);
+                          setTimeout(() => {
+                            onClose();
+                          }, 1200);
+                        }
+                      } catch (err: any) {
+                        setError(err.message || "Failed to join shop");
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }}
+                  >
+                    {language === "fa" ? "اتصال" : "Connect"}
+                  </Button>
+                </div>
               </div>
             </div>
           ) : (

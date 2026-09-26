@@ -3,8 +3,13 @@
 import { cookies } from "next/headers";
 import type { Prisma, User as PrismaUser } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import crypto from "crypto";
 import { generateSalt, hashPassword, verifyPassword } from "@/lib/auth/password";
-import { useSecureSessionCookie } from "@/lib/auth/session-cookie";
+import {
+  signSessionValue,
+  verifyAndExtractSessionUserId,
+  useSecureSessionCookie,
+} from "@/lib/auth/session-cookie";
 import {
   AuthActionResult,
   runAuthAction,
@@ -48,7 +53,8 @@ function validateRole(role: string): UserRole {
 export async function getSessionUserId(): Promise<string | null> {
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_KEY);
-  return session?.value || null;
+  if (!session?.value) return null;
+  return verifyAndExtractSessionUserId(session.value);
 }
 
 export async function getCurrentUser() {
@@ -56,7 +62,8 @@ export async function getCurrentUser() {
   if (!userId) return null;
 
   const user = await prisma.user.findUnique({
-    where: { id: userId }
+    where: { id: userId },
+    include: { shop: { select: { id: true, name: true } }, ownedShop: { select: { id: true, name: true } } }
   });
 
   if (!user || !user.isActive) {
@@ -105,7 +112,7 @@ export async function registerAction(input: RegisterInput): Promise<AuthActionRe
     });
 
     const cookieStore = await cookies();
-    cookieStore.set(SESSION_KEY, user.id, {
+    cookieStore.set(SESSION_KEY, signSessionValue(user.id), {
       httpOnly: true,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
@@ -134,7 +141,7 @@ export async function loginAction(emailInput: string, passwordInput: string): Pr
     if (!ok) throw new AuthError("INVALID_CREDENTIALS");
 
     const cookieStore = await cookies();
-    cookieStore.set(SESSION_KEY, user.id, {
+    cookieStore.set(SESSION_KEY, signSessionValue(user.id), {
       httpOnly: true,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
@@ -146,15 +153,106 @@ export async function loginAction(emailInput: string, passwordInput: string): Pr
   });
 }
 
+const OTP_RESEND_COOLDOWN_MS = 2 * 60 * 1000; // 2 minutes
+const MAX_OTP_ATTEMPTS = 5;
+
 export async function sendOtpAction(emailInput: string): Promise<AuthActionResult<{ success: boolean }>> {
   return runAuthAction(async () => {
     const email = normalizeEmail(emailInput);
     if (!email) throw new AuthError("EMPTY_FIELD");
     if (!EMAIL_REGEX.test(email)) throw new AuthError("INVALID_EMAIL");
 
+    // If account exists, verify it is active
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser && !existingUser.isActive) {
+      throw new AuthError("USER_INACTIVE");
+    }
+
+    // Rate limit resend: require at least 2 minutes between sends
+    const existingOtp = await prisma.otpVerification.findUnique({ where: { email } });
+    if (existingOtp && Date.now() - existingOtp.lastSentAt.getTime() < OTP_RESEND_COOLDOWN_MS) {
+      throw new AuthError("OTP_RATE_LIMITED");
+    }
+
+    // Cryptographically secure 6-digit OTP
+    const otpCode = crypto.randomInt(100000, 1000000).toString();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Store OTP in OtpVerification table without creating the user yet
+    await prisma.otpVerification.upsert({
+      where: { email },
+      create: {
+        email,
+        code: otpCode,
+        expiresAt: otpExpiresAt,
+        lastSentAt: new Date(),
+        attempts: 0,
+      },
+      update: {
+        code: otpCode,
+        expiresAt: otpExpiresAt,
+        lastSentAt: new Date(),
+        attempts: 0,
+      },
+    });
+
+    try {
+      await sendOtpEmail(email, otpCode);
+    } catch (err) {
+      console.error("[sendOtpAction] Failed to send OTP email:", err);
+      throw new AuthError("OTP_SEND_FAILED");
+    }
+
+    return { success: true };
+  });
+}
+
+function safeCompareOtp(provided: string, expected: string): boolean {
+  if (!provided || !expected) return false;
+  const bufA = Buffer.from(provided, "utf-8");
+  const bufB = Buffer.from(expected, "utf-8");
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+export async function loginWithOtpAction(emailInput: string, code: string): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
+  return runAuthAction(async () => {
+    const email = normalizeEmail(emailInput);
+    const cleanCode = code ? code.trim() : "";
+    if (!email || !cleanCode) throw new AuthError("EMPTY_FIELD");
+
+    const otpRecord = await prisma.otpVerification.findUnique({ where: { email } });
+    if (!otpRecord) throw new AuthError("INVALID_CREDENTIALS");
+
+    // Check lockout first (must persist across failed attempts to prevent cooldown bypass)
+    if (otpRecord.attempts >= MAX_OTP_ATTEMPTS) {
+      throw new AuthError("OTP_LOCKED");
+    }
+
+    // Check expiration
+    if (otpRecord.expiresAt.getTime() < Date.now()) {
+      throw new AuthError("INVALID_CREDENTIALS");
+    }
+
+    // Timing-safe code match check
+    if (!safeCompareOtp(cleanCode, otpRecord.code)) {
+      const nextAttempts = otpRecord.attempts + 1;
+      await prisma.otpVerification.update({
+        where: { email },
+        data: { attempts: nextAttempts },
+      });
+      if (nextAttempts >= MAX_OTP_ATTEMPTS) {
+        throw new AuthError("OTP_LOCKED");
+      }
+      throw new AuthError("INVALID_CREDENTIALS");
+    }
+
+    // Valid code: consume OTP
+    await prisma.otpVerification.delete({ where: { email } }).catch(() => {});
+
+    // Only create user in DB after successful verification
     let user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      // Auto-register using email prefix as username
       const username = email.split("@")[0];
       const isFirstUser = (await prisma.user.count()) === 0;
       const role = isFirstUser ? "admin" : "user";
@@ -174,56 +272,8 @@ export async function sendOtpAction(emailInput: string): Promise<AuthActionResul
 
     if (!user.isActive) throw new AuthError("USER_INACTIVE");
 
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        otpCode,
-        otpExpiresAt,
-      },
-    });
-
-    try {
-      await sendOtpEmail(email, otpCode);
-    } catch (err) {
-      console.error("[sendOtpAction] Failed to send OTP email:", err);
-      throw new AuthError("OTP_SEND_FAILED");
-    }
-
-    return { success: true };
-  });
-}
-
-export async function loginWithOtpAction(emailInput: string, code: string): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {
-  return runAuthAction(async () => {
-    const email = normalizeEmail(emailInput);
-    if (!email || !code) throw new AuthError("EMPTY_FIELD");
-
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) throw new AuthError("INVALID_CREDENTIALS");
-    if (!user.isActive) throw new AuthError("USER_INACTIVE");
-
-    if (!user.otpCode || user.otpCode !== code) {
-      throw new AuthError("INVALID_CREDENTIALS");
-    }
-
-    if (!user.otpExpiresAt || user.otpExpiresAt.getTime() < Date.now()) {
-      throw new AuthError("INVALID_CREDENTIALS");
-    }
-
-    // Clear OTP fields after use
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        otpCode: null,
-        otpExpiresAt: null,
-      },
-    });
-
     const cookieStore = await cookies();
-    cookieStore.set(SESSION_KEY, user.id, {
+    cookieStore.set(SESSION_KEY, signSessionValue(user.id), {
       httpOnly: true,
       secure: useSecureSessionCookie(),
       sameSite: "lax",

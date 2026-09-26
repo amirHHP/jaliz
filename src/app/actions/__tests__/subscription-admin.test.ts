@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { signSessionValue } from "@/lib/auth/session-cookie"
 
 const mockCookies = {
   get: vi.fn(),
@@ -33,7 +34,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("fails with FORBIDDEN if caller is not an admin", async () => {
-    mockCookies.get.mockReturnValue({ value: "user-regular" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("user-regular") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "user-regular",
       email: "regular@jaliz.local",
@@ -53,7 +54,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("grants subscription to a single user successfully", async () => {
-    mockCookies.get.mockReturnValue({ value: "admin-id" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("admin-id") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "admin-id",
       email: "admin@jaliz.local",
@@ -80,7 +81,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("grants subscription to multiple users in batch", async () => {
-    mockCookies.get.mockReturnValue({ value: "admin-id" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("admin-id") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "admin-id",
       email: "admin@jaliz.local",
@@ -99,7 +100,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("grants permanent lifetime access when durationDays >= 36500", async () => {
-    mockCookies.get.mockReturnValue({ value: "admin-id" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("admin-id") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "admin-id",
       email: "admin@jaliz.local",
@@ -119,7 +120,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("stacks duration on top of current active subscription", async () => {
-    mockCookies.get.mockReturnValue({ value: "admin-id" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("admin-id") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "admin-id",
       email: "admin@jaliz.local",
@@ -144,7 +145,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("revokes subscription for users by setting expiresAt to now", async () => {
-    mockCookies.get.mockReturnValue({ value: "admin-id" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("admin-id") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "admin-id",
       email: "admin@jaliz.local",
@@ -167,7 +168,7 @@ describe("Admin Subscription Actions", () => {
   })
 
   it("listUsersAction returns users with subscriptionExpiresAt attached", async () => {
-    mockCookies.get.mockReturnValue({ value: "admin-id" })
+    mockCookies.get.mockReturnValue({ value: signSessionValue("admin-id") })
     mockPrisma.user.findUnique.mockResolvedValue({
       id: "admin-id",
       email: "admin@jaliz.local",

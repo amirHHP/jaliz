@@ -17,6 +17,9 @@ export interface User {
   avatar?: string | null
   /** ISO timestamp when the watering-reminder subscription ends, if any. */
   subscriptionExpiresAt?: string | null
+  shopId?: string | null
+  shop?: { id: string; name: string } | null
+  ownedShop?: { id: string; name: string } | null
 }
 
 /** Mutable fields a user is allowed to update on their own profile. */
@@ -65,6 +68,8 @@ export type AuthErrorCode =
   | "EMPTY_FIELD"
   | "FORBIDDEN"
   | "OTP_SEND_FAILED"
+  | "OTP_RATE_LIMITED"
+  | "OTP_LOCKED"
   | "GENERIC"
 
 export class AuthError extends Error {

@@ -522,6 +522,12 @@ export default function AdminPage() {
               </span>
             )}
           </button>
+          <Link
+            href="/admin/shops"
+            className={`flex-1 flex justify-center items-center py-2.5 text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-50`}
+          >
+            {language === "fa" ? "مدیریت فروشگاه‌ها" : "Shops Management"}
+          </Link>
         </div>
 
         {activeAdminTab === "users" && (

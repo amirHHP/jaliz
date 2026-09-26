@@ -116,8 +116,8 @@ export function Header() {
             height={40}
             className="h-10 w-10 rounded-xl shadow-sm object-contain"
           />
-          <span className="text-xl font-bold tracking-tight text-foreground">
-            {t("app_title")}
+          <span className="text-xl font-bold tracking-tight text-foreground flex items-center gap-1">
+            {t("app_title")} {user?.shop?.name && <span className="text-sm font-medium text-emerald-600">({user.shop.name})</span>}
           </span>
         </Link>
 
@@ -261,6 +261,18 @@ export function Header() {
                       {t("admin_panel")}
                     </Link>
                   )}
+                  {user.ownedShop && (
+                    <Link
+                      href="/shop"
+                      prefetch={false}
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                    >
+                      <Shield className="h-4 w-4 text-emerald-600" />
+                      {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
+                    </Link>
+                  )}
                   <button
                     role="menuitem"
                     onClick={() => {
@@ -392,6 +404,16 @@ export function Header() {
 
           {status === "authenticated" && user && (
             <div className="border-t border-border pt-2 mt-2">
+              {user.ownedShop && (
+                <Link
+                  href="/shop"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Shield className="h-4 w-4" />
+                  {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
+                </Link>
+              )}
               <button
                 onClick={() => {
                   setMobileMenuOpen(false)

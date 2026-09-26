@@ -10,6 +10,18 @@ export async function getGlobalSetting(key: string): Promise<string | null> {
   return setting ? setting.value : null;
 }
 
+export async function getGlobalSettings(keys: string[]): Promise<Record<string, string>> {
+  if (!keys || keys.length === 0) return {};
+  const settings = await prisma.globalSetting.findMany({
+    where: { key: { in: keys } }
+  });
+  const map: Record<string, string> = {};
+  for (const s of settings) {
+    map[s.key] = s.value;
+  }
+  return map;
+}
+
 export async function setGlobalSetting(key: string, value: string) {
   const userId = await getSessionUserId();
   if (!userId) throw new Error("Unauthorized");
@@ -28,11 +40,24 @@ export async function setGlobalSetting(key: string, value: string) {
 }
 
 export async function getAiConfig() {
-  const provider = await getGlobalSetting("ai-provider") || "gemini";
-
-  // Each provider stores its own API key and model independently
-  const providerApiKey = await getGlobalSetting(`ai-api-key-${provider}`);
-  const providerModel = await getGlobalSetting(`ai-model-${provider}`);
+  // Batched fetch of active provider, provider keys, and legacy fallbacks in 1 query
+  const keys = [
+    "ai-provider",
+    "ai-api-key",
+    "gemini-api-key",
+    "ai-model",
+    "gemini-model",
+    "ai-api-key-gemini",
+    "ai-model-gemini",
+    "ai-api-key-sotoon",
+    "ai-model-sotoon",
+    "ai-api-key-gapgpt",
+    "ai-model-gapgpt",
+    "ai-api-key-tokenbazaar",
+    "ai-model-tokenbazaar",
+  ];
+  const settings = await getGlobalSettings(keys);
+  const provider = settings["ai-provider"] || "gemini";
 
   // Fallback chain: provider-specific -> env fallback -> shared legacy -> old gemini-specific
   const envKey = provider === "tokenbazaar"
@@ -41,39 +66,57 @@ export async function getAiConfig() {
     ? process.env.GEMINI_API_KEY
     : undefined;
 
-  const apiKey = providerApiKey
+  const apiKey = settings[`ai-api-key-${provider}`]
     || envKey
-    || await getGlobalSetting("ai-api-key")
-    || await getGlobalSetting("gemini-api-key");
+    || settings["ai-api-key"]
+    || settings["gemini-api-key"]
+    || null;
 
-  const model = providerModel
-    || await getGlobalSetting("ai-model")
-    || await getGlobalSetting("gemini-model");
+  const model = settings[`ai-model-${provider}`]
+    || settings["ai-model"]
+    || settings["gemini-model"]
+    || null;
 
   return { provider, apiKey, model };
 }
 
 /**
  * Returns stored API keys for all providers, used by the admin UI to
- * populate the key inputs independently.
+ * populate the key inputs independently. Batched into a single query.
  */
 export async function getAllProviderKeys() {
-  const geminiKey = await getGlobalSetting("ai-api-key-gemini")
-    || await getGlobalSetting("ai-api-key")
-    || await getGlobalSetting("gemini-api-key")
+  const keys = [
+    "ai-api-key-gemini",
+    "ai-api-key",
+    "gemini-api-key",
+    "ai-api-key-sotoon",
+    "ai-api-key-gapgpt",
+    "ai-api-key-tokenbazaar",
+    "ai-model-gemini",
+    "ai-model",
+    "gemini-model",
+    "ai-model-sotoon",
+    "ai-model-gapgpt",
+    "ai-model-tokenbazaar",
+  ];
+  const settings = await getGlobalSettings(keys);
+
+  const geminiKey = settings["ai-api-key-gemini"]
+    || settings["ai-api-key"]
+    || settings["gemini-api-key"]
     || "";
-  const sotoonKey = await getGlobalSetting("ai-api-key-sotoon") || "";
-  const gapgptKey = await getGlobalSetting("ai-api-key-gapgpt") || "";
-  const tokenbazaarKey = await getGlobalSetting("ai-api-key-tokenbazaar")
+  const sotoonKey = settings["ai-api-key-sotoon"] || "";
+  const gapgptKey = settings["ai-api-key-gapgpt"] || "";
+  const tokenbazaarKey = settings["ai-api-key-tokenbazaar"]
     || process.env.TOKENBAZAAR_API_KEY
     || "";
-  const geminiModel = await getGlobalSetting("ai-model-gemini")
-    || await getGlobalSetting("ai-model")
-    || await getGlobalSetting("gemini-model")
+  const geminiModel = settings["ai-model-gemini"]
+    || settings["ai-model"]
+    || settings["gemini-model"]
     || "";
-  const sotoonModel = await getGlobalSetting("ai-model-sotoon") || "";
-  const gapgptModel = await getGlobalSetting("ai-model-gapgpt") || "";
-  const tokenbazaarModel = await getGlobalSetting("ai-model-tokenbazaar") || "";
+  const sotoonModel = settings["ai-model-sotoon"] || "";
+  const gapgptModel = settings["ai-model-gapgpt"] || "";
+  const tokenbazaarModel = settings["ai-model-tokenbazaar"] || "";
   return { geminiKey, sotoonKey, gapgptKey, tokenbazaarKey, geminiModel, sotoonModel, gapgptModel, tokenbazaarModel };
 }
 

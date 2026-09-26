@@ -1,9 +1,20 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSQL } from '@prisma/adapter-libsql'
 
+export async function applyPrismaPragmas(client: PrismaClient) {
+  try {
+    await client.$queryRawUnsafe('PRAGMA journal_mode = WAL;')
+    await client.$queryRawUnsafe('PRAGMA busy_timeout = 5000;')
+    await client.$queryRawUnsafe('PRAGMA synchronous = NORMAL;')
+  } catch (err) {
+    console.error('Failed to configure SQLite PRAGMAs:', err)
+  }
+}
+
 const prismaClientSingleton = () => {
   const dbUrl = (process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL || '').trim()
 
+  let client: PrismaClient
   if (dbUrl.startsWith('libsql://') || dbUrl.startsWith('https://')) {
     // Set process.env.DATABASE_URL if not set, so Prisma Client doesn't complain
     if (!process.env.DATABASE_URL) {
@@ -13,10 +24,16 @@ const prismaClientSingleton = () => {
       url: dbUrl,
       authToken: process.env.TURSO_AUTH_TOKEN,
     })
-    return new PrismaClient({ adapter })
+    client = new PrismaClient({ adapter })
+  } else {
+    client = new PrismaClient()
   }
 
-  return new PrismaClient()
+  if (!dbUrl.startsWith('libsql://') && !dbUrl.startsWith('https://')) {
+    void applyPrismaPragmas(client)
+  }
+
+  return client
 }
 
 declare global {

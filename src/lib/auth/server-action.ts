@@ -72,7 +72,7 @@ export async function runAuthAction<T>(fn: () => Promise<T>): Promise<AuthAction
   }
 }
 
-export function toPublicUser(user: PrismaUser): User {
+export function toPublicUser(user: any): User {
   const { passwordHash, salt, otpCode, otpExpiresAt, ...publicUser } = user
   void passwordHash
   void salt

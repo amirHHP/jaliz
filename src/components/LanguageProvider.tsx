@@ -198,6 +198,10 @@ const translations = {
     auth_error_password_mismatch: "Passwords do not match.",
     auth_error_otp_send_failed:
       "Could not send the verification email. Check your email address or try password login.",
+    auth_error_otp_rate_limited:
+      "Please wait at least 2 minutes before requesting a new verification code.",
+    auth_error_otp_locked:
+      "Too many failed attempts. Please request a new verification code.",
     auth_error_generic: "Something went wrong. Please try again.",
     promo_top_text: "🎁 Get 200,000 Tomans first purchase discount! Sign up now to claim your gift.",
     promo_top_cta: "Sign Up & Claim",
@@ -702,6 +706,10 @@ const translations = {
     auth_error_password_mismatch: "رمز عبور و تکرار آن یکسان نیستند.",
     auth_error_otp_send_failed:
       "ارسال ایمیل کد تایید ممکن نشد. ایمیل را بررسی کنید یا با رمز عبور وارد شوید.",
+    auth_error_otp_rate_limited:
+      "لطفاً قبل از ارسال مجدد کد، حداقل ۲ دقیقه صبر کنید.",
+    auth_error_otp_locked:
+      "تعداد تلاش‌های ناموفق بیش از حد مجاز بود. لطفاً کد جدید درخواست کنید.",
     auth_error_generic: "خطایی رخ داد. لطفاً دوباره تلاش کنید.",
     promo_top_text: "🎁 ۲۰۰,۰۰۰ تومان هدیه ثبت‌نام و خرید اول! همین حالا ثبت‌نام کنید و هدیه خود را دریافت کنید.",
     promo_top_cta: "ثبت‌نام و دریافت هدیه",

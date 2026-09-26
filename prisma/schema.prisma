@@ -20,6 +20,9 @@ model User {
   isActive     Boolean   @default(true)
   phone        String?
   avatar       String?
+  shopId       String?
+  shop         Shop?      @relation("ShopCustomers", fields: [shopId], references: [id])
+  ownedShop    Shop?      @relation("ShopOwner")
   createdAt    DateTime  @default(now())
 
   // Relations
@@ -53,6 +56,11 @@ model Payment {
   paidAt       DateTime?
   /** When status=paid, subscription end time granted by this payment. */
   expiresAt    DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([listingId])
 }
 
 model UserPlant {
@@ -79,6 +87,9 @@ model UserPlant {
 
   // Relations
   statusLogs         PlantStatusLog[]
+
+  @@index([userId])
+  @@index([nextWateringDate])
 }
 
 model PlantStatusLog {
@@ -90,6 +101,9 @@ model PlantStatusLog {
   aiAdvice    String?   // AI suggestion
   image       String?   // Optional photo attached to this log (data URL), for AI context & history
   createdAt   DateTime  @default(now())
+
+  @@index([plantId])
+  @@index([createdAt])
 }
 
 model WateringLog {
@@ -110,6 +124,8 @@ model PlantShare {
   isActive  Boolean   @default(true)
   expiresAt DateTime?
   createdAt DateTime  @default(now())
+
+  @@index([ownerId])
 }
 
 model MarketplaceListing {
@@ -133,6 +149,10 @@ model MarketplaceListing {
   messages      MarketplaceMessage[]
   reports       MarketplaceReport[]
   payments      Payment[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model MarketplaceConversation {
@@ -153,6 +173,7 @@ model ConversationParticipant {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([conversationId, userId])
+  @@index([userId])
 }
 
 model MarketplaceMessage {
@@ -167,6 +188,10 @@ model MarketplaceMessage {
   recipient      User     @relation("MessagesReceived", fields: [recipientId], references: [id])
   body           String
   createdAt      DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([recipientId])
+  @@index([senderId])
 }
 
 model GlobalSetting {
@@ -182,4 +207,31 @@ model MarketplaceReport {
   reporter   User?              @relation(fields: [reporterId], references: [id], onDelete: SetNull)
   reason     String
   createdAt  DateTime           @default(now())
+
+  @@index([listingId])
+  @@index([reporterId])
+}
+
+model OtpVerification {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  code       String
+  expiresAt  DateTime
+  lastSentAt DateTime @default(now())
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([email])
+}
+
+model Shop {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  ownerId   String   @unique
+  owner     User     @relation("ShopOwner", fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+
+  customers User[]   @relation("ShopCustomers")
 }

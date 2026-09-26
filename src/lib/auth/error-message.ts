@@ -11,6 +11,8 @@ const TRANSLATION_KEY_BY_CODE: Record<AuthErrorCode, string> = {
   EMPTY_FIELD: "auth_error_empty_field",
   FORBIDDEN: "auth_error_generic",
   OTP_SEND_FAILED: "auth_error_otp_send_failed",
+  OTP_RATE_LIMITED: "auth_error_otp_rate_limited",
+  OTP_LOCKED: "auth_error_otp_locked",
   GENERIC: "auth_error_generic",
 }
 

@@ -56,7 +56,10 @@ export async function updatePlantsLastWateredAction(plantIds: string[], dateStr:
   if (!userId) return;
   if (!(await userHasActiveSubscription(userId))) return;
 
+  if (!Array.isArray(plantIds) || plantIds.length === 0 || !dateStr) return;
+
   const lastWatered = new Date(dateStr);
+  if (Number.isNaN(lastWatered.getTime())) return;
 
   // We need to fetch each plant to get its wateringInterval
   const plants = await prisma.userPlant.findMany({
@@ -64,19 +67,23 @@ export async function updatePlantsLastWateredAction(plantIds: string[], dateStr:
     select: { id: true, wateringInterval: true }
   });
 
-  for (const plant of plants) {
+  if (plants.length === 0) return;
+
+  const updates = plants.map((plant) => {
     const interval = plant.wateringInterval || 7;
     const nextWateringDate = new Date(lastWatered);
     nextWateringDate.setDate(nextWateringDate.getDate() + interval);
 
-    await prisma.userPlant.update({
-      where: { id: plant.id },
+    return prisma.userPlant.update({
+      where: { id: plant.id, userId },
       data: {
         lastWatered,
-        nextWateringDate
-      }
+        nextWateringDate,
+      },
     });
-  }
+  });
+
+  await prisma.$transaction(updates);
 }
 
 export async function markWateringDoneAction(dateStr: string) {

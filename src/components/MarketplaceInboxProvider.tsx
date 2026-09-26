@@ -150,15 +150,21 @@ export function MarketplaceInboxProvider({ children }: { children: React.ReactNo
     pollInboxRef.current = pollInbox
   }, [pollInbox])
 
-  // Initial inbox load (no listing images).
+  // Initial inbox load (no listing images) only for authenticated users.
   useEffect(() => {
+    if (status !== "authenticated" || !user) {
+      setInboxReady(true)
+      setConversations([])
+      setMessages([])
+      return
+    }
     let cancelled = false
     ;(async () => {
       if (cancelled) return
       await pollInboxRef.current()
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [status, user])
 
   const listConversations = useCallback(
     (userId: string) =>

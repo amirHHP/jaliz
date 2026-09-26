@@ -1,5 +1,41 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import "./globals.css";
+
+const vazirmatn = localFont({
+  src: [
+    {
+      path: "./fonts/Vazirmatn-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Vazirmatn-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/Vazirmatn-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  variable: "--font-vazirmatn",
+  display: "swap",
+});
+
+const geistSans = localFont({
+  src: "./fonts/Geist-Regular.woff2",
+  variable: "--font-geist-sans",
+  display: "swap",
+});
+
+const geistMono = localFont({
+  src: "./fonts/GeistMono-Regular.woff2",
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -64,7 +100,7 @@ export default function RootLayout({
     <html
       lang="fa"
       dir="rtl"
-      className="h-full antialiased"
+      className={`${vazirmatn.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
