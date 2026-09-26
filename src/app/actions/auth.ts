@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import type { Prisma, User as PrismaUser } from "@prisma/client";
+import type { User as PrismaUser } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import crypto from "crypto";
 import { generateSalt, hashPassword, verifyPassword } from "@/lib/auth/password";
@@ -61,10 +61,26 @@ export async function getCurrentUser() {
   const userId = await getSessionUserId();
   if (!userId) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: { shop: { select: { id: true, name: true } }, ownedShop: { select: { id: true, name: true } } }
-  });
+  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+    await (prisma as any).ensureDatabaseSchema().catch(() => {});
+  }
+
+  let user: any;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { shop: { select: { id: true, name: true } }, ownedShop: { select: { id: true, name: true } } }
+    });
+  } catch (err) {
+    console.error("Failed to query user with shop relations:", err);
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: userId },
+      });
+    } catch {
+      return null;
+    }
+  }
 
   if (!user || !user.isActive) {
     if (user && !user.isActive) {

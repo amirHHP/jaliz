@@ -5,6 +5,9 @@ import prisma from "@/lib/prisma"
 import { getSessionUserId, getCurrentUser } from "./auth"
 
 export async function joinShopAction(code: string) {
+  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+    await (prisma as any).ensureDatabaseSchema().catch(() => {})
+  }
   const userId = await getSessionUserId()
   if (!userId) {
     throw new Error("Unauthorized")
@@ -28,6 +31,9 @@ export async function joinShopAction(code: string) {
 }
 
 export async function createShopAction(data: { name: string; code: string; ownerId: string }) {
+  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+    await (prisma as any).ensureDatabaseSchema().catch(() => {})
+  }
   const currentUser = await getCurrentUser()
   if (!currentUser || currentUser.role !== "admin") {
     throw new Error("Unauthorized")
@@ -55,6 +61,9 @@ export async function createShopAction(data: { name: string; code: string; owner
 }
 
 export async function getAdminShopsAction() {
+  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+    await (prisma as any).ensureDatabaseSchema().catch(() => {})
+  }
   const currentUser = await getCurrentUser()
   if (!currentUser || currentUser.role !== "admin") {
     throw new Error("Unauthorized")
@@ -70,6 +79,9 @@ export async function getAdminShopsAction() {
 }
 
 export async function getShopCustomersAction(page: number = 1, limit: number = 20) {
+  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+    await (prisma as any).ensureDatabaseSchema().catch(() => {})
+  }
   const currentUser = await getCurrentUser()
   if (!currentUser) throw new Error("Unauthorized")
 
