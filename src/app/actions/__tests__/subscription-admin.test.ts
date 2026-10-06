@@ -206,7 +206,7 @@ describe("Admin Subscription Actions", () => {
     const users = await listUsersAction()
 
     expect(Array.isArray(users)).toBe(true)
-    const typedUsers = users as Array<Record<string, unknown>>
+    const typedUsers = (users as unknown) as Array<Record<string, unknown>>
     expect(typedUsers).toHaveLength(2)
     expect(typedUsers[0].subscriptionExpiresAt).toBe(payDate.toISOString())
     expect(typedUsers[1].subscriptionExpiresAt).toBeNull()

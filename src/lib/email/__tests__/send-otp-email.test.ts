@@ -29,7 +29,7 @@ describe("sendOtpEmail", () => {
   })
 
   it("logs OTP in development when RESEND_API_KEY is missing", async () => {
-    process.env.NODE_ENV = "development"
+    (process.env as Record<string, string | undefined>).NODE_ENV = "development"
     delete process.env.RESEND_API_KEY
 
     const { sendOtpEmail } = await import("../send-otp-email")
@@ -41,7 +41,7 @@ describe("sendOtpEmail", () => {
   })
 
   it("throws in production when RESEND_API_KEY is missing", async () => {
-    process.env.NODE_ENV = "production"
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production"
     delete process.env.RESEND_API_KEY
 
     const { sendOtpEmail } = await import("../send-otp-email")
@@ -51,7 +51,7 @@ describe("sendOtpEmail", () => {
   })
 
   it("sends email via Resend when API key is configured", async () => {
-    process.env.NODE_ENV = "production"
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production"
     process.env.RESEND_API_KEY = "re_test_key"
     process.env.RESEND_FROM = "Jaliz <auth@jaliz.ir>"
     sendMock.mockResolvedValue({ data: { id: "msg_1" }, error: null })
@@ -71,7 +71,7 @@ describe("sendOtpEmail", () => {
   })
 
   it("throws when Resend returns an error", async () => {
-    process.env.NODE_ENV = "production"
+    (process.env as Record<string, string | undefined>).NODE_ENV = "production"
     process.env.RESEND_API_KEY = "re_test_key"
     sendMock.mockResolvedValue({ data: null, error: { message: "Invalid API key" } })
 

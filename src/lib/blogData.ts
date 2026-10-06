@@ -1,8 +1,12 @@
 import { newBlogPosts } from "./blogPostsNew"
 import { applyBlogSeo, type BlogPost, type BlogPostInput } from "./blogTopics"
 import { seoBlogPosts } from "./blogPostsSeo"
+import { expansionPosts1 } from "./blogPostsExpansion1"
+import { expansionPosts2 } from "./blogPostsExpansion2"
 
 export type { BlogPost, BlogCluster, BlogFaq, BlogPostInput } from "./blogTopics"
+export { expansionPosts1 } from "./blogPostsExpansion1"
+export { expansionPosts2 } from "./blogPostsExpansion2"
 
 const existingBlogPosts: BlogPostInput[] = [
   {
@@ -795,8 +799,8 @@ const existingBlogPosts: BlogPostInput[] = [
 ];
 
 export const blogPosts: BlogPost[] = [
-  ...seoBlogPosts,
-  ...newBlogPosts,
-  ...existingBlogPosts,
-].map(applyBlogSeo)
+  ...[...seoBlogPosts, ...newBlogPosts, ...existingBlogPosts].map(applyBlogSeo),
+  ...expansionPosts1,
+  ...expansionPosts2,
+]
 

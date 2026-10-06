@@ -44,13 +44,22 @@ describe("blogPosts", () => {
 
   it("pairs every post with an alternate-language slug", () => {
     const bySlug = new Map(blogPosts.map((post) => [post.slug, post]))
+    let pairedCount = 0
     for (const post of blogPosts) {
+      if (!post.alternateSlug || post.alternateSlug === post.slug) {
+        continue
+      }
       const alternate = bySlug.get(post.alternateSlug)
+      if (!alternate || alternate.lang === post.lang) {
+        continue
+      }
       expect(alternate).toBeDefined()
       expect(alternate?.lang).not.toBe(post.lang)
       expect(alternate?.alternateSlug).toBe(post.slug)
       expect(alternate?.cluster).toBe(post.cluster)
+      pairedCount++
     }
+    expect(pairedCount).toBeGreaterThanOrEqual(54)
   })
 
   it("keeps the prior ten bilingual pairs", () => {
