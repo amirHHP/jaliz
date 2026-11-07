@@ -67,6 +67,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  redirects: async () => {
+    return [
+      {
+        source: "/admin/shop",
+        destination: "/admin/shops",
+        permanent: true,
+      },
+    ];
+  },
   rewrites: async () => {
     return [
       {

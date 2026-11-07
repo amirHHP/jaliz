@@ -13,6 +13,7 @@ import {
   Shield,
   ShoppingBag,
   Sparkles,
+  Store,
   User,
   UserPlus,
   X,
@@ -261,7 +262,7 @@ export function Header() {
                       {t("admin_panel")}
                     </Link>
                   )}
-                  {user.ownedShop && (
+                  {(user.ownedShop || isAdmin) && (
                     <Link
                       href="/shop"
                       prefetch={false}
@@ -269,7 +270,7 @@ export function Header() {
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-slate-50 dark:hover:bg-slate-700/50"
                     >
-                      <Shield className="h-4 w-4 text-emerald-600" />
+                      <Store className="h-4 w-4 text-emerald-600" />
                       {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
                     </Link>
                   )}
@@ -404,13 +405,13 @@ export function Header() {
 
           {status === "authenticated" && user && (
             <div className="border-t border-border pt-2 mt-2">
-              {user.ownedShop && (
+              {(user.ownedShop || isAdmin) && (
                 <Link
                   href="/shop"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                 >
-                  <Shield className="h-4 w-4" />
+                  <Store className="h-4 w-4" />
                   {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
                 </Link>
               )}

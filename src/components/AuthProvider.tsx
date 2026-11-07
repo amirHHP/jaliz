@@ -94,6 +94,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // Auto-connect to pending shop if user was invited via a shop link
+  useEffect(() => {
+    if (status === "authenticated" && user) {
+      try {
+        const pendingShopCode = localStorage.getItem("pending_shop_code")
+        if (pendingShopCode) {
+          localStorage.removeItem("pending_shop_code")
+          import("@/app/actions/shop").then(({ joinShopAction }) => {
+            joinShopAction(pendingShopCode).then(() => {
+              getCurrentUser().then((updated) => {
+                if (updated) setUser(updated)
+              })
+            }).catch((err) => {
+              console.warn("Failed to join pending shop:", err)
+            })
+          })
+        }
+      } catch {}
+    }
+  }, [status, user])
+
   const register = useCallback(async (input: RegisterInput): Promise<User> => {
     const u = unwrapAuthResult(await registerAction(input))
     setUser(u)
