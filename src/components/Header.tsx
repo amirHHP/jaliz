@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import {
+  Bell,
   Globe,
   History,
   LogIn,
@@ -24,6 +25,7 @@ import { useAuth } from "@/components/AuthProvider"
 import { useMarketplaceInbox } from "@/components/MarketplaceProvider"
 import { useCart } from "@/components/marketplace/CartProvider"
 import { SettingsModal } from "@/components/SettingsModal"
+import { ShopMessagesModal } from "@/components/ShopMessagesModal"
 import { Settings as SettingsIcon } from "lucide-react"
 import { PromoBanner } from "@/components/PromoBanner"
 
@@ -67,7 +69,20 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [shopMessagesOpen, setShopMessagesOpen] = useState(false)
+  const [unreadShopMessagesCount, setUnreadShopMessagesCount] = useState(0)
   const menuRef = useRef<HTMLDivElement | null>(null)
+
+  // Poll or check unread shop messages when user has a connected shop
+  useEffect(() => {
+    if (status === "authenticated" && user?.shop) {
+      import("@/app/actions/shop-messages").then(({ getUnreadShopMessagesCountAction }) => {
+        getUnreadShopMessagesCountAction()
+          .then((count) => setUnreadShopMessagesCount(count || 0))
+          .catch(() => {})
+      })
+    }
+  }, [status, user?.shop?.id])
 
   // Close the account dropdown on outside click / Escape.
   useEffect(() => {
@@ -109,18 +124,38 @@ export function Header() {
       <header className="app-header">
         <PromoBanner />
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 text-emerald-700">
-          <Image
-            src="/logo-icon.jpg"
-            alt="جالیز"
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-xl shadow-sm object-contain"
-          />
-          <span className="text-xl font-bold tracking-tight text-foreground flex items-center gap-1">
-            {t("app_title")} {user?.shop?.name && <span className="text-sm font-medium text-emerald-600">({user.shop.name})</span>}
-          </span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 text-emerald-700">
+            <Image
+              src="/logo-icon.jpg"
+              alt="جالیز"
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-xl shadow-sm object-contain"
+            />
+            <span className="text-xl font-bold tracking-tight text-foreground">
+              {t("app_title")}
+            </span>
+          </Link>
+          {user?.shop?.name && (
+            <button
+              type="button"
+              onClick={() => setShopMessagesOpen(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition cursor-pointer"
+              title={language === "fa" ? `پیام‌های فروشگاه ${user.shop.name}` : `Messages from ${user.shop.name}`}
+            >
+              <Store className="h-3.5 w-3.5" />
+              <span>{user.shop.name}</span>
+              {unreadShopMessagesCount > 0 ? (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white px-1 animate-pulse">
+                  {unreadShopMessagesCount}
+                </span>
+              ) : (
+                <Bell className="h-3 w-3 opacity-60" />
+              )}
+            </button>
+          )}
+        </div>
 
         {/* Desktop navigation */}
         <nav className="hidden md:flex gap-6 text-sm font-medium">
@@ -274,6 +309,26 @@ export function Header() {
                       {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
                     </Link>
                   )}
+                  {user.shop && (
+                    <button
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        setShopMessagesOpen(true)
+                      }}
+                      className="w-full text-start flex items-center justify-between px-3 py-2 text-sm text-foreground hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-emerald-600" />
+                        {language === "fa" ? `پیام‌های ${user.shop.name}` : `Messages from ${user.shop.name}`}
+                      </span>
+                      {unreadShopMessagesCount > 0 && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white px-1">
+                          {unreadShopMessagesCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
                   <button
                     role="menuitem"
                     onClick={() => {
@@ -415,6 +470,25 @@ export function Header() {
                   {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
                 </Link>
               )}
+              {user.shop && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    setShopMessagesOpen(true)
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                >
+                  <span className="flex items-center gap-3">
+                    <Bell className="h-4 w-4 text-emerald-600" />
+                    {language === "fa" ? `پیام‌های ${user.shop.name}` : `Messages from ${user.shop.name}`}
+                  </span>
+                  {unreadShopMessagesCount > 0 && (
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white px-1">
+                      {unreadShopMessagesCount}
+                    </span>
+                  )}
+                </button>
+              )}
               <button
                 onClick={() => {
                   setMobileMenuOpen(false)
@@ -463,6 +537,13 @@ export function Header() {
 
       {/* Settings Modal */}
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {/* Shop Messages Modal */}
+      <ShopMessagesModal
+        isOpen={shopMessagesOpen}
+        onClose={() => setShopMessagesOpen(false)}
+        onRead={() => setUnreadShopMessagesCount(0)}
+      />
     </>
   )
 }

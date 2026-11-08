@@ -71,6 +71,52 @@ export async function ensureDatabaseSchema(client: PrismaClient = prisma): Promi
       }
     }
 
+    try {
+      await client.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "ShopMessage" (
+          "id" TEXT NOT NULL PRIMARY KEY,
+          "shopId" TEXT NOT NULL,
+          "senderId" TEXT NOT NULL,
+          "recipientId" TEXT,
+          "title" TEXT,
+          "body" TEXT NOT NULL,
+          "isBroadcast" BOOLEAN NOT NULL DEFAULT 0,
+          "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT "ShopMessage_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+          CONSTRAINT "ShopMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+          CONSTRAINT "ShopMessage_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+        );
+      `)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessage_shopId_createdAt_idx" ON "ShopMessage"("shopId", "createdAt");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessage_recipientId_idx" ON "ShopMessage"("recipientId");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessage_senderId_idx" ON "ShopMessage"("senderId");`)
+    } catch (err: any) {
+      const msg = err?.message || String(err)
+      if (!msg.includes("already exists")) {
+        console.warn("[ensureDatabaseSchema] ShopMessage notice:", msg)
+      }
+    }
+
+    try {
+      await client.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "ShopMessageRead" (
+          "id" TEXT NOT NULL PRIMARY KEY,
+          "messageId" TEXT NOT NULL,
+          "userId" TEXT NOT NULL,
+          "readAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT "ShopMessageRead_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "ShopMessage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+          CONSTRAINT "ShopMessageRead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+        );
+      `)
+      await client.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "ShopMessageRead_messageId_userId_key" ON "ShopMessageRead"("messageId", "userId");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessageRead_userId_idx" ON "ShopMessageRead"("userId");`)
+    } catch (err: any) {
+      const msg = err?.message || String(err)
+      if (!msg.includes("already exists")) {
+        console.warn("[ensureDatabaseSchema] ShopMessageRead notice:", msg)
+      }
+    }
+
     schemaEnsured = true
   })().catch((err) => {
     schemaPromise = null

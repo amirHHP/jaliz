@@ -115,9 +115,76 @@ async function createOtpTableIfMissing() {
   }
 }
 
+async function createShopMessagesTableIfMissing() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ShopMessage" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "shopId" TEXT NOT NULL,
+      "senderId" TEXT NOT NULL,
+      "recipientId" TEXT,
+      "title" TEXT,
+      "body" TEXT NOT NULL,
+      "isBroadcast" BOOLEAN NOT NULL DEFAULT 0,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "ShopMessage_shopId_fkey" FOREIGN KEY ("shopId") REFERENCES "Shop" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "ShopMessage_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "ShopMessage_recipientId_fkey" FOREIGN KEY ("recipientId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `)
+  console.log("✅ Ensured ShopMessage table exists")
+
+  try {
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessage_shopId_createdAt_idx" ON "ShopMessage"("shopId", "createdAt");`)
+  } catch (err) {
+    const msg = err.message || String(err)
+    if (!msg.includes("already exists")) throw err
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessage_recipientId_idx" ON "ShopMessage"("recipientId");`)
+  } catch (err) {
+    const msg = err.message || String(err)
+    if (!msg.includes("already exists")) throw err
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessage_senderId_idx" ON "ShopMessage"("senderId");`)
+  } catch (err) {
+    const msg = err.message || String(err)
+    if (!msg.includes("already exists")) throw err
+  }
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ShopMessageRead" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "messageId" TEXT NOT NULL,
+      "userId" TEXT NOT NULL,
+      "readAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "ShopMessageRead_messageId_fkey" FOREIGN KEY ("messageId") REFERENCES "ShopMessage" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      CONSTRAINT "ShopMessageRead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `)
+  console.log("✅ Ensured ShopMessageRead table exists")
+
+  try {
+    await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "ShopMessageRead_messageId_userId_key" ON "ShopMessageRead"("messageId", "userId");`)
+  } catch (err) {
+    const msg = err.message || String(err)
+    if (!msg.includes("already exists")) throw err
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "ShopMessageRead_userId_idx" ON "ShopMessageRead"("userId");`)
+  } catch (err) {
+    const msg = err.message || String(err)
+    if (!msg.includes("already exists")) throw err
+  }
+}
+
 try {
   await createShopTableIfMissing()
   await createOtpTableIfMissing()
+  await createShopMessagesTableIfMissing()
   console.log("✅ Customer club migration completed successfully.")
 } catch (err) {
   console.error("❌ Migration failed:", err.message || err)

@@ -35,6 +35,9 @@ model User {
   conversations ConversationParticipant[]
   reports       MarketplaceReport[]
   payments      Payment[]
+  shopMessagesSent  ShopMessage[]     @relation("ShopMessagesSent")
+  shopMessagesRecv  ShopMessage[]     @relation("ShopMessagesReceived")
+  shopMessageReads  ShopMessageRead[]
 }
 
 model Payment {
@@ -234,4 +237,38 @@ model Shop {
   createdAt DateTime @default(now())
 
   customers User[]   @relation("ShopCustomers")
+  messages  ShopMessage[]
 }
+
+model ShopMessage {
+  id          String   @id @default(uuid())
+  shopId      String
+  shop        Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User     @relation("ShopMessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String?  // null = broadcast to all customers of the shop
+  recipient   User?    @relation("ShopMessagesReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  title       String?
+  body        String
+  isBroadcast Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  reads       ShopMessageRead[]
+
+  @@index([shopId, createdAt])
+  @@index([recipientId])
+  @@index([senderId])
+}
+
+model ShopMessageRead {
+  id        String      @id @default(uuid())
+  messageId String
+  message   ShopMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt    DateTime    @default(now())
+
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
