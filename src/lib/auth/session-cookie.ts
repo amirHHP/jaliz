@@ -1,6 +1,7 @@
 import crypto from "crypto";
 
 export const SESSION_KEY = "jaliz_session";
+export const CLIENT_SESSION_KEY = "jaliz_logged_in";
 
 /**
  * Session cookie `Secure` flag.

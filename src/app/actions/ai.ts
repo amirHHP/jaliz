@@ -2,6 +2,8 @@
 
 import { getAiConfig } from "./settings";
 import { parseJsonFromModelText } from "@/lib/ai-json";
+import { getSessionUserId } from "@/app/actions/auth";
+import { userHasActiveSubscription } from "@/lib/subscription-status";
 
 // Read at runtime (not build time) so Docker's API_URL env var is picked up correctly
 function getApiBase() {
@@ -295,6 +297,15 @@ Provide the following details in a JSON object exactly matching this structure, 
 
 export async function getWeatherAdviceAction(data: { latitude: number, longitude: number, userLocation?: string, language?: string, plants: any[] }): Promise<any> {
   try {
+    const userId = await getSessionUserId();
+    if (!userId || !(await userHasActiveSubscription(userId))) {
+      return {
+        error: data.language === "fa"
+          ? "دسترسی به هواشناسی هوشمند نیازمند اشتراک فعال است."
+          : "Smart weather advice requires an active subscription."
+      };
+    }
+
     const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
     const api_key = globalApiKey;
     const model_name = globalModel || (provider === "tokenbazaar" ? "glm-5.3-flash" : provider === "sotoon" || provider === "gapgpt" ? "gpt-4o" : "gemini-1.5-pro");

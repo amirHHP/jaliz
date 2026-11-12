@@ -94,7 +94,10 @@ function setCachedAuthUser(u: User | null) {
 
 export function hasSessionCookie(): boolean {
   if (typeof document === "undefined") return false
-  return document.cookie.split(";").some((c) => c.trim().startsWith("jaliz_session=1"))
+  return document.cookie.split(";").some((c) => {
+    const trimmed = c.trim()
+    return trimmed.startsWith("jaliz_logged_in=1") || trimmed.startsWith("jaliz_session=")
+  })
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -187,19 +190,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkAuth(0)
 
-    // Re-verify auth when coming back online or refocusing the tab
-    const handleOnlineOrFocus = () => {
+    // Re-verify auth when coming back online
+    const handleOnline = () => {
       if (!cancelled) checkAuth(0)
     }
-    window.addEventListener("online", handleOnlineOrFocus)
-    window.addEventListener("focus", handleOnlineOrFocus)
+    window.addEventListener("online", handleOnline)
 
     return () => {
       cancelled = true
       if (retryTimer) clearTimeout(retryTimer)
       window.removeEventListener("storage", handleStorage)
-      window.removeEventListener("online", handleOnlineOrFocus)
-      window.removeEventListener("focus", handleOnlineOrFocus)
+      window.removeEventListener("online", handleOnline)
     }
   }, [])
 
@@ -255,6 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     setCachedAuthUser(null)
     if (typeof document !== "undefined") {
+      document.cookie = "jaliz_logged_in=; path=/; max-age=0"
       document.cookie = "jaliz_session=; path=/; max-age=0"
     }
     await logoutAction()

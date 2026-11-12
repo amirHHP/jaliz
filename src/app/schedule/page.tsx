@@ -13,7 +13,7 @@ export default function SchedulePage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace("/")
+      router.replace("/login?redirect=/schedule")
     }
   }, [status, router])
 

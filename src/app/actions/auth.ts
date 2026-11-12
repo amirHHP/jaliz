@@ -7,6 +7,7 @@ import crypto from "crypto";
 import { generateSalt, hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
   SESSION_KEY,
+  CLIENT_SESSION_KEY,
   signSessionValue,
   verifyAndExtractSessionUserId,
   useSecureSessionCookie,
@@ -92,17 +93,18 @@ export async function getCurrentUser() {
     } else {
       try {
         const cookieStore = await cookies();
-        cookieStore.delete("jaliz_session");
+        cookieStore.delete(SESSION_KEY);
+        cookieStore.delete(CLIENT_SESSION_KEY);
       } catch {}
     }
     return null;
   }
 
-  // Ensure jaliz_session client cookie is present for active session
+  // Ensure client session indicator is present for active session
   try {
     const cookieStore = await cookies();
-    if (!cookieStore.get("jaliz_session")) {
-      cookieStore.set("jaliz_session", "1", {
+    if (!cookieStore.get(CLIENT_SESSION_KEY)) {
+      cookieStore.set(CLIENT_SESSION_KEY, "1", {
         httpOnly: false,
         secure: useSecureSessionCookie(),
         sameSite: "lax",
@@ -158,7 +160,7 @@ export async function registerAction(input: RegisterInput): Promise<AuthActionRe
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
-    cookieStore.set("jaliz_session", "1", {
+    cookieStore.set(CLIENT_SESSION_KEY, "1", {
       httpOnly: false,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
@@ -194,7 +196,7 @@ export async function loginAction(emailInput: string, passwordInput: string): Pr
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
-    cookieStore.set("jaliz_session", "1", {
+    cookieStore.set(CLIENT_SESSION_KEY, "1", {
       httpOnly: false,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
@@ -333,7 +335,7 @@ export async function loginWithOtpAction(emailInput: string, code: string): Prom
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
-    cookieStore.set("jaliz_session", "1", {
+    cookieStore.set(CLIENT_SESSION_KEY, "1", {
       httpOnly: false,
       secure: useSecureSessionCookie(),
       sameSite: "lax",
@@ -348,7 +350,7 @@ export async function loginWithOtpAction(emailInput: string, code: string): Prom
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_KEY);
-  cookieStore.delete("jaliz_session");
+  cookieStore.delete(CLIENT_SESSION_KEY);
 }
 
 export async function updateMyProfileAction(patch: { fullName?: string, phone?: string, avatar?: string | null }): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {

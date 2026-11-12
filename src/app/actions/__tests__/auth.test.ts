@@ -293,14 +293,14 @@ describe("Auth Server Actions - Session Security & OTP", () => {
       // Verify user created
       expect(mockPrisma.user.create).toHaveBeenCalledTimes(1);
 
-      // Verify session cookie was signed and jaliz_session was set
+      // Verify session cookie was signed and jaliz_logged_in was set
       expect(mockCookies.set).toHaveBeenCalledTimes(2);
       const sessionCall = mockCookies.set.mock.calls.find((call: any[]) => typeof call[1] === "string" && call[1].includes("created-user-id."));
       expect(sessionCall).toBeDefined();
       const cookieValue = sessionCall![1];
       expect(cookieValue).toContain("created-user-id.");
       expect(verifyAndExtractSessionUserId(cookieValue)).toBe("created-user-id");
-      expect(mockCookies.set).toHaveBeenCalledWith("jaliz_session", "1", expect.any(Object));
+      expect(mockCookies.set).toHaveBeenCalledWith("jaliz_logged_in", "1", expect.any(Object));
     });
   });
 });

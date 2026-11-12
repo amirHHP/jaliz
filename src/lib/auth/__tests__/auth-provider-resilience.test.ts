@@ -13,6 +13,11 @@ describe("Auth Session Resilience & Network Error Protection", () => {
   })
 
   describe("hasSessionCookie", () => {
+    it("returns true when jaliz_logged_in=1 cookie exists", () => {
+      document.cookie = "jaliz_logged_in=1"
+      expect(hasSessionCookie()).toBe(true)
+    })
+
     it("returns true when jaliz_session=1 cookie exists", () => {
       document.cookie = "jaliz_session=1"
       expect(hasSessionCookie()).toBe(true)

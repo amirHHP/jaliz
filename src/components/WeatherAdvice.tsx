@@ -3,13 +3,17 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CloudRain, Loader2, MapPin, Key } from "lucide-react"
-import { AdviceMarketplaceStrip } from "@/components/marketplace/AdviceMarketplaceStrip"
+import { CloudRain, Loader2, MapPin } from "lucide-react"
 import { useLanguage } from "@/components/LanguageProvider"
+import { useAuth } from "@/components/AuthProvider"
 import { getUserPlantsAction } from "@/app/actions/plants"
 import { getWeatherAdviceAction } from "@/app/actions/ai"
+import { isSubscriptionActive } from "@/lib/subscription"
 
 export function WeatherAdvice() {
+  const { user } = useAuth()
+  const subscribed = isSubscriptionActive(user?.subscriptionExpiresAt)
+
   const [loading, setLoading] = useState(false)
   const [advice, setAdvice] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +29,10 @@ export function WeatherAdvice() {
       setUserLocation(language === "en" ? "Tehran, IR" : "تهران، ایران")
     }
   }, [language])
+
+  if (!subscribed) {
+    return null
+  }
 
   const fetchAdvice = async () => {
     setLoading(true)
@@ -94,7 +102,6 @@ export function WeatherAdvice() {
             <div className="p-5 rounded-xl bg-slate-50 border border-slate-100 shadow-inner whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">
               {advice}
             </div>
-            <AdviceMarketplaceStrip adviceText={advice} />
           </div>
         ) : error ? (
           <div className="p-4 rounded-lg bg-red-50 text-red-600 border border-red-100 text-sm flex items-center gap-2">
