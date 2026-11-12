@@ -11,98 +11,17 @@ import { Header } from "@/components/Header"
 import { PlantModal } from "@/components/PlantModal"
 import { ShareProfileDialog } from "@/components/ShareProfileDialog"
 import { LandingPage } from "@/components/LandingPage"
-import { getUserPlantsAction, updateUserPlantAction, deleteUserPlantAction, createUserPlantAction } from "@/app/actions/plants"
-
-interface Plant {
-  id: string
-  name: string
-  type: string
-  locationType: "Indoor" | "Outdoor"
-  lightExposure: "Low Light" | "Partial Shade" | "Bright Indirect" | "Full Sun"
-  potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
-  growingMedium: "Soil" | "Water"
-  hasDrainage: boolean
-  lastWatered: string
-  nextWateringDate?: string
-  wateringInterval: number
-  recentlyReplanted: boolean
-  lastSoilChange?: string
-  health: "Excellent" | "Good" | "Needs Attention"
-  image?: string
-  careTips?: string
-  wateringTips?: string
-  statusLogs?: {
-    id: string
-    status: string
-    health: string
-    aiAdvice?: string | null
-    image?: string | null
-    createdAt: Date
-  }[]
-}
-
-function safeDateString(val: any, fallback?: string): string | undefined {
-  if (!val) return fallback
-  try {
-    const d = new Date(val)
-    if (isNaN(d.getTime())) return fallback
-    return d.toISOString().split("T")[0]
-  } catch {
-    return fallback
-  }
-}
-
-function dbRowToPlant(row: any): Plant {
-  const { statusLogs, ...rest } = row
-  return {
-    id: rest.id,
-    name: rest.name,
-    type: rest.type ?? "",
-    locationType: rest.locationType ?? "Indoor",
-    lightExposure: rest.lightExposure ?? "Bright Indirect",
-    potType: rest.potType ?? "Plastic",
-    growingMedium: rest.growingMedium ?? "Soil",
-    hasDrainage: rest.hasDrainage ?? true,
-    lastWatered: safeDateString(rest.lastWatered, new Date().toISOString().split("T")[0])!,
-    nextWateringDate: safeDateString(rest.nextWateringDate),
-    wateringInterval: rest.wateringInterval ?? 7,
-    recentlyReplanted: rest.recentlyReplanted ?? false,
-    lastSoilChange: safeDateString(rest.lastSoilChange),
-    health: rest.health ?? "Excellent",
-    image: rest.image ?? undefined,
-    careTips: rest.careTips ?? undefined,
-    wateringTips: rest.wateringTips ?? undefined,
-    statusLogs: statusLogs ?? undefined,
-  }
-}
+import { usePlants, type Plant } from "@/components/PlantsProvider"
 
 export function MyPlantsDashboard() {
   const { t, language } = useLanguage()
   const { user, status } = useAuth()
-  const [plants, setPlants] = useState<Plant[]>([])
-  const [loading, setLoading] = useState(true)
+  const { plants, loading, createPlant, updatePlant, deletePlant, refreshPlants } = usePlants()
   const [selectedPlantId, setSelectedPlantId] = useState<string | null>(null)
   
   const [draftPlant, setDraftPlant] = useState<any>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const isRtl = language === "fa"
-
-  const fetchPlants = useCallback(async () => {
-    if (!user) { setLoading(false); return }
-    setLoading(true)
-    try {
-      const data = await getUserPlantsAction({ includeStatusLogs: true })
-      setPlants(data.map(dbRowToPlant))
-    } catch (e) {
-      console.error(e)
-    }
-    setLoading(false)
-  }, [user])
-
-  useEffect(() => {
-    if (status === "authenticated") fetchPlants()
-    else if (status === "unauthenticated") setLoading(false)
-  }, [status, fetchPlants])
 
   // Scan draft auto-detection
   useEffect(() => {
@@ -122,7 +41,7 @@ export function MyPlantsDashboard() {
     if (!draftPlant) return
     setIsSavingDraft(true)
     try {
-      const data = await createUserPlantAction({
+      const data = await createPlant({
         name: draftPlant.name,
         type: draftPlant.type,
         locationType: draftPlant.locationType,
@@ -141,7 +60,6 @@ export function MyPlantsDashboard() {
       if (data) {
         localStorage.removeItem("jaliz_scanned_plant_draft")
         setDraftPlant(null)
-        fetchPlants()
       }
     } catch (e) {
       console.error("Failed to save draft plant:", e)
@@ -155,10 +73,9 @@ export function MyPlantsDashboard() {
     setDraftPlant(null)
   }
 
-  const deletePlant = async (id: string) => {
+  const handleDeletePlant = async (id: string) => {
     try {
-      await deleteUserPlantAction(id)
-      setPlants((prev) => prev.filter((p) => p.id !== id))
+      await deletePlant(id)
       setSelectedPlantId(null)
     } catch (e) {
       console.error(e)
@@ -167,7 +84,7 @@ export function MyPlantsDashboard() {
 
   const handleSavePlant = async (updated: Plant) => {
     try {
-      const data = await updateUserPlantAction(updated.id, {
+      await updatePlant(updated.id, {
         name: updated.name,
         type: updated.type,
         locationType: updated.locationType,
@@ -184,9 +101,6 @@ export function MyPlantsDashboard() {
         wateringTips: updated.wateringTips || null,
         wateringInterval: updated.wateringInterval,
       })
-      if (data) {
-        setPlants((prev) => prev.map((p) => p.id === updated.id ? dbRowToPlant(data) : p))
-      }
       setSelectedPlantId(null)
     } catch (e) {
       console.error(e)
@@ -370,7 +284,7 @@ export function MyPlantsDashboard() {
           initialLogs={selectedPlant.statusLogs}
           onClose={() => setSelectedPlantId(null)}
           onSave={handleSavePlant}
-          onDelete={deletePlant}
+          onDelete={handleDeletePlant}
         />
       )}
     </div>

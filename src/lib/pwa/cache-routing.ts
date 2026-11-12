@@ -36,3 +36,34 @@ export function trimCacheKeys<T>(keys: T[], maxEntries: number): T[] {
   if (keys.length <= maxEntries) return []
   return keys.slice(0, keys.length - maxEntries)
 }
+
+export function isDynamicUserPath(pathname: string): boolean {
+  if (
+    pathname === "/" ||
+    pathname === "/schedule" ||
+    pathname.startsWith("/marketplace/chats") ||
+    pathname.startsWith("/shop") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/plants/new") ||
+    pathname.startsWith("/plants/diagnose")
+  ) {
+    return true
+  }
+  return false
+}
+
+export function isRscRequest(url: URL | string, headers?: Headers | Record<string, string>): boolean {
+  const parsedUrl = typeof url === "string" ? new URL(url, "http://localhost") : url
+  if (parsedUrl.searchParams.has("_rsc")) return true
+  if (headers) {
+    if (typeof (headers as Headers).get === "function") {
+      if ((headers as Headers).get("RSC") === "1") return true
+    } else if (
+      (headers as Record<string, string>)["RSC"] === "1" ||
+      (headers as Record<string, string>)["rsc"] === "1"
+    ) {
+      return true
+    }
+  }
+  return false
+}

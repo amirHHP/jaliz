@@ -1,17 +1,19 @@
 // Jaliz Service Worker — multi-cache strategies for a more local-app feel
-const SHELL_CACHE = 'jaliz-shell-v3'
-const STATIC_CACHE = 'jaliz-static-v3'
-const PAGES_CACHE = 'jaliz-pages-v3'
-const IMAGE_CACHE = 'jaliz-images-v3'
+const SHELL_CACHE = 'jaliz-shell-v5'
+const STATIC_CACHE = 'jaliz-static-v5'
+const PAGES_CACHE = 'jaliz-pages-v5'
+const IMAGE_CACHE = 'jaliz-images-v5'
 
 const ALL_CACHES = [SHELL_CACHE, STATIC_CACHE, PAGES_CACHE, IMAGE_CACHE]
 const CACHE_PREFIX = 'jaliz-'
 
-const NETWORK_TIMEOUT_MS = 2500
+// 8s timeout allows slow mobile/cellular networks without premature 503 errors
+const NETWORK_TIMEOUT_MS = 8000
 const MAX_IMAGE_ENTRIES = 60
 
+// Only static app-shell assets and offline fallback.
+// Dynamic pages like '/' are excluded to prevent caching stale unauthenticated landing page.
 const PRECACHE_URLS = [
-  '/',
   '/offline.html',
   '/manifest.json',
   '/icons/icon.svg',
@@ -23,9 +25,6 @@ const PRECACHE_URLS = [
   '/logo-horizontal.jpg',
   '/logo-icon.jpg',
   '/logo-icon-dark.jpg',
-  '/marketplace',
-  '/login',
-  '/plants/diagnose',
 ]
 
 self.addEventListener('install', (event) => {
@@ -71,8 +70,18 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
   if (url.pathname.startsWith('/api/')) return
 
+  // Dynamic user paths and Next.js RSC requests must never serve stale unauthenticated responses
+  if (isDynamicUserPath(url.pathname) || isRscRequest(request, url)) {
+    if (request.mode === 'navigate') {
+      event.respondWith(networkFirstPage(request, PAGES_CACHE, NETWORK_TIMEOUT_MS))
+      return
+    }
+    // Client-side RSC fetches and data requests go directly to network
+    return
+  }
+
   if (request.mode === 'navigate') {
-    event.respondWith(staleWhileRevalidatePage(event, request))
+    event.respondWith(networkFirstPage(request, PAGES_CACHE, NETWORK_TIMEOUT_MS))
     return
   }
 
@@ -112,34 +121,62 @@ function isImageRequest(request, url) {
   return /\.(?:png|jpe?g|gif|webp|svg|avif|ico)$/i.test(url.pathname)
 }
 
-async function staleWhileRevalidatePage(event, request) {
-  const cache = await caches.open(PAGES_CACHE)
-  const cached = await cache.match(request)
-
-  const networkPromise = fetch(request)
-    .then((response) => {
-      if (response && response.status === 200) {
-        cache.put(request, response.clone())
-      }
-      return response
-    })
-    .catch(() => null)
-
-  if (cached) {
-    event.waitUntil(networkPromise)
-    return cached
+function isDynamicUserPath(pathname) {
+  if (
+    pathname === '/' ||
+    pathname === '/schedule' ||
+    pathname.startsWith('/marketplace/chats') ||
+    pathname.startsWith('/shop') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/plants/new') ||
+    pathname.startsWith('/plants/diagnose')
+  ) {
+    return true
   }
+  return false
+}
 
-  const networkResponse = await networkPromise
-  if (networkResponse) return networkResponse
+function isRscRequest(request, url) {
+  if (url.searchParams.has('_rsc')) return true
+  try {
+    if (request.headers && (request.headers.get('RSC') === '1' || request.headers.get('rsc') === '1')) {
+      return true
+    }
+  } catch {}
+  return false
+}
 
-  const shell = await caches.open(SHELL_CACHE)
-  return (
-    (await shell.match(request)) ||
-    (await shell.match('/')) ||
-    (await shell.match('/offline.html')) ||
-    new Response('Offline', { status: 503, statusText: 'Offline' })
-  )
+async function networkFirstPage(request, cacheName, timeoutMs) {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+    const response = await fetch(request, { signal: controller.signal })
+    clearTimeout(timer)
+
+    if (response && response.status === 200) {
+      const url = new URL(request.url)
+      // Never cache dynamic user pages (prevents serving stale landing page to authenticated users)
+      if (!isDynamicUserPath(url.pathname)) {
+        const cache = await caches.open(cacheName)
+        await cache.put(request, response.clone())
+      }
+    }
+    return response
+  } catch {
+    const url = new URL(request.url)
+    if (!isDynamicUserPath(url.pathname)) {
+      const cache = await caches.open(cacheName)
+      const cached = await cache.match(request)
+      if (cached) return cached
+    }
+
+    const shell = await caches.open(SHELL_CACHE)
+    const offlinePage = await shell.match('/offline.html')
+    if (offlinePage) return offlinePage
+
+    return new Response('Offline', { status: 503, statusText: 'Offline' })
+  }
 }
 
 async function cacheFirst(request, cacheName) {
@@ -182,13 +219,15 @@ async function cacheFirstWithLimit(request, cacheName, maxEntries) {
 }
 
 async function networkFirstWithTimeout(request, cacheName, timeoutMs) {
-  const cache = await caches.open(cacheName)
+  const url = new URL(request.url)
+  const isDynamic = isDynamicUserPath(url.pathname) || isRscRequest(request, url)
 
   try {
     const response = await Promise.race([
-      fetch(request).then((res) => {
-        if (res && res.status === 200) {
-          cache.put(request, res.clone())
+      fetch(request).then(async (res) => {
+        if (res && res.status === 200 && !isDynamic) {
+          const cache = await caches.open(cacheName)
+          await cache.put(request, res.clone())
         }
         return res
       }),
@@ -198,8 +237,11 @@ async function networkFirstWithTimeout(request, cacheName, timeoutMs) {
     ])
     return response
   } catch {
-    const cached = await cache.match(request)
-    if (cached) return cached
+    if (!isDynamic) {
+      const cache = await caches.open(cacheName)
+      const cached = await cache.match(request)
+      if (cached) return cached
+    }
     return (
       (await caches.match(request)) ||
       new Response('Offline', { status: 503, statusText: 'Offline' })

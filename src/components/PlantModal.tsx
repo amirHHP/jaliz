@@ -197,6 +197,9 @@ export function PlantModal({ plant, initialLogs, onClose, onSave, onDelete }: Pl
         setLogImage("")
         setIsLogging(false)
         setHealth(resolvedHealth)
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("jaliz:plants-updated"))
+        }
       }
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to add log")

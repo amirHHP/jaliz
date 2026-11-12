@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, useRef } from "react"
 import { CreateListingInput, Listing, ListingFilter, UpdateListingInput } from "@/lib/marketplace"
 import {
   getMarketplaceListingsAction,
@@ -31,21 +31,26 @@ export function MarketplaceListingsProvider({ children }: { children: React.Reac
   const [ready, setReady] = useState(false)
   const [revision, setRevision] = useState(0)
   const [listings, setListings] = useState<Listing[]>([])
+  const lastFetchedAtRef = useRef<number>(0)
 
   const bump = useCallback(() => setRevision((n) => n + 1), [])
-
-  const ensureLoaded = useCallback(() => {
-    setShouldLoad(true)
-  }, [])
 
   const reloadListings = useCallback(async () => {
     try {
       const lData = await getMarketplaceListingsAction()
       setListings(lData as any)
+      lastFetchedAtRef.current = Date.now()
     } catch (err) {
       console.error(err)
     }
   }, [])
+
+  const ensureLoaded = useCallback(() => {
+    setShouldLoad(true)
+    if (lastFetchedAtRef.current && Date.now() - lastFetchedAtRef.current > 60000) {
+      reloadListings()
+    }
+  }, [reloadListings])
 
   // Heavy fetch only after a consumer asks for listings (marketplace / dashboard grid).
   useEffect(() => {
@@ -56,6 +61,7 @@ export function MarketplaceListingsProvider({ children }: { children: React.Reac
         const lData = await getMarketplaceListingsAction()
         if (cancelled) return
         setListings(lData as any)
+        lastFetchedAtRef.current = Date.now()
       } catch (err) {
         console.error(err)
       } finally {

@@ -95,9 +95,6 @@ export async function createSubscriptionPaymentAction(): Promise<CreateSubscript
   }
 
   try {
-    if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-      await (prisma as any).ensureDatabaseSchema().catch(() => {})
-    }
     await prisma.payment.create({
       data: paymentData,
     })
@@ -298,9 +295,6 @@ export async function createMarketplacePaymentAction(
   }
 
   try {
-    if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-      await (prisma as any).ensureDatabaseSchema().catch(() => {})
-    }
     await prisma.payment.create({
       data: paymentData,
     })
@@ -467,9 +461,6 @@ export async function createMarketplaceCartPaymentAction(
   }
 
   try {
-    if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-      await (prisma as any).ensureDatabaseSchema().catch(() => {})
-    }
     await prisma.payment.create({
       data: paymentData,
     })

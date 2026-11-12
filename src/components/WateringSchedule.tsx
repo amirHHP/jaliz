@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { Check, Droplets, Lock, Loader2, Bell, BellRing } from "lucide-react"
-import { getUserPlantsAction, getWateringLogAction, updatePlantsLastWateredAction, markWateringDoneAction } from "@/app/actions/plants"
+import { getWateringLogAction, updatePlantsLastWateredAction, markWateringDoneAction } from "@/app/actions/plants"
 import { createSubscriptionPaymentAction } from "@/app/actions/payments"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,20 +13,7 @@ import {
 } from "@/lib/subscription"
 import { plantNeedsWater } from "@/lib/watering"
 import { useWateringNotification } from "@/components/WateringNotificationProvider"
-
-interface Plant {
-  id: string
-  name: string
-  locationType: "Indoor" | "Outdoor"
-  lightExposure: "Low Light" | "Partial Shade" | "Bright Indirect" | "Full Sun"
-  potType: "Terracotta" | "Plastic" | "Ceramic" | "Metal" | "Other"
-  hasDrainage: boolean
-  lastWatered: string
-  nextWateringDate?: string
-  growingMedium: "Soil" | "Water"
-  recentlyReplanted: boolean
-  image?: string
-}
+import { usePlants, type Plant } from "@/components/PlantsProvider"
 
 function formatToman(amount: number, language: string): string {
   const formatted = new Intl.NumberFormat(language === "fa" ? "fa-IR" : "en-US").format(amount)
@@ -36,7 +23,7 @@ function formatToman(amount: number, language: string): string {
 export function WateringSchedule() {
   const { language } = useLanguage()
   const { user, status, refreshUser } = useAuth()
-  const [plants, setPlants] = useState<Plant[]>([])
+  const { plants, refreshPlants } = usePlants()
   const [isDone, setIsDone] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
@@ -65,23 +52,6 @@ export function WateringSchedule() {
   const loadData = useCallback(async () => {
     if (!user || !subscribed) return
     try {
-      const plantData = await getUserPlantsAction()
-      if (plantData) {
-        setPlants(plantData.map((r) => ({
-          id: r.id,
-          name: r.name,
-          locationType: (r.locationType as Plant["locationType"]) || "Indoor",
-          lightExposure: (r.lightExposure as Plant["lightExposure"]) || "Bright Indirect",
-          potType: (r.potType as Plant["potType"]) || "Plastic",
-          hasDrainage: r.hasDrainage || true,
-          lastWatered: r.lastWatered ? new Date(r.lastWatered).toISOString() : new Date().toISOString(),
-          nextWateringDate: r.nextWateringDate ? new Date(r.nextWateringDate).toISOString() : undefined,
-          growingMedium: (r.growingMedium as Plant["growingMedium"]) || "Soil",
-          recentlyReplanted: r.recentlyReplanted || false,
-          image: r.image ?? undefined,
-        })))
-      }
-
       const logData = await getWateringLogAction(today)
       setIsDone(!!logData)
     } catch (e) {
@@ -106,6 +76,7 @@ export function WateringSchedule() {
         await updatePlantsLastWateredAction(ids, today)
       }
       await markWateringDoneAction(today)
+      await refreshPlants()
       await loadData()
       setIsDone(true)
     } catch (e) {

@@ -216,7 +216,8 @@ const prismaClientSingleton = () => {
     void applyPrismaPragmas(client)
   }
 
-  void ensureDatabaseSchema(client)
+  // Runtime schema migrations are moved to build/migration scripts.
+  // keep method on client instance for auto-heal fallback when explicitly needed
   ;(client as any).ensureDatabaseSchema = () => ensureDatabaseSchema(client)
 
   return client

@@ -85,7 +85,7 @@ export function BottomNav() {
               <Link
                 key={tab.href}
                 href={tab.href}
-                prefetch={false}
+                prefetch={true}
                 id="smart-detect-bottom"
                 className="relative flex flex-col items-center justify-center gap-0.5 px-1"
               >
@@ -103,7 +103,7 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              prefetch={false}
+              prefetch={true}
               className={`relative flex flex-col items-center justify-center gap-0.5 px-1 ${
                 isActive
                   ? "text-emerald-600 dark:text-emerald-400"

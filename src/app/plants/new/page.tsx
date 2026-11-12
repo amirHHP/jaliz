@@ -228,6 +228,9 @@ export default function NewPlantPage() {
         wateringTips: draft.wateringTips || null,
         wateringInterval: draft.wateringInterval,
       })
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jaliz:plants-updated"))
+      }
       router.push("/")
     } catch (error) {
       console.error(error)

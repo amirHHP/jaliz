@@ -61,11 +61,8 @@ export async function getCurrentUser() {
   const userId = await getSessionUserId();
   if (!userId) return null;
 
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {});
-  }
-
   let user: any;
+  let dbError = false;
   try {
     user = await prisma.user.findUnique({
       where: { id: userId },
@@ -77,17 +74,43 @@ export async function getCurrentUser() {
       user = await prisma.user.findUnique({
         where: { id: userId },
       });
-    } catch {
-      return null;
+    } catch (fallbackErr) {
+      console.error("Failed to query user fallback:", fallbackErr);
+      dbError = true;
     }
+  }
+
+  if (dbError) {
+    // Valid session HMAC cookie exists, but DB is temporarily unreachable or slow.
+    // Throw an error so callers know it's a transient failure, NOT an invalid session.
+    throw new Error("DATABASE_UNAVAILABLE");
   }
 
   if (!user || !user.isActive) {
     if (user && !user.isActive) {
       await logoutAction();
+    } else {
+      try {
+        const cookieStore = await cookies();
+        cookieStore.delete("jaliz_session");
+      } catch {}
     }
     return null;
   }
+
+  // Ensure jaliz_session client cookie is present for active session
+  try {
+    const cookieStore = await cookies();
+    if (!cookieStore.get("jaliz_session")) {
+      cookieStore.set("jaliz_session", "1", {
+        httpOnly: false,
+        secure: useSecureSessionCookie(),
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+    }
+  } catch {}
 
   const subscriptionExpiresAt = await getSubscriptionExpiresAtForUser(user.id);
   return {
@@ -135,6 +158,13 @@ export async function registerAction(input: RegisterInput): Promise<AuthActionRe
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
+    cookieStore.set("jaliz_session", "1", {
+      httpOnly: false,
+      secure: useSecureSessionCookie(),
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
 
     return toPublicUser(user);
   });
@@ -163,6 +193,13 @@ export async function loginAction(emailInput: string, passwordInput: string): Pr
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+    cookieStore.set("jaliz_session", "1", {
+      httpOnly: false,
+      secure: useSecureSessionCookie(),
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
     });
 
     return toPublicUser(user);
@@ -296,6 +333,13 @@ export async function loginWithOtpAction(emailInput: string, code: string): Prom
       path: "/",
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });
+    cookieStore.set("jaliz_session", "1", {
+      httpOnly: false,
+      secure: useSecureSessionCookie(),
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
 
     return toPublicUser(user);
   });
@@ -304,6 +348,7 @@ export async function loginWithOtpAction(emailInput: string, code: string): Prom
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_KEY);
+  cookieStore.delete("jaliz_session");
 }
 
 export async function updateMyProfileAction(patch: { fullName?: string, phone?: string, avatar?: string | null }): Promise<AuthActionResult<Awaited<ReturnType<typeof toPublicUser>>>> {

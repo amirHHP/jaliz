@@ -38,6 +38,7 @@ const geistMono = localFont({
 
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
+import { PlantsProvider } from "@/components/PlantsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { WateringNotificationProvider } from "@/components/WateringNotificationProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
@@ -124,19 +125,21 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <LanguageProvider>
           <AuthProvider>
-            <ThemeProvider>
-              <WateringNotificationProvider>
-                <MarketplaceProvider>
-                  <CartProvider>
-                    {children}
-                    <CartConflictModal />
-                    <CartDrawer />
-                    <BottomNav />
-                    <InstallPrompt />
-                  </CartProvider>
-                </MarketplaceProvider>
-              </WateringNotificationProvider>
-            </ThemeProvider>
+            <PlantsProvider>
+              <ThemeProvider>
+                <WateringNotificationProvider>
+                  <MarketplaceProvider>
+                    <CartProvider>
+                      {children}
+                      <CartConflictModal />
+                      <CartDrawer />
+                      <BottomNav />
+                      <InstallPrompt />
+                    </CartProvider>
+                  </MarketplaceProvider>
+                </WateringNotificationProvider>
+              </ThemeProvider>
+            </PlantsProvider>
           </AuthProvider>
         </LanguageProvider>
         <SpeedInsights />

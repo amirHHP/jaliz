@@ -302,6 +302,9 @@ export default function SmartDiagnosisPage() {
       }
 
       await createUserPlantAction(plantPayload)
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jaliz:plants-updated"))
+      }
       track("Plant Diagnose Register New Plant", { type: draft.type || "Unknown" })
       alert(t("smart_diag_new_success"))
       router.push("/")
@@ -327,6 +330,9 @@ export default function SmartDiagnosisPage() {
         diagnosis?.advice || "",
         uploadedImage
       )
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("jaliz:plants-updated"))
+      }
       track("Plant Diagnose Log Status Existing", { health: diagnosis?.health || "Good" })
       alert(t("smart_diag_save_success"))
       router.push("/")

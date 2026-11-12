@@ -69,6 +69,63 @@ describe("Auth Server Actions - Session Security & OTP", () => {
     });
   });
 
+  describe("getCurrentUser - Network & DB Resilience", () => {
+    it("returns null when no session cookie exists", async () => {
+      const { getCurrentUser } = await import("../auth");
+      mockCookies.get.mockReturnValue(undefined);
+
+      const user = await getCurrentUser();
+      expect(user).toBeNull();
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("returns public user when session cookie is valid and user exists", async () => {
+      const { getCurrentUser } = await import("../auth");
+      const signed = signSessionValue("valid-user-id");
+      mockCookies.get.mockReturnValue({ value: signed });
+
+      mockPrisma.user.findUnique.mockResolvedValueOnce({
+        id: "valid-user-id",
+        email: "user@jaliz.local",
+        fullName: "Test User",
+        role: "user",
+        isActive: true,
+        createdAt: new Date(),
+        shop: null,
+        ownedShop: null,
+      });
+      mockPrisma.payment.findMany.mockResolvedValueOnce([]);
+
+      const user = await getCurrentUser();
+      expect(user).not.toBeNull();
+      expect(user?.id).toBe("valid-user-id");
+      expect(user?.email).toBe("user@jaliz.local");
+    });
+
+    it("throws DATABASE_UNAVAILABLE when valid session exists but database queries fail", async () => {
+      const { getCurrentUser } = await import("../auth");
+      const signed = signSessionValue("valid-user-id");
+      mockCookies.get.mockReturnValue({ value: signed });
+
+      mockPrisma.user.findUnique.mockRejectedValue(new Error("Connection timeout to Turso"));
+
+      await expect(getCurrentUser()).rejects.toThrow("DATABASE_UNAVAILABLE");
+      // Cookie must NOT be deleted on transient DB error
+      expect(mockCookies.delete).not.toHaveBeenCalled();
+    });
+
+    it("clears session and returns null when user is inactive or deleted from DB", async () => {
+      const { getCurrentUser } = await import("../auth");
+      const signed = signSessionValue("deleted-user-id");
+      mockCookies.get.mockReturnValue({ value: signed });
+
+      mockPrisma.user.findUnique.mockResolvedValueOnce(null);
+
+      const user = await getCurrentUser();
+      expect(user).toBeNull();
+    });
+  });
+
   describe("OTP Generation & Rate Limiting", () => {
     it("sends OTP and does NOT create a user record in User table", async () => {
       const { sendOtpAction } = await import("../auth");
@@ -236,12 +293,14 @@ describe("Auth Server Actions - Session Security & OTP", () => {
       // Verify user created
       expect(mockPrisma.user.create).toHaveBeenCalledTimes(1);
 
-      // Verify session cookie was signed
-      expect(mockCookies.set).toHaveBeenCalledTimes(1);
-      const setCall = mockCookies.set.mock.calls[0];
-      const cookieValue = setCall[1];
+      // Verify session cookie was signed and jaliz_session was set
+      expect(mockCookies.set).toHaveBeenCalledTimes(2);
+      const sessionCall = mockCookies.set.mock.calls.find((call: any[]) => typeof call[1] === "string" && call[1].includes("created-user-id."));
+      expect(sessionCall).toBeDefined();
+      const cookieValue = sessionCall![1];
       expect(cookieValue).toContain("created-user-id.");
       expect(verifyAndExtractSessionUserId(cookieValue)).toBe("created-user-id");
+      expect(mockCookies.set).toHaveBeenCalledWith("jaliz_session", "1", expect.any(Object));
     });
   });
 });

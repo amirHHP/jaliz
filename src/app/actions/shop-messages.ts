@@ -12,10 +12,6 @@ export interface SendShopMessageInput {
 }
 
 export async function sendShopMessageAction(input: SendShopMessageInput) {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser) {
     throw new Error("لطفاً ابتدا وارد حساب کاربری خود شوید.")
@@ -94,10 +90,6 @@ export async function sendShopMessageAction(input: SendShopMessageInput) {
 }
 
 export async function getShopSentMessagesAction(shopId: string, page: number = 1, limit: number = 20) {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser) {
     throw new Error("Unauthorized")
@@ -153,10 +145,6 @@ export async function getShopSentMessagesAction(shopId: string, page: number = 1
 }
 
 export async function getCustomerShopMessagesAction() {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser || !currentUser.shopId) {
     return { messages: [], shop: null }
@@ -210,10 +198,6 @@ export async function getCustomerShopMessagesAction() {
 }
 
 export async function getUnreadShopMessagesCountAction(): Promise<number> {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser || !currentUser.shopId) {
     return 0
@@ -242,10 +226,6 @@ export async function getUnreadShopMessagesCountAction(): Promise<number> {
 }
 
 export async function markShopMessageAsReadAction(messageId: string) {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser) {
     throw new Error("Unauthorized")
@@ -271,10 +251,6 @@ export async function markShopMessageAsReadAction(messageId: string) {
 }
 
 export async function markAllCustomerMessagesReadAction() {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser || !currentUser.shopId) {
     return { success: true }
@@ -323,10 +299,6 @@ export async function markAllCustomerMessagesReadAction() {
 }
 
 export async function deleteShopMessageAction(messageId: string) {
-  if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
-    await (prisma as any).ensureDatabaseSchema().catch(() => {})
-  }
-
   const currentUser = await getCurrentUser()
   if (!currentUser) {
     throw new Error("Unauthorized")
