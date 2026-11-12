@@ -165,23 +165,6 @@ export function ListingDetailsModal({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length])
 
-  // Close modal on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        if (showReportModal) {
-          setShowReportModal(false)
-        } else if (showBuyModal) {
-          setShowBuyModal(false)
-        } else {
-          onClose()
-        }
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [onClose, showReportModal, showBuyModal])
-
   // ----- Owner actions ------------------------------------------------------
   const handleToggleCompleted = async () => {
     if (!user) return
@@ -258,9 +241,6 @@ export function ListingDetailsModal({
 
   return (
     <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
     >
       <div className="w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col relative my-auto animate-in zoom-in-95 duration-200">
@@ -281,7 +261,7 @@ export function ListingDetailsModal({
             onClick={onClose}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition shrink-0 cursor-pointer shadow-sm border border-slate-200 dark:border-slate-700"
             aria-label={t("cancel" as never)}
-            title={language === "fa" ? "بستن (Esc)" : "Close (Esc)"}
+            title={language === "fa" ? "بستن" : "Close"}
           >
             <X className="h-4 w-4 text-slate-700 dark:text-slate-200" />
             <span>{language === "fa" ? "بستن" : "Close"}</span>
@@ -472,38 +452,6 @@ export function ListingDetailsModal({
             )}
           </div>
 
-          {/* Owner row + meta ---------------------------------------- */}
-          <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100/50 rounded-2xl p-4 shadow-sm">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="h-10 w-10 rounded-full bg-emerald-200 border-2 border-white flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
-                {isOwner && user?.avatar ? (
-                  <img src={user.avatar} alt={ownerName} className="h-full w-full object-cover" />
-                ) : owner?.avatar ? (
-                  <img src={owner.avatar} alt={ownerName} className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-5 w-5 text-emerald-800" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-emerald-600/70 font-medium">
-                  {t("mp_details_owner" as never)}
-                </p>
-                <p className="text-sm font-bold text-emerald-950 truncate">
-                  {ownerName}
-                </p>
-              </div>
-            </div>
-            <div className="text-end text-xs text-emerald-700/60">
-              <p className="font-medium">{t("mp_details_posted_at" as never)}</p>
-              <p className="font-bold text-emerald-800">
-                {new Date(listing.createdAt).toLocaleDateString(
-                  language === "fa" ? "fa-IR" : undefined,
-                  { year: "numeric", month: "short", day: "numeric" },
-                )}
-              </p>
-            </div>
-          </div>
-
           {/* Action row --------------------------------------------- */}
           {isOwner ? (
             <div className="space-y-3">
@@ -564,106 +512,62 @@ export function ListingDetailsModal({
             </div>
           ) : isAuthenticated ? (
             <div className="space-y-4">
-              {/* Online Purchase CTA for for-sale items */}
-              {listing.mode === "sell" && listing.status === "active" && typeof listing.price === "number" && listing.price > 0 && (
-                <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
-                      <CreditCard className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">
-                        {t("mp_buy_online_badge" as never)}
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {language === "fa" ? "پرداخت امن درگاه بانکی شاپرک + تحویل تضمین‌شده" : "Secure payment via banking gateway + guaranteed delivery"}
-                      </span>
-                    </div>
-                  </div>
+              <div className="flex items-center gap-2.5">
+                {listing.mode === "sell" && listing.status === "active" && typeof listing.price === "number" && listing.price > 0 && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const res = addItem(listing, ownerName || "فروشگاه")
+                      if (res.success) {
+                        setJustAddedToCart(true)
+                        setTimeout(() => setJustAddedToCart(false), 2500)
+                        track("Marketplace Add to Cart", { listingId: listing.id })
+                      }
+                    }}
+                    className={`flex-1 font-bold h-11 px-5 rounded-xl text-sm transition-all gap-2 shadow-sm ${
+                      justAddedToCart
+                        ? "bg-emerald-700 text-white"
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    }`}
+                  >
+                    {justAddedToCart ? (
+                      <>
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span>{t("cart_added_toast" as never)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="h-5 w-5" />
+                        <span>{t("cart_add_btn" as never)}</span>
+                      </>
+                    )}
+                  </Button>
+                )}
 
-                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        const res = addItem(listing, ownerName || "فروشگاه")
-                        if (res.success) {
-                          setJustAddedToCart(true)
-                          setTimeout(() => setJustAddedToCart(false), 2500)
-                          track("Marketplace Add to Cart", { listingId: listing.id })
-                        }
-                      }}
-                      className={`font-bold px-4 py-2.5 rounded-xl border text-xs transition-all gap-1.5 ${
-                        justAddedToCart
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-500 dark:bg-emerald-950 dark:text-emerald-300"
-                          : "border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
-                      }`}
-                    >
-                      {justAddedToCart ? (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                          <span>{t("cart_added_toast" as never)}</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingBag className="h-4 w-4" />
-                          <span>{t("cart_add_btn" as never)}</span>
-                        </>
-                      )}
-                    </Button>
-
-                    <Button
-                      onClick={() => {
-                        setShowBuyModal(true)
-                        track("Marketplace Clicked Buy Online", { listingId: listing.id })
-                      }}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 hover:scale-[1.02] transition-all gap-2 text-xs"
-                    >
-                      <CreditCard className="h-4 w-4" />
-                      <span>{t("mp_action_buy_online" as never)}</span>
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 items-center">
-                {phone ? (
+                {phone && (
                   <>
                     <a
                       href={telLink(phone)}
+                      title={t("mp_action_call" as never)}
+                      aria-label={t("mp_action_call" as never)}
                       onClick={() => track("Marketplace Open Contact Call", { listingId: listing.id, type: listing.type })}
-                      className="inline-flex items-center gap-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
+                      className="h-11 w-11 inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all hover:scale-105 shrink-0"
                     >
-                      <PhoneCall className="h-4 w-4" />
-                      {t("mp_action_call" as never)}
+                      <PhoneCall className="h-5 w-5" />
                     </a>
                     <a
                       href={whatsappLink(phone)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      title={t("mp_action_whatsapp" as never)}
+                      aria-label={t("mp_action_whatsapp" as never)}
                       onClick={() => track("Marketplace Open Contact WhatsApp", { listingId: listing.id, type: listing.type })}
-                      className="inline-flex items-center gap-2 rounded-md bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
+                      className="h-11 w-11 inline-flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-sm transition-all hover:scale-105 shrink-0"
                     >
-                      <MessageCircle className="h-4 w-4 text-emerald-600" />
-                      {t("mp_action_whatsapp" as never)}
+                      <MessageCircle className="h-5 w-5" />
                     </a>
                   </>
-                ) : (
-                  <span className="text-xs text-slate-400">
-                    {t("mp_details_no_phone" as never)}
-                  </span>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowReportModal(true)
-                    track("Marketplace Report Clicked", { listingId: listing.id })
-                  }}
-                  className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5 ms-auto animate-in fade-in"
-                >
-                  <AlertTriangle className="h-4 w-4" />
-                  {language === "fa" ? "گزارش تخلف" : "Report"}
-                </Button>
               </div>
 
               {/* Inline chat ------------------------------------------ */}
@@ -679,54 +583,72 @@ export function ListingDetailsModal({
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Online Purchase CTA for unauthenticated visitor */}
-              {listing.mode === "sell" && listing.status === "active" && typeof listing.price === "number" && listing.price > 0 && (
-                <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
-                      <CreditCard className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">
-                        {t("mp_buy_online_badge" as never)}
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {language === "fa" ? "پرداخت امن درگاه بانکی شاپرک + تحویل تضمین‌شده" : "Secure payment via banking gateway + guaranteed delivery"}
-                      </span>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/login?redirect=/marketplace/${listing.id}`}
-                    className="w-full sm:w-auto inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md shadow-emerald-600/20 hover:scale-[1.02] transition-all gap-2 text-sm"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    <span>{t("mp_action_buy_online" as never)}</span>
-                  </Link>
-                </div>
-              )}
-
-              <div className="rounded-md bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-600 flex items-center justify-between">
-                <span>{t("mp_action_sign_in_to_contact" as never)}</span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
+                {listing.mode === "sell" && listing.status === "active" && typeof listing.price === "number" && listing.price > 0 && (
                   <Button
-                    variant="outline"
-                    size="sm"
+                    type="button"
                     onClick={() => {
-                      setShowReportModal(true)
-                      track("Marketplace Report Clicked", { listingId: listing.id })
+                      const res = addItem(listing, ownerName || "فروشگاه")
+                      if (res.success) {
+                        setJustAddedToCart(true)
+                        setTimeout(() => setJustAddedToCart(false), 2500)
+                        track("Marketplace Add to Cart", { listingId: listing.id })
+                      }
                     }}
-                    className="text-amber-600 hover:bg-amber-50 hover:text-amber-700 border-amber-200 gap-1.5"
+                    className={`flex-1 font-bold h-11 px-5 rounded-xl text-sm transition-all gap-2 shadow-sm ${
+                      justAddedToCart
+                        ? "bg-emerald-700 text-white"
+                        : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                    }`}
                   >
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    {language === "fa" ? "گزارش تخلف" : "Report"}
+                    {justAddedToCart ? (
+                      <>
+                        <CheckCircle2 className="h-5 w-5" />
+                        <span>{t("cart_added_toast" as never)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="h-5 w-5" />
+                        <span>{t("cart_add_btn" as never)}</span>
+                      </>
+                    )}
                   </Button>
-                  <Link
-                    href={`/login?redirect=/marketplace/${listing.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5"
-                  >
-                    {t("sign_in" as never)}
-                  </Link>
-                </div>
+                )}
+
+                {phone && (
+                  <>
+                    <a
+                      href={telLink(phone)}
+                      title={t("mp_action_call" as never)}
+                      aria-label={t("mp_action_call" as never)}
+                      onClick={() => track("Marketplace Open Contact Call", { listingId: listing.id, type: listing.type })}
+                      className="h-11 w-11 inline-flex items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all hover:scale-105 shrink-0"
+                    >
+                      <PhoneCall className="h-5 w-5" />
+                    </a>
+                    <a
+                      href={whatsappLink(phone)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={t("mp_action_whatsapp" as never)}
+                      aria-label={t("mp_action_whatsapp" as never)}
+                      onClick={() => track("Marketplace Open Contact WhatsApp", { listingId: listing.id, type: listing.type })}
+                      className="h-11 w-11 inline-flex items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 shadow-sm transition-all hover:scale-105 shrink-0"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                    </a>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800 px-4 py-3 text-sm text-slate-600 dark:text-slate-300 flex items-center justify-between">
+                <span>{t("mp_action_sign_in_to_contact" as never)}</span>
+                <Link
+                  href={`/login?redirect=/marketplace/${listing.id}`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-1.5 transition-colors"
+                >
+                  {t("sign_in" as never)}
+                </Link>
               </div>
             </div>
           )}

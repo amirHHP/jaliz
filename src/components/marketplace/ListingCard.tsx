@@ -1,17 +1,12 @@
 "use client"
 
-import { CheckCircle2, CreditCard, ImageIcon, MapPin, ShoppingBag } from "lucide-react"
+import { CheckCircle2, ImageIcon, MapPin, ShoppingBag } from "lucide-react"
 
 import { Listing } from "@/lib/marketplace"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useCart } from "./CartProvider"
 
 import {
-  MODE_BADGE_CLASS,
-  MODE_ICON,
-  MODE_TRANSLATION_KEY,
-  TYPE_ICON,
-  TYPE_TRANSLATION_KEY,
   formatToman,
 } from "./listing-helpers"
 
@@ -28,8 +23,6 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
   const { t, language } = useLanguage()
   const { addItem, isItemInCart } = useCart()
   const inCart = isItemInCart(listing.id)
-  const TypeIcon = TYPE_ICON[listing.type]
-  const ModeIcon = MODE_ICON[listing.mode]
   const isCompleted = listing.status === "completed"
 
   const priceLine =
@@ -66,25 +59,6 @@ export function ListingCard({ listing, ownerName, onClick }: ListingCardProps) {
           </div>
         )}
 
-        <div className="absolute top-3 start-3 flex flex-wrap gap-1.5">
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-card/95 backdrop-blur-sm text-card-foreground px-2 py-1 rounded-md shadow-sm">
-            <TypeIcon className="h-3 w-3" />
-            {t(TYPE_TRANSLATION_KEY[listing.type] as never)}
-          </span>
-          <span
-            className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md ${MODE_BADGE_CLASS[listing.mode]}`}
-          >
-            <ModeIcon className="h-3 w-3" />
-            {t(MODE_TRANSLATION_KEY[listing.mode] as never)}
-          </span>
-        </div>
-
-        {listing.mode === "sell" && !isCompleted && (
-          <div className="absolute top-3 end-3 inline-flex items-center gap-1 text-[9px] font-bold bg-emerald-600/90 backdrop-blur-sm text-white px-2 py-0.5 rounded-full shadow-sm">
-            <CreditCard className="h-2.5 w-2.5" />
-            <span>{language === "fa" ? "خرید آنلاین" : "Buy Online"}</span>
-          </div>
-        )}
 
         {isCompleted && (
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex items-center justify-center">
