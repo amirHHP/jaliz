@@ -67,6 +67,17 @@ async function createPaymentTableIfMissing() {
   `)
   console.log("✅ Ensured Payment table exists")
 
+  // Ensure columns exist FIRST before attempting to index them
+  await addColumnIfMissing("Payment", "type", "TEXT DEFAULT 'subscription'")
+  await addColumnIfMissing("Payment", "listingId", "TEXT")
+  await addColumnIfMissing("Payment", "buyerPhone", "TEXT")
+  await addColumnIfMissing("Payment", "buyerAddress", "TEXT")
+  await addColumnIfMissing("Payment", "buyerNotes", "TEXT")
+  await addColumnIfMissing("Payment", "expiresAt", "DATETIME")
+  await addColumnIfMissing("Payment", "paidAt", "DATETIME")
+  await addColumnIfMissing("Payment", "refId", "TEXT")
+  await addColumnIfMissing("Payment", "description", "TEXT DEFAULT ''")
+
   const indexes = [
     { name: "Payment_authority_key", sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Payment_authority_key" ON "Payment"("authority");` },
     { name: "Payment_userId_idx", sql: `CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");` },
@@ -80,19 +91,11 @@ async function createPaymentTableIfMissing() {
       console.log(`✅ Ensured index ${idx.name}`)
     } catch (err) {
       const msg = err.message || String(err)
-      if (!msg.includes("already exists")) throw err
+      if (!msg.includes("already exists")) {
+        console.warn(`⚠️ Could not create index ${idx.name}:`, msg)
+      }
     }
   }
-
-  await addColumnIfMissing("Payment", "type", "TEXT DEFAULT 'subscription'")
-  await addColumnIfMissing("Payment", "listingId", "TEXT")
-  await addColumnIfMissing("Payment", "buyerPhone", "TEXT")
-  await addColumnIfMissing("Payment", "buyerAddress", "TEXT")
-  await addColumnIfMissing("Payment", "buyerNotes", "TEXT")
-  await addColumnIfMissing("Payment", "expiresAt", "DATETIME")
-  await addColumnIfMissing("Payment", "paidAt", "DATETIME")
-  await addColumnIfMissing("Payment", "refId", "TEXT")
-  await addColumnIfMissing("Payment", "description", "TEXT DEFAULT ''")
 }
 
 try {

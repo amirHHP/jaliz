@@ -138,11 +138,6 @@ export async function ensureDatabaseSchema(client: PrismaClient = prisma): Promi
           CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
         );
       `)
-      await client.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Payment_authority_key" ON "Payment"("authority");`)
-      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");`)
-      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_status_idx" ON "Payment"("status");`)
-      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_expiresAt_idx" ON "Payment"("expiresAt");`)
-      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_listingId_idx" ON "Payment"("listingId");`)
     } catch (err: any) {
       const msg = err?.message || String(err)
       if (!msg.includes("already exists")) {
@@ -168,6 +163,24 @@ export async function ensureDatabaseSchema(client: PrismaClient = prisma): Promi
         const msg = err?.message || String(err)
         if (!msg.includes("duplicate column") && !msg.includes("already exists")) {
           console.warn(`[ensureDatabaseSchema] Payment.${col} notice:`, msg)
+        }
+      }
+    }
+
+    const paymentIndexes = [
+      `CREATE UNIQUE INDEX IF NOT EXISTS "Payment_authority_key" ON "Payment"("authority");`,
+      `CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");`,
+      `CREATE INDEX IF NOT EXISTS "Payment_status_idx" ON "Payment"("status");`,
+      `CREATE INDEX IF NOT EXISTS "Payment_expiresAt_idx" ON "Payment"("expiresAt");`,
+      `CREATE INDEX IF NOT EXISTS "Payment_listingId_idx" ON "Payment"("listingId");`,
+    ]
+    for (const sql of paymentIndexes) {
+      try {
+        await client.$executeRawUnsafe(sql)
+      } catch (err: any) {
+        const msg = err?.message || String(err)
+        if (!msg.includes("already exists")) {
+          console.warn("[ensureDatabaseSchema] Payment index notice:", msg)
         }
       }
     }
