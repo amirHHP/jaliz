@@ -12,6 +12,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  PlusCircle,
   Shield,
   ShoppingBag,
   Sparkles,
@@ -313,6 +314,21 @@ export function Header() {
                       </span>
                     )}
                   </div>
+                  <Link
+                    href="/marketplace?action=new"
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false)
+                      if (pathname === "/marketplace") {
+                        window.dispatchEvent(new CustomEvent("jaliz:open-create-listing"))
+                      }
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors"
+                  >
+                    <PlusCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>{language === "fa" ? "ثبت آگهی" : "Post Listing"}</span>
+                  </Link>
+                  <div className="my-1 border-t border-border" />
                   <button
                     role="menuitem"
                     onClick={toggleLanguage}
@@ -462,30 +478,47 @@ export function Header() {
         <nav className="px-4 py-3 pb-6 space-y-1">
           {/* User profile card in mobile menu */}
           {status === "authenticated" && user && (
-            <div className="px-3 py-2.5 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center overflow-hidden shrink-0">
-                {user.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.fullName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <User className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+            <div className="space-y-2 mb-2">
+              <div className="px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center overflow-hidden shrink-0">
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.fullName}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {user.fullName}
+                  </p>
+                  <p className="text-xs text-muted truncate">{user.email}</p>
+                </div>
+                {isAdmin && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded shrink-0">
+                    <Shield className="h-3 w-3" />
+                    {t("admin_role_admin")}
+                  </span>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {user.fullName}
-                </p>
-                <p className="text-xs text-muted truncate">{user.email}</p>
-              </div>
-              {isAdmin && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded shrink-0">
-                  <Shield className="h-3 w-3" />
-                  {t("admin_role_admin")}
-                </span>
-              )}
+
+              {/* Post listing button in mobile user menu */}
+              <Link
+                href="/marketplace?action=new"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  if (pathname === "/marketplace") {
+                    window.dispatchEvent(new CustomEvent("jaliz:open-create-listing"))
+                  }
+                }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-950 transition-colors"
+              >
+                <PlusCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span>{language === "fa" ? "ثبت آگهی" : "Post Listing"}</span>
+              </Link>
             </div>
           )}
 
@@ -568,6 +601,14 @@ export function Header() {
           {/* Mobile auth actions (for guests) */}
           {status !== "loading" && status !== "authenticated" && (
             <div className="border-t border-border pt-2 mt-2 space-y-1">
+              <Link
+                href="/marketplace?action=new"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-950 transition-colors"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>{language === "fa" ? "ثبت آگهی" : "Post Listing"}</span>
+              </Link>
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}

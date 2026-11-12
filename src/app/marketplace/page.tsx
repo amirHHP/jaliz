@@ -7,11 +7,9 @@ import { track } from "@vercel/analytics"
 import {
   ArrowLeftRight,
   Apple,
-  MessageSquare,
   Plus,
   Scissors,
   Search,
-  ShoppingBag,
   Sprout,
   UserCircle2,
   Wrench,
@@ -40,8 +38,10 @@ const TAB_DEFS: { id: Tab; key: string; icon: React.ComponentType<{ className?: 
 
 function MarketplaceOpenFromQuery({
   setSelectedId,
+  onOpenCreate,
 }: {
   setSelectedId: (id: string) => void
+  onOpenCreate: () => void
 }) {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -49,15 +49,27 @@ function MarketplaceOpenFromQuery({
   const { get, ready } = useMarketplace()
 
   useEffect(() => {
+    if (!ready) return
     const raw = searchParams.get("open")
-    if (!raw || !ready) return
-    const openId = decodeURIComponent(raw)
-    if (get(openId)) setSelectedId(openId)
-    const sp = new URLSearchParams(searchParams.toString())
-    sp.delete("open")
-    const q = sp.toString()
-    router.replace(`${pathname}${q ? `?${q}` : ""}`, { scroll: false })
-  }, [searchParams, ready, get, router, pathname, setSelectedId])
+    const action = searchParams.get("action")
+    const shouldCreate = action === "new" || searchParams.get("create") === "1"
+
+    if (shouldCreate) {
+      onOpenCreate()
+    } else if (raw) {
+      const openId = decodeURIComponent(raw)
+      if (get(openId)) setSelectedId(openId)
+    }
+
+    if (raw || shouldCreate) {
+      const sp = new URLSearchParams(searchParams.toString())
+      sp.delete("open")
+      sp.delete("action")
+      sp.delete("create")
+      const q = sp.toString()
+      router.replace(`${pathname}${q ? `?${q}` : ""}`, { scroll: false })
+    }
+  }, [searchParams, ready, get, router, pathname, setSelectedId, onOpenCreate])
 
   return null
 }
@@ -106,12 +118,22 @@ export default function MarketplacePage() {
     track("Marketplace Clicked Post Button")
     if (status !== "authenticated") {
       // Push them to login with a return URL so they bounce back.
-      window.location.href = "/login?redirect=/marketplace"
+      window.location.href = `/login?redirect=${encodeURIComponent("/marketplace?action=new")}`
       return
     }
     setEditingId(null)
     setShowCreate(true)
   }
+
+  useEffect(() => {
+    const handleOpenCreateEvent = () => {
+      handlePostClick()
+    }
+    window.addEventListener("jaliz:open-create-listing", handleOpenCreateEvent)
+    return () => {
+      window.removeEventListener("jaliz:open-create-listing", handleOpenCreateEvent)
+    }
+  }, [status])
 
   const tabsToRender: { id: Tab; key: string; icon: React.ComponentType<{ className?: string }> }[] = [
     ...TAB_DEFS,
@@ -123,48 +145,14 @@ export default function MarketplacePage() {
   return (
     <div className="page-shell">
       <Suspense fallback={null}>
-        <MarketplaceOpenFromQuery setSelectedId={setSelectedId} />
+        <MarketplaceOpenFromQuery
+          setSelectedId={setSelectedId}
+          onOpenCreate={handlePostClick}
+        />
       </Suspense>
       <Header />
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Page header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-emerald-700 mb-1">
-              <ShoppingBag className="h-5 w-5" />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                {t("mp_title" as never)}
-              </span>
-            </div>
-            <h1 className="text-3xl font-bold text-foreground tracking-tight">
-              {t("mp_title" as never)}
-            </h1>
-            <p className="text-muted mt-1 max-w-xl">
-              {t("mp_subtitle" as never)}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {user && (
-              <Link
-                href="/marketplace/chats"
-                prefetch={false}
-                className="inline-flex items-center gap-2 rounded-md border border-border bg-card hover:bg-slate-50 dark:hover:bg-slate-700 text-foreground px-4 py-2 text-sm font-semibold shadow-sm transition-colors"
-              >
-                <MessageSquare className="h-4 w-4 text-emerald-600" />
-                {language === "fa" ? "گفتگوها" : "Chats"}
-              </Link>
-            )}
-            <Button
-              onClick={handlePostClick}
-              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-            >
-              <Plus className="h-4 w-4" />
-              {t("mp_post_btn" as never)}
-            </Button>
-          </div>
-        </div>
-
         {/* Contextual first-purchase promo card */}
         <div className="mb-6">
           <MarketplacePromoCard />
