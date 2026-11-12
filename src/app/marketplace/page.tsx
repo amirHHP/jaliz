@@ -11,7 +11,6 @@ import {
   Scissors,
   Search,
   Sprout,
-  UserCircle2,
   Wrench,
 } from "lucide-react"
 
@@ -138,9 +137,6 @@ export default function MarketplacePage() {
   const tabsToRender: { id: Tab; key: string; icon: React.ComponentType<{ className?: string }> }[] = [
     ...TAB_DEFS,
   ]
-  if (user) {
-    tabsToRender.push({ id: "mine", key: "mp_tab_mine", icon: UserCircle2 })
-  }
 
   return (
     <div className="page-shell">
@@ -152,14 +148,21 @@ export default function MarketplacePage() {
       </Suspense>
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-4 pt-2 sm:pt-4 pb-8 max-w-6xl">
         {/* Contextual first-purchase promo card */}
-        <div className="mb-6">
-          <MarketplacePromoCard />
-        </div>
+        <MarketplacePromoCard />
 
-        {/* Tabs + search */}
+        {/* Search + Tabs */}
         <div className="surface-card p-3 mb-6 flex flex-col gap-3">
+          <div className="relative">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t("mp_search_ph" as never)}
+              className="surface-input w-full h-10 ps-9 pe-3 text-sm"
+            />
+          </div>
           <div className="flex flex-wrap gap-1.5">
             {tabsToRender.map(({ id, key, icon: Icon }) => {
               const isActive = activeTab === id
@@ -178,15 +181,6 @@ export default function MarketplacePage() {
                 </button>
               )
             })}
-          </div>
-          <div className="relative">
-            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("mp_search_ph" as never)}
-              className="surface-input w-full h-10 ps-9 pe-3 text-sm"
-            />
           </div>
         </div>
 

@@ -21,7 +21,7 @@ export function MarketplacePromoCard() {
   return (
     <div
       dir={language === "fa" ? "rtl" : "ltr"}
-      className="relative overflow-hidden rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 bg-gradient-to-br from-emerald-50 via-emerald-100/30 to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-teal-950/30 p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 group"
+      className="mb-4 sm:mb-6 relative overflow-hidden rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 bg-gradient-to-br from-emerald-50 via-emerald-100/30 to-teal-50/50 dark:from-emerald-950/40 dark:via-slate-900/60 dark:to-teal-950/30 p-5 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 group"
     >
       {/* Decorative background blobs */}
       <div className="absolute -top-12 -end-12 w-32 h-32 bg-amber-200/20 dark:bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />

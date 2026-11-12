@@ -211,16 +211,6 @@ export default function MarketplaceChatsPage() {
           activeConvId ? "hidden md:flex" : "flex"
         }`}
       >
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-emerald-600" />
-            {language === "fa" ? "صندوق پیام‌های بازارچه" : "Marketplace Inbox"}
-          </h1>
-          <span className="text-xs bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full">
-            {conversations.length}
-          </span>
-        </div>
-
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-6 text-center">
