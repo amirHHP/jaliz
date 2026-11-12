@@ -32,6 +32,7 @@ vi.mock("@/lib/zarinpal", () => ({
   getSiteUrl: () => "https://jalizapp.ir",
   getPaymentGatewayBaseUrl: () => "https://jaliz.noxte.ir",
   getPaymentCallbackUrl: () => "https://jaliz.noxte.ir/payments/callback",
+  getPaymentGatewayForwardUrl: (auth: string) => `https://www.zarinpal.com/pg/StartPay/${auth}`,
   zarinpalStartPayUrl: (auth: string) => `https://www.zarinpal.com/pg/StartPay/${auth}`,
   zarinpalErrorMessageFa: (_code: number, fallback: string) => fallback,
   requestZarinpalPayment: (args: any) => mockRequestZarinpalPayment(args),
@@ -183,6 +184,29 @@ describe("Subscription Payment Actions & Gateway Callback", () => {
       expect(res.status).toBe(307)
       const location = res.headers.get("location")
       expect(location).toBe("https://jalizapp.ir/schedule?payment=cancelled")
+    })
+  })
+
+  describe("payments/pay/[authority] bridge route GET", () => {
+    it("renders origin bridge page with meta referrer origin and form targeting ZarinPal", async () => {
+      const { GET } = await import("../../payments/pay/[authority]/route")
+      const req = new NextRequest("https://jaliz.noxte.ir/payments/pay/A000999")
+      const res = await GET(req, { params: Promise.resolve({ authority: "A000999" }) })
+
+      expect(res.status).toBe(200)
+      const text = await res.text()
+      expect(text).toContain('content="origin"')
+      expect(text).toContain("https://www.zarinpal.com/pg/StartPay/A000999")
+      expect(res.headers.get("referrer-policy")).toBe("origin")
+    })
+
+    it("redirects to canonical jaliz.noxte.ir if accessed on jalizapp.ir", async () => {
+      const { GET } = await import("../../payments/pay/[authority]/route")
+      const req = new NextRequest("https://jalizapp.ir/payments/pay/A000999")
+      const res = await GET(req, { params: Promise.resolve({ authority: "A000999" }) })
+
+      expect(res.status).toBe(307)
+      expect(res.headers.get("location")).toBe("https://jaliz.noxte.ir/payments/pay/A000999")
     })
   })
 })

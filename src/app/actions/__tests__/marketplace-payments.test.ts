@@ -45,6 +45,7 @@ vi.mock("@/lib/zarinpal", () => ({
   getSiteUrl: () => "https://jaliz.ir",
   getPaymentGatewayBaseUrl: () => "https://jaliz.ir",
   getPaymentCallbackUrl: () => "https://jaliz.ir/payments/callback",
+  getPaymentGatewayForwardUrl: (auth: string) => `https://www.zarinpal.com/pg/StartPay/${auth}`,
   zarinpalStartPayUrl: (auth: string) => `https://www.zarinpal.com/pg/StartPay/${auth}`,
   zarinpalErrorMessageFa: (_code: number, fallback: string) => fallback,
   requestZarinpalPayment: (args: any) => mockRequestZarinpalPayment(args),

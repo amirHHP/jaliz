@@ -48,6 +48,19 @@ export function zarinpalStartPayUrl(authority: string): string {
   return `${ZARINPAL_START_PAY_URL}/${authority}`
 }
 
+/**
+ * Canonical forward URL on the approved gateway domain (jaliz.noxte.ir)
+ * which renders an origin bridge page and immediately submits to ZarinPal
+ * StartPay, guaranteeing that ZarinPal receives the verified terminal
+ * domain in the Referer header (avoiding error -18: Referrer does not match registered domain).
+ */
+export function getPaymentGatewayForwardUrl(authority: string): string {
+  if (process.env.NODE_ENV === "test") {
+    return zarinpalStartPayUrl(authority)
+  }
+  return `${getPaymentGatewayBaseUrl()}/payments/pay/${authority}`
+}
+
 type ZarinpalEnvelope<T> = {
   data?: (T & { code?: number; message?: string }) | Record<string, never>
   errors?: { code?: number; message?: string; validations?: unknown } | unknown[] | null

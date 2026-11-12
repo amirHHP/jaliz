@@ -11,6 +11,7 @@ import {
 import { getSubscriptionExpiresAtForUser } from "@/lib/subscription-status"
 import {
   getPaymentCallbackUrl,
+  getPaymentGatewayForwardUrl,
   getSiteUrl,
   requestZarinpalPayment,
   verifyZarinpalPayment,
@@ -116,7 +117,7 @@ export async function createSubscriptionPaymentAction(): Promise<CreateSubscript
     }
   }
 
-  return { ok: true, paymentUrl: zarinpalStartPayUrl(zarinpal.authority) }
+  return { ok: true, paymentUrl: getPaymentGatewayForwardUrl(zarinpal.authority) }
 }
 
 export type VerifySubscriptionPaymentResult =
@@ -316,7 +317,7 @@ export async function createMarketplacePaymentAction(
     }
   }
 
-  return { ok: true, paymentUrl: zarinpalStartPayUrl(zarinpal.authority) }
+  return { ok: true, paymentUrl: getPaymentGatewayForwardUrl(zarinpal.authority) }
 }
 
 export interface CartItemCheckoutInput {
@@ -482,7 +483,7 @@ export async function createMarketplaceCartPaymentAction(
     }
   }
 
-  return { ok: true, paymentUrl: zarinpalStartPayUrl(zarinpal.authority) }
+  return { ok: true, paymentUrl: getPaymentGatewayForwardUrl(zarinpal.authority) }
 }
 
 export type VerifyMarketplacePaymentResult =
