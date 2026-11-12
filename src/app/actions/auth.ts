@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import crypto from "crypto";
 import { generateSalt, hashPassword, verifyPassword } from "@/lib/auth/password";
 import {
+  SESSION_KEY,
   signSessionValue,
   verifyAndExtractSessionUserId,
   useSecureSessionCookie,
@@ -21,7 +22,6 @@ import { sendOtpEmail } from "@/lib/email/send-otp-email";
 import { getSubscriptionExpiresAtForUser } from "@/lib/subscription-status";
 import { nextSubscriptionExpiry } from "@/lib/subscription";
 
-const SESSION_KEY = "jaliz_session";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();

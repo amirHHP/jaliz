@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import {
   Bell,
+  BookOpen,
   Globe,
   History,
   LogIn,
@@ -18,6 +19,7 @@ import {
   User,
   UserPlus,
   X,
+  Settings as SettingsIcon,
 } from "lucide-react"
 
 import { useLanguage } from "@/components/LanguageProvider"
@@ -26,7 +28,6 @@ import { useMarketplaceInbox } from "@/components/MarketplaceProvider"
 import { useCart } from "@/components/marketplace/CartProvider"
 import { SettingsModal } from "@/components/SettingsModal"
 import { ShopMessagesModal } from "@/components/ShopMessagesModal"
-import { Settings as SettingsIcon } from "lucide-react"
 import { PromoBanner } from "@/components/PromoBanner"
 
 
@@ -56,6 +57,26 @@ const PREFETCH_DISABLED_HREFS = new Set([
   "/plants/diagnose",
 ])
 
+const BOTTOM_NAV_KEYS = new Set<NavLink["key"]>([
+  "my_plants",
+  "schedule",
+  "marketplace",
+  "chats",
+])
+
+function getMobileLinkIcon(key: NavLink["key"]) {
+  switch (key) {
+    case "blog":
+      return <BookOpen className="h-4 w-4" />
+    case "admin_panel":
+      return <Shield className="h-4 w-4 text-emerald-600" />
+    case "marketplace":
+      return <Store className="h-4 w-4" />
+    default:
+      return null
+  }
+}
+
 
 export function Header() {
   const { language, setLanguage, t } = useLanguage()
@@ -72,6 +93,8 @@ export function Header() {
   const [shopMessagesOpen, setShopMessagesOpen] = useState(false)
   const [unreadShopMessagesCount, setUnreadShopMessagesCount] = useState(0)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const mobileNavRef = useRef<HTMLDivElement | null>(null)
+  const hamburgerBtnRef = useRef<HTMLButtonElement | null>(null)
 
   // Poll or check unread shop messages when user has a connected shop
   useEffect(() => {
@@ -84,16 +107,29 @@ export function Header() {
     }
   }, [status, user?.shop?.id])
 
-  // Close the account dropdown on outside click / Escape.
+  // Close the account dropdown and mobile menu on outside click / Escape.
   useEffect(() => {
-    if (!menuOpen) return
+    if (!menuOpen && !mobileMenuOpen) return
     const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (menuOpen && menuRef.current && !menuRef.current.contains(target)) {
         setMenuOpen(false)
+      }
+      if (
+        mobileMenuOpen &&
+        mobileNavRef.current &&
+        !mobileNavRef.current.contains(target) &&
+        hamburgerBtnRef.current &&
+        !hamburgerBtnRef.current.contains(target)
+      ) {
+        setMobileMenuOpen(false)
       }
     }
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMenuOpen(false)
+      if (e.key === "Escape") {
+        setMenuOpen(false)
+        setMobileMenuOpen(false)
+      }
     }
     document.addEventListener("mousedown", handleClick)
     document.addEventListener("keydown", handleKey)
@@ -101,7 +137,7 @@ export function Header() {
       document.removeEventListener("mousedown", handleClick)
       document.removeEventListener("keydown", handleKey)
     }
-  }, [menuOpen])
+  }, [menuOpen, mobileMenuOpen])
 
   // Close mobile menu on route change.
   useEffect(() => {
@@ -119,8 +155,25 @@ export function Header() {
     return true
   })
 
+  // On mobile when authenticated, items already in BottomNav do not need to be duplicated in the top menu
+  const mobileNavLinks = visibleLinks.filter((l) => {
+    if (isAuthenticated && BOTTOM_NAV_KEYS.has(l.key)) {
+      return false
+    }
+    return true
+  })
+
   return (
     <>
+      {/* Mobile backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-xs z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       <header className="app-header">
         <PromoBanner />
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -224,7 +277,10 @@ export function Header() {
           ) : status === "authenticated" && user ? (
             <div className="relative" ref={menuRef}>
               <button
-                onClick={() => setMenuOpen((v) => !v)}
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  setMenuOpen((v) => !v)
+                }}
                 className="h-9 w-9 rounded-full bg-emerald-100 border border-emerald-200 shadow-sm flex items-center justify-center flex-shrink-0 hover:bg-emerald-200 transition overflow-hidden"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
@@ -372,7 +428,11 @@ export function Header() {
 
           {/* Mobile hamburger button */}
           <button
-            onClick={() => setMobileMenuOpen((v) => !v)}
+            ref={hamburgerBtnRef}
+            onClick={() => {
+              setMenuOpen(false)
+              setMobileMenuOpen((v) => !v)
+            }}
             className="md:hidden flex items-center justify-center h-9 w-9 rounded-lg text-foreground hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
@@ -388,16 +448,56 @@ export function Header() {
 
       {/* Mobile navigation drawer */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+        ref={mobileNavRef}
+        className={`md:hidden border-t border-border bg-card/95 backdrop-blur-md transition-all duration-300 ease-in-out ${
+          mobileMenuOpen
+            ? `${
+                isAuthenticated
+                  ? "max-h-[calc(100dvh-8.5rem)]"
+                  : "max-h-[calc(100dvh-5rem)]"
+              } opacity-100 overflow-y-auto overscroll-contain shadow-lg`
+            : "max-h-0 opacity-0 overflow-hidden pointer-events-none border-t-0"
         }`}
       >
-        <nav className="border-t border-border bg-card/95 backdrop-blur-md px-4 py-3 space-y-1">
-          {visibleLinks.map((link) => {
+        <nav className="px-4 py-3 pb-6 space-y-1">
+          {/* User profile card in mobile menu */}
+          {status === "authenticated" && user && (
+            <div className="px-3 py-2.5 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center overflow-hidden shrink-0">
+                {user.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.fullName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <User className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {user.fullName}
+                </p>
+                <p className="text-xs text-muted truncate">{user.email}</p>
+              </div>
+              {isAdmin && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded shrink-0">
+                  <Shield className="h-3 w-3" />
+                  {t("admin_role_admin")}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Mobile navigation links (excluding items that already exist in bottom nav) */}
+          {mobileNavLinks.map((link) => {
             const isActive =
               link.href === "/"
                 ? pathname === "/"
-                : link.href !== "#" && pathname.startsWith(link.href)
+                : link.href === "/marketplace"
+                  ? pathname === "/marketplace" ||
+                    (pathname.startsWith("/marketplace/") && !pathname.startsWith("/marketplace/chats"))
+                  : link.href !== "#" && pathname.startsWith(link.href)
             return (
               <Link
                 key={link.key}
@@ -410,7 +510,10 @@ export function Header() {
                     : "text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400"
                 }`}
               >
-                <span>{t(link.key)}</span>
+                <span className="flex items-center gap-3">
+                  {getMobileLinkIcon(link.key)}
+                  <span>{t(link.key)}</span>
+                </span>
                 {link.key === "chats" && unreadCount > 0 && (
                   <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                     {unreadCount}
@@ -420,23 +523,49 @@ export function Header() {
             )
           })}
 
-          {/* Mobile Smart Detect CTA */}
-          {isAuthenticated && (
-            <div className="border-t border-border pt-2 mt-2">
-              <Link
-                href="/plants/diagnose"
-                prefetch={false}
-                id="smart-detect-mobile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md transition-all hover:shadow-lg"
-              >
-                <Sparkles className="h-4 w-4" />
-                {t("smart_detect")}
-              </Link>
-            </div>
+          {/* Shop management links */}
+          {status === "authenticated" && user && (user.ownedShop || isAdmin) && (
+            <Link
+              href="/shop"
+              prefetch={false}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                pathname.startsWith("/shop")
+                  ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-semibold"
+                  : "text-emerald-700 dark:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+              }`}
+            >
+              <Store className="h-4 w-4" />
+              <span>{language === "fa" ? "پنل فروشگاه" : "Shop Panel"}</span>
+            </Link>
           )}
 
-          {/* Mobile auth actions */}
+          {status === "authenticated" && user?.shop && (
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false)
+                setShopMessagesOpen(true)
+              }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
+              <span className="flex items-center gap-3">
+                <Bell className="h-4 w-4 text-emerald-600" />
+                <span>
+                  {language === "fa"
+                    ? `پیام‌های ${user.shop.name}`
+                    : `Messages from ${user.shop.name}`}
+                </span>
+              </span>
+              {unreadShopMessagesCount > 0 && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white px-1">
+                  {unreadShopMessagesCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Mobile auth actions (for guests) */}
           {status !== "loading" && status !== "authenticated" && (
             <div className="border-t border-border pt-2 mt-2 space-y-1">
               <Link
@@ -445,7 +574,7 @@ export function Header() {
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
               >
                 <LogIn className="h-4 w-4" />
-                {t("sign_in")}
+                <span>{t("sign_in")}</span>
               </Link>
               <Link
                 href="/register"
@@ -453,83 +582,62 @@ export function Header() {
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-950 transition-colors"
               >
                 <UserPlus className="h-4 w-4" />
-                {t("sign_up")}
+                <span>{t("sign_up")}</span>
               </Link>
             </div>
           )}
 
-          {status === "authenticated" && user && (
-            <div className="border-t border-border pt-2 mt-2">
-              {(user.ownedShop || isAdmin) && (
-                <Link
-                  href="/shop"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-emerald-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                >
-                  <Store className="h-4 w-4" />
-                  {language === "fa" ? "پنل فروشگاه" : "Shop Panel"}
-                </Link>
-              )}
-              {user.shop && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                    setShopMessagesOpen(true)
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
-                >
-                  <span className="flex items-center gap-3">
-                    <Bell className="h-4 w-4 text-emerald-600" />
-                    {language === "fa" ? `پیام‌های ${user.shop.name}` : `Messages from ${user.shop.name}`}
-                  </span>
-                  {unreadShopMessagesCount > 0 && (
-                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white px-1">
-                      {unreadShopMessagesCount}
-                    </span>
-                  )}
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false)
-                  logout()
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-red-600 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                {t("sign_out")}
-              </button>
-            </div>
-          )}
-
-          {/* Mobile language toggle */}
-          <div className="border-t border-border pt-2 mt-2">
+          {/* Mobile utilities (settings, changelog, language) */}
+          <div className="border-t border-border pt-2 mt-2 space-y-1">
             <button
-              onClick={toggleLanguage}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
-            >
-              <Globe className="h-4 w-4" />
-              {language === "en" ? "فارسی" : "English"}
-            </button>
-            <button
+              type="button"
               onClick={() => {
                 setMobileMenuOpen(false)
                 setSettingsOpen(true)
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer"
             >
               <SettingsIcon className="h-4 w-4" />
-              {t("settings")}
+              <span>{t("settings")}</span>
             </button>
             <Link
               href="/changelog"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                pathname === "/changelog"
+                  ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 font-semibold"
+                  : "text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400"
+              }`}
             >
               <History className="h-4 w-4" />
-              {t("changelog")}
+              <span>{t("changelog")}</span>
             </Link>
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
+              <Globe className="h-4 w-4" />
+              <span>{language === "en" ? "فارسی" : "English"}</span>
+            </button>
           </div>
+
+          {/* Mobile logout */}
+          {status === "authenticated" && user && (
+            <div className="border-t border-border pt-2 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false)
+                  logout()
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>{t("sign_out")}</span>
+              </button>
+            </div>
+          )}
         </nav>
       </div>
 

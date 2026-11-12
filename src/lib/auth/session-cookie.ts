@@ -1,5 +1,7 @@
 import crypto from "crypto";
 
+export const SESSION_KEY = "jaliz_session";
+
 /**
  * Session cookie `Secure` flag.
  * In production, Next sets NODE_ENV=production even on plain HTTP (e.g. VM IP:port).

@@ -117,6 +117,61 @@ export async function ensureDatabaseSchema(client: PrismaClient = prisma): Promi
       }
     }
 
+    try {
+      await client.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "Payment" (
+          "id" TEXT NOT NULL PRIMARY KEY,
+          "userId" TEXT NOT NULL,
+          "authority" TEXT NOT NULL,
+          "amount" INTEGER NOT NULL,
+          "status" TEXT NOT NULL DEFAULT 'pending',
+          "refId" TEXT,
+          "description" TEXT NOT NULL DEFAULT '',
+          "type" TEXT NOT NULL DEFAULT 'subscription',
+          "listingId" TEXT,
+          "buyerPhone" TEXT,
+          "buyerAddress" TEXT,
+          "buyerNotes" TEXT,
+          "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "paidAt" DATETIME,
+          "expiresAt" DATETIME,
+          CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+        );
+      `)
+      await client.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Payment_authority_key" ON "Payment"("authority");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_status_idx" ON "Payment"("status");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_expiresAt_idx" ON "Payment"("expiresAt");`)
+      await client.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Payment_listingId_idx" ON "Payment"("listingId");`)
+    } catch (err: any) {
+      const msg = err?.message || String(err)
+      if (!msg.includes("already exists")) {
+        console.warn("[ensureDatabaseSchema] Payment table notice:", msg)
+      }
+    }
+
+    const paymentColumns = [
+      { col: "type", type: "TEXT DEFAULT 'subscription'" },
+      { col: "listingId", type: "TEXT" },
+      { col: "buyerPhone", type: "TEXT" },
+      { col: "buyerAddress", type: "TEXT" },
+      { col: "buyerNotes", type: "TEXT" },
+      { col: "expiresAt", type: "DATETIME" },
+      { col: "paidAt", type: "DATETIME" },
+      { col: "refId", type: "TEXT" },
+      { col: "description", type: "TEXT DEFAULT ''" },
+    ]
+    for (const { col, type } of paymentColumns) {
+      try {
+        await client.$executeRawUnsafe(`ALTER TABLE "Payment" ADD COLUMN "${col}" ${type};`)
+      } catch (err: any) {
+        const msg = err?.message || String(err)
+        if (!msg.includes("duplicate column") && !msg.includes("already exists")) {
+          console.warn(`[ensureDatabaseSchema] Payment.${col} notice:`, msg)
+        }
+      }
+    }
+
     schemaEnsured = true
   })().catch((err) => {
     schemaPromise = null

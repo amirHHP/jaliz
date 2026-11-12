@@ -39,6 +39,7 @@ const geistMono = localFont({
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { WateringNotificationProvider } from "@/components/WateringNotificationProvider";
 import { MarketplaceProvider } from "@/components/MarketplaceProvider";
 import { CartProvider } from "@/components/marketplace/CartProvider";
 import { CartConflictModal } from "@/components/marketplace/CartConflictModal";
@@ -124,15 +125,17 @@ export default function RootLayout({
         <LanguageProvider>
           <AuthProvider>
             <ThemeProvider>
-              <MarketplaceProvider>
-                <CartProvider>
-                  {children}
-                  <CartConflictModal />
-                  <CartDrawer />
-                  <BottomNav />
-                  <InstallPrompt />
-                </CartProvider>
-              </MarketplaceProvider>
+              <WateringNotificationProvider>
+                <MarketplaceProvider>
+                  <CartProvider>
+                    {children}
+                    <CartConflictModal />
+                    <CartDrawer />
+                    <BottomNav />
+                    <InstallPrompt />
+                  </CartProvider>
+                </MarketplaceProvider>
+              </WateringNotificationProvider>
             </ThemeProvider>
           </AuthProvider>
         </LanguageProvider>

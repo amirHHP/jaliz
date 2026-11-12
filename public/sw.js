@@ -225,11 +225,48 @@ self.addEventListener('periodicsync', (event) => {
 })
 
 self.addEventListener('push', (event) => {
-  const title = 'جالیز'
+  let title = 'جالیز 💧'
+  let body = 'یادآور آبیاری گیاهان شما'
+  let targetUrl = '/schedule'
+
+  if (event.data) {
+    try {
+      const payload = event.data.json()
+      if (payload.title) title = payload.title
+      if (payload.body) body = payload.body
+      if (payload.url) targetUrl = payload.url
+    } catch {
+      body = event.data.text()
+    }
+  }
+
   const options = {
-    body: event.data ? event.data.text() : 'یادآور آبیاری گیاهان شما',
+    body,
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-192x192.png',
+    data: { url: targetUrl },
+    tag: 'jaliz-watering-reminder',
   }
   event.waitUntil(self.registration.showNotification(title, options))
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/schedule'
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(targetUrl)
+          }
+          return client.focus()
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl)
+      }
+    }),
+  )
 })

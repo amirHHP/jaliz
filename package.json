@@ -8,7 +8,7 @@
     "dev:next": "prisma generate && next dev",
     "dev:py": "cd api && ../.venv/bin/uvicorn index:app --reload --port 8000",
     "generate:changelog": "node scripts/generate-changelog.mjs",
-    "build": "node scripts/migrate-customer-club.mjs && prisma generate && node scripts/generate-changelog.mjs && next build --webpack",
+    "build": "node scripts/migrate-subscription.mjs && node scripts/migrate-customer-club.mjs && prisma generate && node scripts/generate-changelog.mjs && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

@@ -45,6 +45,24 @@ describe("zarinpal client", () => {
     )
   })
 
+  it("resolves site url and payment gateway urls properly", async () => {
+    delete process.env.NEXT_PUBLIC_SITE_URL
+    delete process.env.PAYMENT_GATEWAY_URL
+    delete process.env.ZARINPAL_CALLBACK_BASE_URL
+
+    const { getSiteUrl, getPaymentGatewayBaseUrl, getPaymentCallbackUrl } = await import("@/lib/zarinpal")
+    expect(getSiteUrl()).toBe("https://jalizapp.ir")
+
+    // In tests NODE_ENV === 'test', so it returns getSiteUrl() unless explicitly set
+    expect(getPaymentGatewayBaseUrl()).toBe("https://jalizapp.ir")
+    expect(getPaymentCallbackUrl()).toBe("https://jalizapp.ir/payments/callback")
+
+    // If explicit gateway URL is provided
+    process.env.PAYMENT_GATEWAY_URL = "https://jaliz.noxte.ir"
+    expect(getPaymentGatewayBaseUrl()).toBe("https://jaliz.noxte.ir")
+    expect(getPaymentCallbackUrl()).toBe("https://jaliz.noxte.ir/payments/callback")
+  })
+
   it("verifies a successful payment", async () => {
     fetchMock.mockResolvedValue({
       ok: true,

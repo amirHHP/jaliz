@@ -54,6 +54,11 @@ async function createPaymentTableIfMissing() {
       "status" TEXT NOT NULL DEFAULT 'pending',
       "refId" TEXT,
       "description" TEXT NOT NULL DEFAULT '',
+      "type" TEXT NOT NULL DEFAULT 'subscription',
+      "listingId" TEXT,
+      "buyerPhone" TEXT,
+      "buyerAddress" TEXT,
+      "buyerNotes" TEXT,
       "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "paidAt" DATETIME,
       "expiresAt" DATETIME,
@@ -62,16 +67,32 @@ async function createPaymentTableIfMissing() {
   `)
   console.log("✅ Ensured Payment table exists")
 
-  try {
-    await prisma.$executeRawUnsafe(
-      `CREATE UNIQUE INDEX IF NOT EXISTS "Payment_authority_key" ON "Payment"("authority")`,
-    )
-  } catch (err) {
-    const msg = err.message || String(err)
-    if (!msg.includes("already exists")) throw err
+  const indexes = [
+    { name: "Payment_authority_key", sql: `CREATE UNIQUE INDEX IF NOT EXISTS "Payment_authority_key" ON "Payment"("authority");` },
+    { name: "Payment_userId_idx", sql: `CREATE INDEX IF NOT EXISTS "Payment_userId_idx" ON "Payment"("userId");` },
+    { name: "Payment_status_idx", sql: `CREATE INDEX IF NOT EXISTS "Payment_status_idx" ON "Payment"("status");` },
+    { name: "Payment_expiresAt_idx", sql: `CREATE INDEX IF NOT EXISTS "Payment_expiresAt_idx" ON "Payment"("expiresAt");` },
+    { name: "Payment_listingId_idx", sql: `CREATE INDEX IF NOT EXISTS "Payment_listingId_idx" ON "Payment"("listingId");` },
+  ]
+  for (const idx of indexes) {
+    try {
+      await prisma.$executeRawUnsafe(idx.sql)
+      console.log(`✅ Ensured index ${idx.name}`)
+    } catch (err) {
+      const msg = err.message || String(err)
+      if (!msg.includes("already exists")) throw err
+    }
   }
 
+  await addColumnIfMissing("Payment", "type", "TEXT DEFAULT 'subscription'")
+  await addColumnIfMissing("Payment", "listingId", "TEXT")
+  await addColumnIfMissing("Payment", "buyerPhone", "TEXT")
+  await addColumnIfMissing("Payment", "buyerAddress", "TEXT")
+  await addColumnIfMissing("Payment", "buyerNotes", "TEXT")
   await addColumnIfMissing("Payment", "expiresAt", "DATETIME")
+  await addColumnIfMissing("Payment", "paidAt", "DATETIME")
+  await addColumnIfMissing("Payment", "refId", "TEXT")
+  await addColumnIfMissing("Payment", "description", "TEXT DEFAULT ''")
 }
 
 try {
@@ -80,7 +101,11 @@ try {
   console.log("Note: User.subscriptionExpiresAt is no longer required for auth.")
 } catch (err) {
   console.error("❌ Subscription migration failed:", err.message || err)
-  process.exit(1)
+  if (!process.env.TURSO_AUTH_TOKEN && (dbUrl.startsWith("libsql://") || dbUrl.startsWith("https://"))) {
+    console.warn("⚠️ TURSO_AUTH_TOKEN not provided, skipping remote migration.")
+  } else {
+    process.exit(1)
+  }
 } finally {
   await prisma.$disconnect()
 }

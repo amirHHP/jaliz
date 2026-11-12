@@ -9,7 +9,39 @@ export function getZarinpalMerchantId(): string {
 export function getSiteUrl(): string {
   const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim()
   if (fromEnv) return fromEnv.replace(/\/$/, "")
-  return "https://jaliz.ir"
+  return "https://jalizapp.ir"
+}
+
+/**
+ * The base URL where the payment gateway (ZarinPal) expects the callback.
+ * In production, the terminal domain registered and approved by ZarinPal is jaliz.noxte.ir.
+ * In test or local development environments, it adapts to the current site URL unless explicitly configured.
+ */
+export function getPaymentGatewayBaseUrl(): string {
+  const fromEnv = (
+    process.env.PAYMENT_GATEWAY_URL ||
+    process.env.ZARINPAL_CALLBACK_BASE_URL ||
+    ""
+  ).trim()
+  if (fromEnv) return fromEnv.replace(/\/$/, "")
+
+  if (process.env.NODE_ENV === "test") {
+    return getSiteUrl()
+  }
+
+  const site = getSiteUrl()
+  if (process.env.NODE_ENV === "development" && (site.includes("localhost") || site.includes("127.0.0.1"))) {
+    return site
+  }
+
+  return "https://jaliz.noxte.ir"
+}
+
+/**
+ * Canonical callback URL registered with ZarinPal for payment processing.
+ */
+export function getPaymentCallbackUrl(): string {
+  return `${getPaymentGatewayBaseUrl()}/payments/callback`
 }
 
 export function zarinpalStartPayUrl(authority: string): string {

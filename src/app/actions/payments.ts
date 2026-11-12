@@ -10,12 +10,37 @@ import {
 } from "@/lib/subscription"
 import { getSubscriptionExpiresAtForUser } from "@/lib/subscription-status"
 import {
+  getPaymentCallbackUrl,
   getSiteUrl,
   requestZarinpalPayment,
   verifyZarinpalPayment,
   zarinpalErrorMessageFa,
   zarinpalStartPayUrl,
 } from "@/lib/zarinpal"
+
+async function getRequestOrigin(): Promise<string> {
+  try {
+    const { headers } = await import("next/headers")
+    const headerList = await headers()
+    const origin = headerList.get("origin")
+    if (origin && origin !== "null") return origin.replace(/\/$/, "")
+    const referer = headerList.get("referer")
+    if (referer) {
+      try {
+        const url = new URL(referer)
+        return url.origin.replace(/\/$/, "")
+      } catch {
+        /* invalid url */
+      }
+    }
+    const host = headerList.get("x-forwarded-host") || headerList.get("host")
+    const proto = headerList.get("x-forwarded-proto") || "https"
+    if (host) return `${proto}://${host}`.replace(/\/$/, "")
+  } catch {
+    // headers() might not be available in non-request contexts
+  }
+  return getSiteUrl()
+}
 
 export type CreateSubscriptionPaymentResult =
   | { ok: true; paymentUrl: string }
@@ -32,7 +57,8 @@ export async function createSubscriptionPaymentAction(): Promise<CreateSubscript
     return { ok: false, error: "حساب کاربری معتبر نیست." }
   }
 
-  const callbackUrl = `${getSiteUrl()}/payments/callback`
+  const returnOrigin = await getRequestOrigin()
+  const callbackUrl = getPaymentCallbackUrl()
 
   let zarinpal
   try {
@@ -59,21 +85,37 @@ export async function createSubscriptionPaymentAction(): Promise<CreateSubscript
     }
   }
 
+  const paymentData = {
+    userId,
+    authority: zarinpal.authority,
+    amount: SUBSCRIPTION_PRICE_RIAL,
+    status: "pending",
+    description: SUBSCRIPTION_DESCRIPTION_FA,
+    buyerNotes: JSON.stringify({ returnOrigin, kind: "subscription" }),
+  }
+
   try {
+    if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+      await (prisma as any).ensureDatabaseSchema().catch(() => {})
+    }
     await prisma.payment.create({
-      data: {
-        userId,
-        authority: zarinpal.authority,
-        amount: SUBSCRIPTION_PRICE_RIAL,
-        status: "pending",
-        description: SUBSCRIPTION_DESCRIPTION_FA,
-      },
+      data: paymentData,
     })
   } catch (err) {
-    console.error("Payment create error:", err)
-    return {
-      ok: false,
-      error: "جدول پرداخت هنوز روی دیتابیس آماده نیست. بعد از مایگریشن دوباره تلاش کنید.",
+    console.error("Payment create error, attempting auto-heal migration:", err)
+    try {
+      if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+        await (prisma as any).ensureDatabaseSchema()
+      }
+      await prisma.payment.create({
+        data: paymentData,
+      })
+    } catch (retryErr) {
+      console.error("Payment create retry failed:", retryErr)
+      return {
+        ok: false,
+        error: "جدول پرداخت هنوز روی دیتابیس آماده نیست. بعد از مایگریشن دوباره تلاش کنید.",
+      }
     }
   }
 
@@ -207,7 +249,8 @@ export async function createMarketplacePaymentAction(
   const totalToman = listing.price + shippingFeeToman
   const amountRial = totalToman * 10
   const description = `خرید آنلاین ${listing.title} در جالیز`
-  const callbackUrl = `${getSiteUrl()}/payments/callback`
+  const returnOrigin = await getRequestOrigin()
+  const callbackUrl = getPaymentCallbackUrl()
 
   let zarinpal
   try {
@@ -234,32 +277,48 @@ export async function createMarketplacePaymentAction(
     }
   }
 
-  try {
-    const orderMetadata = JSON.stringify({
-      items: [{ listingId: listing.id, title: listing.title, price: listing.price, quantity: 1 }],
-      shippingFee: shippingFeeToman,
-      notes: input.buyerNotes?.trim() || "",
-    })
+  const orderMetadata = JSON.stringify({
+    items: [{ listingId: listing.id, title: listing.title, price: listing.price, quantity: 1 }],
+    shippingFee: shippingFeeToman,
+    notes: input.buyerNotes?.trim() || "",
+    returnOrigin,
+  })
 
+  const paymentData = {
+    userId,
+    listingId: listing.id,
+    type: "marketplace",
+    authority: zarinpal.authority,
+    amount: amountRial,
+    status: "pending",
+    description,
+    buyerPhone: input.buyerPhone?.trim() || user.phone || null,
+    buyerAddress: input.buyerAddress?.trim() || null,
+    buyerNotes: orderMetadata,
+  }
+
+  try {
+    if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+      await (prisma as any).ensureDatabaseSchema().catch(() => {})
+    }
     await prisma.payment.create({
-      data: {
-        userId,
-        listingId: listing.id,
-        type: "marketplace",
-        authority: zarinpal.authority,
-        amount: amountRial,
-        status: "pending",
-        description,
-        buyerPhone: input.buyerPhone?.trim() || user.phone || null,
-        buyerAddress: input.buyerAddress?.trim() || null,
-        buyerNotes: orderMetadata,
-      },
+      data: paymentData,
     })
   } catch (err) {
-    console.error("Marketplace payment record create error:", err)
-    return {
-      ok: false,
-      error: "خطا در ثبت رکورد پرداخت روی پایگاه داده. لطفاً دوباره تلاش کنید.",
+    console.error("Marketplace payment record create error, attempting auto-heal migration:", err)
+    try {
+      if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+        await (prisma as any).ensureDatabaseSchema()
+      }
+      await prisma.payment.create({
+        data: paymentData,
+      })
+    } catch (retryErr) {
+      console.error("Marketplace payment record create retry error:", retryErr)
+      return {
+        ok: false,
+        error: "خطا در ثبت رکورد پرداخت روی پایگاه داده. لطفاً دوباره تلاش کنید.",
+      }
     }
   }
 
@@ -356,7 +415,8 @@ export async function createMarketplaceCartPaymentAction(
 
   const sellerName = listings[0].owner.fullName || "فروشنده جالیز"
   const description = `خرید آنلاین ${input.items.length} کالا از ${sellerName} در جالیز`
-  const callbackUrl = `${getSiteUrl()}/payments/callback`
+  const returnOrigin = await getRequestOrigin()
+  const callbackUrl = getPaymentCallbackUrl()
 
   let zarinpal
   try {
@@ -383,35 +443,51 @@ export async function createMarketplaceCartPaymentAction(
     }
   }
 
-  try {
-    const orderMetadata = JSON.stringify({
-      isCart: true,
-      items: orderItemsSummary,
-      itemsSubtotal: itemsSubtotalToman,
-      shippingFee: shippingFeeToman,
-      totalToman,
-      notes: input.buyerNotes?.trim() || "",
-    })
+  const orderMetadata = JSON.stringify({
+    isCart: true,
+    items: orderItemsSummary,
+    itemsSubtotal: itemsSubtotalToman,
+    shippingFee: shippingFeeToman,
+    totalToman,
+    notes: input.buyerNotes?.trim() || "",
+    returnOrigin,
+  })
 
+  const paymentData = {
+    userId,
+    listingId: listings[0].id,
+    type: "marketplace",
+    authority: zarinpal.authority,
+    amount: amountRial,
+    status: "pending",
+    description,
+    buyerPhone: input.buyerPhone?.trim() || user.phone || null,
+    buyerAddress: input.buyerAddress?.trim() || null,
+    buyerNotes: orderMetadata,
+  }
+
+  try {
+    if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+      await (prisma as any).ensureDatabaseSchema().catch(() => {})
+    }
     await prisma.payment.create({
-      data: {
-        userId,
-        listingId: listings[0].id,
-        type: "marketplace",
-        authority: zarinpal.authority,
-        amount: amountRial,
-        status: "pending",
-        description,
-        buyerPhone: input.buyerPhone?.trim() || user.phone || null,
-        buyerAddress: input.buyerAddress?.trim() || null,
-        buyerNotes: orderMetadata,
-      },
+      data: paymentData,
     })
   } catch (err) {
-    console.error("Marketplace cart payment record create error:", err)
-    return {
-      ok: false,
-      error: "خطا در ثبت رکورد پرداخت روی پایگاه داده. لطفاً دوباره تلاش کنید.",
+    console.error("Marketplace cart payment record create error, attempting auto-heal migration:", err)
+    try {
+      if (typeof (prisma as any)?.ensureDatabaseSchema === "function") {
+        await (prisma as any).ensureDatabaseSchema()
+      }
+      await prisma.payment.create({
+        data: paymentData,
+      })
+    } catch (retryErr) {
+      console.error("Marketplace cart payment record create retry error:", retryErr)
+      return {
+        ok: false,
+        error: "خطا در ثبت رکورد پرداخت روی پایگاه داده. لطفاً دوباره تلاش کنید.",
+      }
     }
   }
 
