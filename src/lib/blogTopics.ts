@@ -47,7 +47,7 @@ export type BlogPostInput = Omit<
 >
 
 export const BLOG_SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://jaliz.ir"
+  (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
 
 const blogSeoBySlug: Record<string, BlogSeoMeta> = {}
 

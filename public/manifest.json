@@ -66,6 +66,9 @@
     },
     {
       "origin": "*.jaliz.ir"
+    },
+    {
+      "origin": "*.jalizapp.ir"
     }
   ],
   "shortcuts": [

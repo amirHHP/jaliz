@@ -1,14 +1,22 @@
 import { MetadataRoute } from "next"
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaliz.ir"
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/marketplace", "/marketplace/", "/blog", "/blog/"],
-        disallow: ["/admin", "/plants", "/schedule", "/login", "/register"],
+        allow: "/",
+        disallow: [
+          "/admin",
+          "/admin/",
+          "/schedule",
+          "/plants/new",
+          "/login",
+          "/register",
+          "/api/",
+        ],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

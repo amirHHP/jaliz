@@ -124,6 +124,35 @@ export function LandingPage() {
               >
                 {t("landing_cta_login_hint")}
               </Link>
+
+              <div className="pt-3 border-t border-slate-100 w-full text-center">
+                <div className="flex items-center justify-center gap-4 text-xs font-semibold text-emerald-700 mb-2">
+                  <Link href="/blog" className="hover:underline">
+                    {language === "fa" ? "وبلاگ نگهداری گیاهان" : "Care Blog"}
+                  </Link>
+                  <span className="text-slate-300">•</span>
+                  <Link href="/marketplace" className="hover:underline">
+                    {language === "fa" ? "بازارچه بذر و گیاه" : "Marketplace"}
+                  </Link>
+                </div>
+                <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+                  <Link href="/blog/راهنمای-آبیاری-گیاهان-آپارتمانی" className="hover:text-emerald-700 hover:underline">
+                    {language === "fa" ? "راهنمای آبیاری" : "Watering"}
+                  </Link>
+                  <span>·</span>
+                  <Link href="/blog/نگهداری-سانسوریا" className="hover:text-emerald-700 hover:underline">
+                    {language === "fa" ? "نگهداری سانسوریا" : "Snake Plant"}
+                  </Link>
+                  <span>·</span>
+                  <Link href="/blog/نگهداری-پتوس" className="hover:text-emerald-700 hover:underline">
+                    {language === "fa" ? "نگهداری پتوس" : "Pothos"}
+                  </Link>
+                  <span>·</span>
+                  <Link href="/blog/علت-زرد-شدن-برگ-گیاهان" className="hover:text-emerald-700 hover:underline">
+                    {language === "fa" ? "زرد شدن برگ" : "Yellow Leaves"}
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -185,11 +214,27 @@ export function LandingPage() {
       <div className="pointer-events-none absolute bottom-0 -start-32 h-96 w-96 rounded-full bg-teal-200/25 blur-3xl" />
 
       <div className="flex-none p-5 sm:p-6 flex justify-between items-center relative z-10">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-emerald-700 flex items-center justify-center text-white shadow-sm">
-            <Sprout className="w-4 h-4" />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-emerald-700 flex items-center justify-center text-white shadow-sm">
+              <Sprout className="w-4 h-4" />
+            </div>
+            <span className="font-bold text-slate-800 tracking-tight">{t("app_title")}</span>
           </div>
-          <span className="font-bold text-slate-800 tracking-tight">{t("app_title")}</span>
+          <div className="hidden xs:flex sm:flex items-center gap-1 sm:gap-2 me-1">
+            <Link
+              href="/blog"
+              className="text-xs font-semibold text-slate-600 hover:text-emerald-700 transition-colors px-2.5 py-1 rounded-full hover:bg-white/60"
+            >
+              {language === "fa" ? "وبلاگ" : "Blog"}
+            </Link>
+            <Link
+              href="/marketplace"
+              className="text-xs font-semibold text-slate-600 hover:text-emerald-700 transition-colors px-2.5 py-1 rounded-full hover:bg-white/60"
+            >
+              {language === "fa" ? "بازارچه" : "Market"}
+            </Link>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button

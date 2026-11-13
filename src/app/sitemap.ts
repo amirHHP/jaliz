@@ -2,7 +2,7 @@ import { MetadataRoute } from "next"
 import prisma from "@/lib/prisma"
 import { blogPosts } from "@/lib/blogData"
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://jaliz.ir"
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages
@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: SITE_URL,
       lastModified: new Date(),
       changeFrequency: "daily",
-      priority: 1,
+      priority: 1.0,
     },
     {
       url: `${SITE_URL}/marketplace`,
@@ -23,7 +23,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/blog`,
       lastModified: new Date(),
       changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/plants/diagnose`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.3,
     },
   ]
 
@@ -32,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
     lastModified: new Date(post.publishedAtIso),
     changeFrequency: "weekly",
-    priority: 0.7,
+    priority: 0.8,
   }))
 
   // Dynamic listing pages
