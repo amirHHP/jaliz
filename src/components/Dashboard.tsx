@@ -119,17 +119,17 @@ export function Dashboard() {
               <p className="text-slate-600 text-base md:text-lg max-w-2xl">{t("welcome_desc")}</p>
             </section>
 
-            <div className="relative overflow-hidden rounded-3xl border border-emerald-100/60 bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 text-emerald-950 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
+            <div className="relative overflow-hidden rounded-3xl border border-emerald-100/60 bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 text-emerald-950 shadow-[0_8px_30px_rgb(0,0,0,0.04)] py-8 sm:py-12 px-4 sm:px-6 flex items-center justify-center min-h-[580px] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
               <div className="pointer-events-none absolute inset-0 opacity-40">
                 <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-emerald-200/50 blur-3xl" />
                 <div className="absolute -bottom-12 -left-8 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl" />
               </div>
 
               {/* Blurred preview of companion, watering, and weather sections */}
-              <div className="select-none p-6 md:p-8 blur-[4px] opacity-40 space-y-6" aria-hidden="true">
+              <div className="pointer-events-none absolute inset-0 select-none p-6 md:p-8 blur-[5px] opacity-35 space-y-4 overflow-hidden" aria-hidden="true">
                 <div className="rounded-3xl border border-emerald-200/70 bg-white/70 p-5 flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                    <PlantMascot state="thriving" size={64} />
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                    <PlantMascot state="thriving" size={54} />
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="h-4 w-32 rounded bg-emerald-300/60" />
@@ -137,71 +137,78 @@ export function Dashboard() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-emerald-100/70 bg-white/70 p-5 space-y-4">
+                <div className="rounded-2xl border border-emerald-100/70 bg-white/70 p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="rounded-2xl bg-emerald-100 p-2.5">
-                      <Droplets className="h-6 w-6 text-emerald-600" />
+                      <Droplets className="h-5 w-5 text-emerald-600" />
                     </div>
-                    <div>
-                      <div className="h-5 w-40 rounded bg-emerald-800/70" />
-                      <div className="h-3 w-56 rounded bg-emerald-600/40 mt-1.5" />
+                    <div className="space-y-1.5">
+                      <div className="h-4 w-36 rounded bg-emerald-800/70" />
+                      <div className="h-3 w-48 rounded bg-emerald-600/40" />
                     </div>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="h-16 rounded-xl bg-white/60 border border-emerald-100" />
+                  <div className="h-16 rounded-xl bg-white/60 border border-emerald-100" />
+                  <div className="h-16 rounded-xl bg-white/60 border border-emerald-100" />
                 </div>
               </div>
 
-              {/* Lock card overlay */}
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-emerald-950/20 px-5 backdrop-blur-[2px]">
-                <div className="w-full max-w-md rounded-3xl border border-white/50 bg-white/95 p-6 md:p-8 text-center shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-500">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-inner">
-                    <Lock className="h-7 w-7" />
-                  </div>
-                  <h3 className="text-xl font-bold text-emerald-950">
-                    {language === "fa"
-                      ? "بخش آبیاری، همراه برگچه و مشاوره هوشمند قفل است"
-                      : "Smart Watering, Bargcheh Companion & Weather Advice are Locked"}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-emerald-800/80">
-                    {language === "fa"
-                      ? "با فعال‌سازی اشتراک ماهانه، همراه با برگچه برنامه زمان‌بندی هوشمند آبیاری، استمرار روزانه و تحلیل آب‌وهوایی گیاهانتان را دریافت کنید."
-                      : "Unlock smart watering schedule, Bargcheh mascot companion, and hyper-local weather advice with a monthly subscription."}
-                  </p>
-                  <div className="mt-5 rounded-2xl bg-emerald-50/80 border border-emerald-100 p-3 text-center">
-                    <p className="text-2xl font-black tracking-tight text-emerald-900">
-                      {formatToman(SUBSCRIPTION_PRICE_TOMAN, language)}
-                      <span className="ms-1.5 text-sm font-semibold text-emerald-700/70">
-                        {language === "fa" ? "/ ماه" : "/ month"}
-                      </span>
-                    </p>
-                  </div>
+              {/* Dark translucent backdrop overlay */}
+              <div className="pointer-events-none absolute inset-0 bg-emerald-950/15 backdrop-blur-[2px]" aria-hidden="true" />
 
-                  {checkoutError && (
-                    <p className="mt-3 text-xs font-medium text-rose-600 bg-rose-50 border border-rose-200/70 rounded-xl p-2">
-                      {checkoutError}
-                    </p>
-                  )}
-
-                  <Button
-                    onClick={handleBuySubscription}
-                    disabled={checkoutLoading}
-                    className="mt-5 w-full rounded-2xl bg-emerald-600 py-6 text-base font-semibold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700"
-                  >
-                    {checkoutLoading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <Lock className="h-4 w-4" />
-                    )}
-                    <span className="ms-2">
-                      {checkoutLoading
-                        ? language === "fa"
-                          ? "در حال اتصال به درگاه..."
-                          : "Connecting to checkout..."
-                        : language === "fa"
-                        ? "خرید اشتراک و فعال‌سازی"
-                        : "Buy subscription"}
-                    </span>
-                  </Button>
+              {/* Lock card (in normal flow so parent height naturally encompasses it) */}
+              <div className="relative z-10 w-full max-w-md rounded-3xl border border-white/70 bg-white/95 p-6 sm:p-8 text-center shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-500">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-inner">
+                  <Lock className="h-7 w-7" />
                 </div>
+                <h3 className="text-xl sm:text-2xl font-black text-emerald-950">
+                  {language === "fa"
+                    ? "بخش آبیاری، همراه برگچه و مشاوره هوشمند قفل است"
+                    : "Smart Watering, Bargcheh Companion & Weather Advice are Locked"}
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm leading-relaxed text-emerald-800/80">
+                  {language === "fa"
+                    ? "با فعال‌سازی اشتراک ماهانه، همراه با برگچه برنامه زمان‌بندی هوشمند آبیاری، استمرار روزانه و تحلیل آب‌وهوایی گیاهانتان را دریافت کنید."
+                    : "Unlock smart watering schedule, Bargcheh mascot companion, and hyper-local weather advice with a monthly subscription."}
+                </p>
+                <div className="mt-4 rounded-2xl bg-emerald-50/80 border border-emerald-100 p-3 text-center">
+                  <p className="text-2xl font-black tracking-tight text-emerald-900">
+                    {formatToman(SUBSCRIPTION_PRICE_TOMAN, language)}
+                    <span className="ms-1.5 text-xs sm:text-sm font-semibold text-emerald-700/70">
+                      {language === "fa" ? "/ ماه" : "/ month"}
+                    </span>
+                  </p>
+                </div>
+
+                {checkoutError && (
+                  <p className="mt-3 text-xs font-medium text-rose-600 bg-rose-50 border border-rose-200/70 rounded-xl p-2">
+                    {checkoutError}
+                  </p>
+                )}
+
+                <Button
+                  onClick={handleBuySubscription}
+                  disabled={checkoutLoading}
+                  className="mt-5 w-full rounded-2xl bg-emerald-600 py-6 text-base font-bold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-700 cursor-pointer active:scale-98 transition-all"
+                >
+                  {checkoutLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                  <span className="ms-2">
+                    {checkoutLoading
+                      ? language === "fa"
+                        ? "در حال اتصال به درگاه..."
+                        : "Connecting to checkout..."
+                      : language === "fa"
+                      ? "خرید اشتراک و فعال‌سازی"
+                      : "Buy subscription"}
+                  </span>
+                </Button>
               </div>
             </div>
           </>
