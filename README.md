@@ -1,74 +1,112 @@
-# 🌿 Jaliz (جالیز) - Your Cozy Plant Companion
+<div align="center">
 
-Jaliz is a beautiful, bilingual (English/Farsi) web application designed for plant lovers. It serves as your personal gardening dashboard, helping you keep track of your plant collection, watering schedules, and plant health, while also providing a marketplace to trade plants with the community.
+  <img src="public/logo-horizontal.jpg" alt="جالیز | دستیار هوشمند گیاهان آپارتمانی" width="520" style="border-radius: 16px; margin-bottom: 16px;" />
 
-## ✨ Features
+  # 🌿 جالیز (Jaliz)
+  ### دستیار هوشمند و همراه صمیمی گیاهان آپارتمانی شما
 
-- **🪴 Comprehensive Plant Management**: Add plants to your collection with detailed properties (indoor/outdoor, light exposure, pot type, drainage).
-- **💧 Smart Watering Schedules**: Automatically calculates your next watering date and alerts you.
-- **🤖 AI Plant Analysis**: Don't know what plant you have? Upload a photo or type its name, and our AI (powered by FastAPI & Python) will automatically identify it and fill in care tips!
-- **🌍 Bilingual & RTL Support**: Full support for both English and Farsi, including localized Shamsi (Jalali) dates for Persian users.
-- **🎨 Warm & Cozy Design**: A highly aesthetic, friendly UI with pastel greens, rounded corners, and a welcoming "plant parent" tone.
-- **🛒 Plant Marketplace**: Discover, swap, and purchase plants from other users in the Jaliz community.
-- **📱 Responsive Layout**: Works perfectly on desktop and mobile.
-- **⚡ Local-First Database**: Uses SQLite via Prisma 6 for a fully self-contained, easy-to-deploy architecture.
+  <p align="center">
+    <b>دیگه نگران خشک شدن یا زرد شدن گیاهانت نباش!</b><br>
+    جالیز یک پلتفرم جامع و هوشمند برای مراقبت از گیاهان خانگی، تشخیص بیماری‌ها با هوش مصنوعی و ارتباط با جامعه علاقه‌مندان به گل و گیاه است.
+  </p>
 
-## 📸 Screenshots
+  <p align="center">
+    <img src="https://img.shields.io/badge/نسخه-PWA_Ready-22c55e?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA Ready" />
+    <img src="https://img.shields.io/badge/هوش_مصنوعی-Vision_AI-059669?style=for-the-badge&logo=openai&logoColor=white" alt="AI Powered" />
+    <img src="https://img.shields.io/badge/تقویم-شمسی_و_میلادی-10b981?style=for-the-badge" alt="Calendar" />
+    <img src="https://img.shields.io/badge/زبان-فارسی_%7C_English-14b8a6?style=for-the-badge" alt="Bilingual" />
+    <img src="https://img.shields.io/badge/طراحی-Cozy_Design-34d399?style=for-the-badge" alt="Cozy Design" />
+  </p>
 
-*(Note: Replace these placeholder images with actual screenshots in the `public/screenshots/` directory)*
+</div>
 
-### Dashboard
-![Dashboard](public/screenshots/dashboard.png)
-*A cozy overview of your plants' happiness and upcoming watering tasks.*
+---
 
-### My Plants Collection
-![My Plants](public/screenshots/plants.png)
-*A beautiful grid view of your plant collection with quick-glance status indicators.*
+<div align="center">
+  <img src="public/hero-character.jpg" alt="جالیز - دستیار مهربان گیاهان" width="280" style="border-radius: 24px; box-shadow: 0 12px 30px rgba(0,0,0,0.08); margin: 16px 0;" />
+  <br>
+  <em>«گیاهان زبان صحبت ندارند، اما نیاز دارند. با جالیز، زبان گیاهانت را بفهم و خانه‌ات را سبز نگه دار.»</em>
+</div>
 
-### Community Marketplace
-![Marketplace](public/screenshots/marketplace.png)
-*Discover and exchange plants with fellow plant enthusiasts.*
+---
 
-## 🚀 Getting Started
+## 📖 درباره محصول
 
-Jaliz uses a dual-stack architecture with Next.js for the frontend/API and a Python backend for AI features.
+بسیاری از دوست‌داران گل و گیاه به دلیل مشغله‌های روزمره، ندانستن نیازهای آبی و نوری هر گونه، یا بی‌اطلاعی از علائم اولیه آفات، شاهد پژمرده شدن گیاهان محبوبشان می‌شوند. 
 
-### Prerequisites
-- Node.js 20+
-- Python 3.10+
-- `uv` or `pip` for Python dependency management
+**جالیز** با هدف ساده‌سازی باغبانی در خانه و محیط کار متولد شده است؛ محیطی گرم، صمیمی و به دور از اصطلاحات پیچیده که با استفاده از توانایی‌های پردازش تصویر و هوش مصنوعی، مانند یک پزشک و باغبان دلسوز در کنار شماست.
 
-### Installation
+---
 
-1. **Install Node dependencies:**
-   ```bash
-   npm install
-   ```
+## ✨ قابلیت‌ها و ارزش‌های کلیدی محصول
 
-2. **Setup the Python environment:**
-   ```bash
-   cd api
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
+### 🪴 ۱. شناسنامه دیجیتال و مدیریت کلکسیون گیاهان
+- **ثبت مشخصات تخصصی هر گیاه**: گونه، نام دلخواه، نیاز نوری (نور مستقیم، فیلترشده، سایه)، نوع بستر کشت (خاک یا هیدروپونیک)، جنس گلدان و سوراخ زهکشی.
+- **داشبورد وضعیت شادابی**: مشاهده سلامت کلی گیاهان با یک نگاه و ثبت تاریخچه‌ی تغییر خاک و کوددهی.
 
-3. **Initialize the Database:**
-   ```bash
-   npm run postinstall
-   ```
+### 💧 ۲. زمان‌بندی و یادآور هوشمند آبیاری
+- **محاسبه هوشمند فواصل آبیاری**: تنظیم خودکار زمان‌های آبیاری متناسب با جنس گلدان، میزان نور و فصل سال.
+- **هشدارهای به‌موقع**: جلوگیری از خشک شدن گیاه و پیشگیری از پوسیدگی ریشه بر اثر آبیاری بیش از حد.
 
-4. **Run the Development Servers:**
-   This command starts both the Next.js app and the Python FastAPI server concurrently.
-   ```bash
-   npm run dev
-   ```
+### 🩺 ۳. دکتر گیاه و تشخیص هوشمند بیماری‌ها (AI Doctor)
+- **شناسایی از روی عکس**: با بارگذاری یا ثبت یک عکس ساده، هوش مصنوعی گونه گیاه را شناسایی می‌کند.
+- **تشخیص آفات و استرس‌های محیطی**: علت زردی، سوختگی نوک برگ‌ها، لکه‌ها و آفت‌ها را در کمترین زمان پیدا کنید.
+- **نسخه درمانی گام‌به‌گام**: دریافت دستورالعمل‌های ساده و کاربردی برای درمان و بازگرداندن طراوت گیاه.
 
-5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the app!
+### 🌦️ ۴. مشاور هوشمند آب‌وهوایی محلی (Hyper-Local Weather Advice)
+- تحلیل پیش‌بینی هوای محلی ۴۸ ساعته محل سکونت شما.
+- هشدارهای هوشمند برای موج سرما، گرمای شدید یا تغییرات ناگهانی رطوبت برای جابه‌جایی یا تغییر دوز آبیاری گلدان‌ها.
 
-## 🛠 Tech Stack
+### 🧳 ۵. حالت گیاه‌بان؛ مراقبت از گیاهان در زمان سفر (Plant-Sitter)
+- ایجاد لینک امن و موقت اختصاصی بدون نیاز به ثبت‌نام اجباری برای دوستان یا اعضای خانواده.
+- امکان مشاهده برنامه روزانه، تیک زدن آبیاری‌های انجام‌شده و ثبت یادداشت توسط مراقب در زمان مسافرت شما.
 
-- **Frontend**: Next.js 16 (App Router), React 19, Tailwind CSS v4, Lucide Icons, Radix UI
-- **Backend (Main)**: Next.js Server Actions, Prisma 6 ORM, SQLite
-- **Backend (AI)**: Python, FastAPI, Uvicorn
-- **Testing**: Vitest
+### 🏡 ۶. بازارچه محلی و تبادل سبز (Community Marketplace)
+- بستر اختصاصی برای کشف، خرید، فروش و معاوضه گیاهان، گلدان‌ها و قلمه‌ها با افراد هم‌محله‌ای.
+- سیستم چت و پیام‌رسانی داخلی برای ارتباط مستقیم خریدار و فروشنده.
+
+### 🏷️ ۷. تولید بارکد QR و کارت مشخصات (Store Scan & Print)
+- تولید و پرینت شناسنامه با بارکد QR اختصاصی برای گلدان‌ها.
+- کاربردی برای نظم‌دهی به گلدان‌های خانگی یا مدیریت حرفه‌ای گلخانه‌ها و فروشگاه‌های گل.
+
+### 📸 ۸. کارت‌های خاطره و اشتراک‌گذاری اجتماعی (Shareable Cards)
+- ساخت کارت‌های گرافیکی و زیبا از وضعیت و روند رشد گیاه با یک کلیک، آماده برای انتشار در استوری اینستاگرام و شبکه‌های اجتماعی.
+
+### 📚 ۹. پایگاه دانش و دانشنامه مراقبت از گیاهان
+- آرشیو غنی از مقالات راهنمای نگهداری، نکات تکثیر، شناخت آفات و معرفی گونه‌های مختلف با قلمی صمیمی و علمی.
+
+---
+
+## 🎨 تجربه کاربری و طراحی (User Experience)
+
+<div align="center">
+  <img src="public/logo-vertical.jpg" alt="طراحی بومی جالیز" width="220" style="border-radius: 16px; margin: 12px 0;" />
+</div>
+
+- **رابط کاربری گرم و آرامش‌بخش (Cozy Aesthetic)**: استفاده از پالت رنگ‌های طبیعی و طراحی آرام‌بخش برای حس سرزندگی و آرامش در تعامل روزانه.
+- **دوزبانه کامل (فارسی و انگلیسی)**: همراه با فونت استاندارد وزیرمتن (Vazirmatn)، پشتیبانی کامل از چیدمان راست‌به‌چپ (RTL) و تقویم خورشیدی جلالی.
+- **وب‌اپلیکیشن پیش‌رونده (PWA)**: قابلیت نصب مستقیم روی صفحه اصلی گوشی‌های اندروید و iOS بدون نیاز به اپ‌استورها، با دسترسی فوق‌العاده سریع و پشتیبانی در حالت آفلاین.
+- **پشتیبانی از حالت تیره و روشن (Dark / Light Mode)**: امکان انتخاب تم دلخواه متناسب با نور محیط.
+
+---
+
+## 🎯 مخاطبان جالیز
+
+1. **دوست‌داران گیاهان خانگی**: افرادی که می‌خواهند بدون استرس و سردرگمی، گیاهان شاداب و سرسبز داشته باشند.
+2. **کلکسیونرها و گیاه‌دوستان پرتجربه**: کسانی که نیاز به ثبت تاریخچه‌ها، جزئیات کوددهی، تعویض گلدان و زمان‌بندی دقیق دارند.
+3. **گلخانه‌ها و فروشگاه‌های گل و گیاه**: کسب‌وکارهایی که به دنبال ارائه شناسنامه دیجیتال QR به مشتریان و معرفی محصولات خود در بازارچه محلی هستند.
+
+---
+
+## 🧩 معماری و زیرساخت مدرن محصول
+
+- **فرانت‌اند و تعاملات**: Next.js App Router و React با طراحی واکنشی مدرن و سبک با Tailwind CSS
+- **هوش مصنوعی و پردازش چندوجهی**: سرویس‌دهنده پردازش تصویر و هوش مصنوعی با پشتیبانی از مدل‌های روز
+- **معماری داده و پایگاه داده**: سیستم محلی‌محور و سبک با SQLite و نگاشت داده Prisma
+- **تجربه آفلاین و شبکه**: Service Worker یکپارچه برای تجربه روان اپلیکیشن و ذخیره‌سازی محلی داده‌ها
+
+---
+
+<div align="center">
+  <p>🌱 <b>جالیز؛ دستیار همیشگی برای خانه‌ای سرسبزتر و شاداب‌تر</b> 🌱</p>
+</div>

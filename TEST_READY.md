@@ -1,99 +1,117 @@
-# TEST READY — Milestone M2: Automated Validation Infrastructure
+# TEST READY — Milestone M1: Automated Test Suite Infrastructure
 
-**Timestamp**: 2026-10-06T06:40:00Z  
-**Agent**: Test Writer (`teamwork_preview_test_writer_m2_1`)  
-**Status**: READY FOR DOWNSTREAM CONTENT PRODUCTION (M3, M4, M5)
+**Timestamp**: 2026-11-13T05:24:00Z  
+**Agent**: Test Writer (`teamwork_test_writer_m1_1`)  
+**Status**: READY FOR DOWNSTREAM IMPLEMENTATION (Milestone M2)
 
 ---
 
 ## 1. Overview & Verification Readiness
 
-The automated validation infrastructure for the Jaliz 50-article blog expansion has been constructed, verified, and documented. Downstream content authors (M3: Articles 1–25, M4: Articles 26–50) can now author articles and immediately verify them against automated validation scripts and tests.
+The automated test suite infrastructure for the **Jaliz Plant Care & Schedule Gamification Redesign** has been fully authored, type-checked, and verified against Vitest. The test suites are comprehensive, opaque-box, requirement-driven, and strictly adhere to the Interface Contracts established in `PROJECT.md § Interface Contracts`.
+
+Downstream engineers implementing **Milestone M2** can now write the core logic in `src/lib/` and immediately verify their implementations against these authoritative test suites.
 
 ---
 
 ## 2. Test Artifacts Delivered
 
-1. **`scripts/validate-blog.mjs`** (Standalone Executable Validator):
-   - Standalone CLI runner with colored terminal reports and `--json` support.
-   - Enforces 11 automated checks: Article Count (50 expansion / 104 total), Slug Format & Uniqueness, Anti-Cannibalization Matrix, Description Length (<= 160 chars), Schema (`categoryEn` & `cluster`), Reading Time, Keywords (>= 4), Content Quality (> 1500 chars, `<h2>`, `<ul>`/`<ol>`, Jaliz CTAs), FAQ Schema (>= 2), Internal Link Integrity (zero broken links), and ISO Date formats.
-   - Dual-mode execution:
-     - Strict mode (`node scripts/validate-blog.mjs`): gatekeeper for Milestone M5.
-     - Progressive mode (`node scripts/validate-blog.mjs --allow-partial`): development feedback for M3 and M4.
+| Test File | Target Module | Tests | Tiers Covered |
+|-----------|---------------|-------|---------------|
+| `src/lib/__tests__/daily-advice-cache.test.ts` | `src/lib/daily-advice-cache.ts` | 17 | Tiers 1, 2, 3, 4 |
+| `src/lib/__tests__/mascot.test.ts` | `src/lib/mascot-dialogue.ts` | 18 | Tiers 1, 2, 3, 4, 5 |
+| `src/lib/__tests__/care-tasks.test.ts` | `src/lib/care-tasks.ts` | 15 | Tiers 1, 2, 3 |
+| `src/lib/__tests__/gamification.test.ts` | `src/lib/gamification.ts` | 20 | Tiers 1, 2, 3, 4, 5 |
+| **Total** | | **70** | |
 
-2. **`src/lib/__tests__/blogExpansion.test.ts`** (Vitest 4-Tier Test Suite):
-   - **Tier 1: Feature Coverage** (required fields, schema typing, progressive count reporting).
-   - **Tier 2: Boundary & Corner Cases** (description <= 160 chars, faqs >= 2, text > 1500 chars, valid ISO dates).
-   - **Tier 3: Cross-Feature & Uniqueness Integrity** (0% slug collision, 0% keyword cannibalization with legacy articles, 50-article inventory contract verification).
-   - **Tier 4: Real-world Linkage & Navigation** (zero broken links, natural Jaliz CTAs, no circular self-links).
-
-3. **`TEST_INFRA.md`** (Testing Infrastructure Guide):
-   - Complete technical documentation of all checks, architecture, and verification commands.
+### Type-Safe Placeholder Stubs Created
+- `src/lib/daily-advice-cache.ts`
+- `src/lib/mascot-dialogue.ts`
+- `src/lib/care-tasks.ts`
+- `src/lib/gamification.ts`
 
 ---
 
-## 3. Baseline Verification Results
+## 3. Coverage Matrix
 
-### A. Vitest Test Execution
-```bash
-$ npx vitest run src/lib/__tests__/blogExpansion.test.ts
-✓ src/lib/__tests__/blogExpansion.test.ts (19 tests) 4ms
-   ✓ blogExpansion — 4-Tier Automated Validation Suite (19)
-     ✓ Tier 1: Feature Coverage (3 tests)
-     ✓ Tier 2: Boundary & Corner Cases (6 tests)
-     ✓ Tier 3: Cross-Feature & Uniqueness Integrity (7 tests)
-     ✓ Tier 4: Real-world Linkage & Navigation (3 tests)
+### A. Daily Advice Cache (`daily-advice-cache.test.ts`)
+- [x] **Tier 1 (Key Naming & Storage)**: Validates `jaliz_daily_advice_${userId}` key format, JSON metadata payload (`userId`, `date`, `advice`, `fetchedAt`).
+- [x] **Tier 2 (Date Boundary & Invalidation)**: Cache hit on same date, cache miss/invalidation when date advances to next calendar day, fallback to `toLocalDateString()`.
+- [x] **Tier 3 (User Isolation)**: User A cannot read User B's cache; clearing User A leaves User B intact.
+- [x] **Tier 4 (Error Resilience & SSR)**: Safe `null` return on corrupted non-JSON strings, non-object primitives, missing required keys, mismatched userId, quota/security exceptions, and SSR null storage without throwing.
 
-Test Files  1 passed (1)
-     Tests  19 passed (19)
-```
+### B. Mascot State & Dialogue (`mascot.test.ts`)
+- [x] **Tier 1 (Thirsty State)**: Resolves `"thirsty"` when `plantsToWaterCount > 0 && !isDoneToday` during day hours.
+- [x] **Tier 2 (Celebrating State)**: Resolves `"celebrating"` when `isDoneToday === true`.
+- [x] **Tier 3 (Thriving State)**: Resolves `"thriving"` when `totalPlants > 0 && plantsToWaterCount === 0`.
+- [x] **Tier 4 (Resting State & Hours)**: Resolves `"resting"` when `totalPlants === 0` or during night hours (`hour >= 20 || hour < 5`). Validates boundary hours (0, 4, 5, 19, 20, 23) and default system hour.
+- [x] **Tier 5 (Dialogue Text)**: Generates contextual Persian messages for thirsty plants (with plant name injection), celebrated completion, thriving garden, empty garden, and streak milestones. Enforces 0% `undefined`/`null` leakage and validates English output option.
 
-Combined blog suites:
-```bash
-$ npx vitest run src/lib/__tests__/blogData.test.ts src/lib/__tests__/blogExpansion.test.ts
-Test Files  2 passed (2)
-     Tests  26 passed (26)
-```
+### C. Care Tasks Partitioning (`care-tasks.test.ts`)
+- [x] **Tier 1 (Task Partitioning)**: Buckets plants into `overdue`, `today`, and `upcoming`. Handles empty array with 100% completion.
+- [x] **Tier 2 (Boundary Testing)**: Exact `dueDays` calculation (`-2` overdue, `0` today, `+3` upcoming) and localized formatted text ("امروز", "۲ روز تاخیر", "۳ روز دیگر"). Fallback to `lastWatered + wateringInterval`.
+- [x] **Tier 3 (Progress Percentage)**: Accurately calculates `totalDueToday`, `completedCount`, and `completionPercentage` (e.g. 2 of 4 = 50%, all done or `isDoneToday === true` = 100%, 1 of 3 = 33%).
+- [x] **Sorting**: Validates sorting of overdue tasks (most overdue first) and upcoming tasks (soonest first).
 
-### B. Validation Script Execution
-```bash
-# Progressive validation (Development mode)
-$ node scripts/validate-blog.mjs --allow-partial
-🛡️ Checks Run: 11 | Checks Passed: 11 / 11
-🎉 ALL ACCEPTANCE CRITERIA VERIFIED SUCCESSFULLY! (Exit Code 0)
+### D. Gamification Mechanics (`gamification.test.ts`)
+- [x] **Tier 1 (Consecutive Day Calculation)**: Calculates consecutive day streaks from dates (`string` | `Date`), handles unsorted dates, deduplicates multiple logs on same day.
+- [x] **Tier 2 (Streak Continuity)**: Preserves active streak when today is not yet logged, but yesterday was logged (streak remains intact, pending today).
+- [x] **Tier 3 (Streak Break)**: Gap of 2 or more days resets streak to 0. Ignores invalid date strings.
+- [x] **Tier 4 (Gardener Levels)**: Maps XP to levels:
+  - Level 1: `Sprout` / `جوانه` (0–99 XP)
+  - Level 2: `Seedling` / `نهال` (100–249 XP)
+  - Level 3: `Green Bush` / `بوته سبز` (250–499 XP)
+  - Level 4: `Specialist` / `متخصص` (500–999 XP)
+  - Level 5: `Master` / `استاد باغبان` (1000+ XP)
+  - Clamps negative XP to Level 1.
+- [x] **Tier 5 (XP Rewards)**:
+  - `water_plant`: 10 XP
+  - `daily_complete`: 25 XP
+  - `streak_milestone`: 50 XP
 
-# Strict validation (Gatekeeper mode)
-$ node scripts/validate-blog.mjs
-🛡️ Checks Run: 11 | Checks Passed: 10 / 11
-❌ Errors (1): ArticleCount: Found 0 expansion articles; expected 50. Total blog posts: 54 (expected 104).
-💥 VALIDATION FAILED WITH 1 ERROR(S). (Exit Code 1)
-```
+---
 
-### C. TypeScript Type-Checking
+## 4. Verification Results
+
+### A. TypeScript Type-Checking
 ```bash
 $ npx tsc --noEmit
 # Exit Code: 0 (Zero TypeScript errors)
 ```
 
+### B. Vitest Execution on New Suites
+```bash
+$ npx vitest run src/lib/__tests__/daily-advice-cache.test.ts src/lib/__tests__/mascot.test.ts src/lib/__tests__/care-tasks.test.ts src/lib/__tests__/gamification.test.ts
+
+Test Files  4 failed (4)
+     Tests  70 failed (70)
+```
+*Note: All 70 tests fail with `Error: Not implemented` on the placeholder stubs, confirming non-facade, real test execution.*
+
+### C. Baseline Regression Check
+```bash
+$ npm test
+Test Files  4 failed | 34 passed (38)
+     Tests  70 failed | 272 passed (342)
+```
+*Existing 34 test files (272 tests) pass 100% without regression.*
+
 ---
 
-## 4. Instructions for Downstream Milestone Agents
+## 5. Instructions for Milestone M2 Implementation Agent
 
-- **Milestone M3 (Batch 1: Articles 1–25)**:
-  - Populate `src/lib/blogPostsExpansion1.ts`.
-  - Validate during authoring using:
-    ```bash
-    node scripts/validate-blog.mjs --allow-partial
-    npx vitest run src/lib/__tests__/blogExpansion.test.ts
-    ```
-- **Milestone M4 (Batch 2: Articles 26–50)**:
-  - Populate `src/lib/blogPostsExpansion2.ts`.
-  - Validate Batch 2 using the same commands.
-- **Milestone M5 (Final Acceptance Gate)**:
-  - Run full strict verification:
-    ```bash
-    node scripts/validate-blog.mjs
-    npx vitest run
-    npx tsc --noEmit
-    ```
-  - Both must pass with Exit Code 0.
+1. Implement business logic inside:
+   - `src/lib/daily-advice-cache.ts`
+   - `src/lib/mascot-dialogue.ts`
+   - `src/lib/care-tasks.ts`
+   - `src/lib/gamification.ts`
+   - `getWateringStreakAction` in `src/app/actions/plants.ts`
+2. Run validation command:
+   ```bash
+   npx vitest run src/lib/__tests__/daily-advice-cache.test.ts src/lib/__tests__/mascot.test.ts src/lib/__tests__/care-tasks.test.ts src/lib/__tests__/gamification.test.ts
+   ```
+3. When all 70 tests pass (GREEN), run full repository test suite:
+   ```bash
+   npm test
+   ```
+   All 38 test files (342 tests) must pass with Exit Code 0.

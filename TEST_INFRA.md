@@ -1,142 +1,118 @@
-# Jaliz Blog Expansion — Testing & Validation Infrastructure
+# Jaliz Plant Care & Gamification — Testing Infrastructure (Milestone M1)
 
-This document details the automated validation infrastructure and test suite created for the **Jaliz Blog Expansion** project (50 Persian SEO articles). It covers architectural design, validation rules, runner instructions, and testing tiers satisfying Acceptance Criteria **R1–R4**.
+This document details the automated testing infrastructure created for the **Jaliz Plant Care & Schedule Gamification Redesign** (`/schedule`), satisfying user requirements **R1–R4** and interface contracts established in `PROJECT.md § Interface Contracts`.
 
 ---
 
 ## 1. Architectural Overview
 
-The testing infrastructure operates on two synchronized layers:
+The test infrastructure establishes opaque-box, contract-driven unit test suites under `src/lib/__tests__/` to support test-driven development (TDD) across all gamification, mascot dialogue, task partitioning, and AI advice caching modules.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   Jaliz Blog Validation Infrastructure                 │
+│               Jaliz Gamified Care Testing Infrastructure               │
 ├──────────────────────────────────┬─────────────────────────────────────┤
-│ 1. Standalone CLI Validator       │ 2. Vitest 4-Tier Test Suite         │
-│    `scripts/validate-blog.mjs`    │    `src/lib/__tests__/blogExpansion.test.ts`│
+│ Module Test Suite                │ Scope & Interface Contract          │
 ├──────────────────────────────────┼─────────────────────────────────────┤
-│ • Fast Node.js / jiti execution  │ • Deep Vitest integration           │
-│ • Acceptance criteria gatekeeper │ • 19 structured unit/integration tests│
-│ • Strict & Progressive modes     │ • Boundary, edge-case & link audits │
-│ • Exit code 0/1 for CI/CD gates  │ • Continuous watcher & coverage ready│
+│ 1. `daily-advice-cache.test.ts`  │ Advice caching, date invalidation,  │
+│    (17 unit tests)               │ user isolation, SSR/null resilience │
+├──────────────────────────────────┼─────────────────────────────────────┤
+│ 2. `mascot.test.ts`              │ Emotional state engine, hour cutoffs│
+│    (18 unit tests)               │ Persian/English contextual dialogue │
+├──────────────────────────────────┼─────────────────────────────────────┤
+│ 3. `care-tasks.test.ts`          │ Task partitioning (overdue, today,  │
+│    (15 unit tests)               │ upcoming), progress %, due text     │
+├──────────────────────────────────┼─────────────────────────────────────┤
+│ 4. `gamification.test.ts`        │ Consecutive care streaks, gaps,     │
+│    (20 unit tests)               │ gardener levels (1-5), XP rewards   │
 └──────────────────────────────────┴─────────────────────────────────────┘
 ```
 
-Both layers validate data directly from `src/lib/blogData.ts`, testing both the aggregated `blogPosts: BlogPost[]` array and the individual batch modules (`blogPostsExpansion1.ts`, `blogPostsExpansion2.ts`, and legacy articles).
+Total: **70 comprehensive test cases** covering Tiers 1 through 5.
 
 ---
 
-## 2. Standalone Validator (`scripts/validate-blog.mjs`)
+## 2. Test Suites Specification
 
-The standalone validator is an executable Node.js tool using `jiti` to dynamically load and inspect TypeScript modules in memory without pre-compilation.
+### 1. Daily Advice Cache (`src/lib/__tests__/daily-advice-cache.test.ts`)
+- **Target Module**: `src/lib/daily-advice-cache.ts`
+- **Tiers Covered**:
+  - **Tier 1 (Key Naming & Storage)**: Validates `jaliz_daily_advice_${userId}` key structure and JSON payload schema (`userId`, `date`, `advice`, `fetchedAt`).
+  - **Tier 2 (Date Boundary & Invalidation)**: Verifies cache hit on matching calendar date (`today`), cache miss/invalidation when advancing to next calendar day (`todayDate !== cachedDate`), and default fallback to local date (`toLocalDateString()`).
+  - **Tier 3 (User Isolation)**: Ensures User A's advice never leaks to User B; cache clearing for User A does not disturb User B's cache.
+  - **Tier 4 (Resilience & SSR Safety)**: Validates graceful `null` return on corrupted JSON, non-object primitives, missing properties, mismatched userId, storage quota exceptions (`QuotaExceededError`), and `null`/undefined storage in SSR contexts without throwing.
 
-### Command-Line Usage
+### 2. Mascot State & Dialogue (`src/lib/__tests__/mascot.test.ts`)
+- **Target Module**: `src/lib/mascot-dialogue.ts`
+- **Tiers Covered**:
+  - **Tier 1 (Thirsty State)**: Resolves `"thirsty"` when `plantsToWaterCount > 0 && !isDoneToday` during active daytime hours.
+  - **Tier 2 (Celebrating State)**: Resolves `"celebrating"` when `isDoneToday === true`.
+  - **Tier 3 (Thriving State)**: Resolves `"thriving"` when all plants are hydrated (`totalPlants > 0 && plantsToWaterCount === 0`).
+  - **Tier 4 (Resting State & Hour Boundaries)**: Resolves `"resting"` when `totalPlants === 0` or during night hours (`hour >= 20 || hour < 5`). Validates hour boundaries (0, 4, 5, 19, 20, 23) and default system hour.
+  - **Tier 5 (Persian/English Micro-copy)**: Generates encouraging Persian micro-copy for thirsty plants (with plant name injection), celebrated completion, thriving garden, empty garden, and streak milestones. Enforces 0% `undefined`/`null` leakage and validates English output mode.
+
+### 3. Care Tasks Partitioning (`src/lib/__tests__/care-tasks.test.ts`)
+- **Target Module**: `src/lib/care-tasks.ts`
+- **Tiers Covered**:
+  - **Tier 1 (Partitioning Structure)**: Partitions plant collections into `overdue`, `today`, and `upcoming` buckets. Handles empty plant collections with 100% completion.
+  - **Tier 2 (Boundary Calculations & Formatted Text)**: Calculates exact `dueDays` offsets (`-2` overdue, `0` today, `+3` upcoming) and formatted localized strings ("امروز", "۲ روز تاخیر", "۳ روز دیگر"). Falls back to `lastWatered + wateringInterval` when `nextWateringDate` is absent.
+  - **Tier 3 (Progress Percentage)**: Accurately computes `totalDueToday`, `completedCount` (based on `lastWatered` matching today), and `completionPercentage`. Enforces 100% completion when `isDoneToday === true` and rounds fractional percentages to nearest integer.
+  - **Sorting Order**: Validates that overdue items are sorted with most overdue first, and upcoming items are sorted soonest first.
+
+### 4. Gamification Mechanics (`src/lib/__tests__/gamification.test.ts`)
+- **Target Module**: `src/lib/gamification.ts`
+- **Tiers Covered**:
+  - **Tier 1 (Consecutive Day Calculation)**: Calculates streaks from date arrays (`string` | `Date`), supports unsorted arrays, and deduplicates multiple logs on the same calendar day.
+  - **Tier 2 (Streak Continuity / Pending Today)**: Preserves active streak when today is not yet logged, but yesterday was logged (streak remains intact, waiting for today's routine).
+  - **Tier 3 (Streak Break)**: Enforces reset to 0 when a gap of 2 or more days occurs. Ignores invalid date strings gracefully.
+  - **Tier 4 (Gardener Levels)**: Maps XP to levels:
+    - Level 1: `Sprout` / `جوانه` (0–99 XP)
+    - Level 2: `Seedling` / `نهال` (100–249 XP)
+    - Level 3: `Green Bush` / `بوته سبز` (250–499 XP)
+    - Level 4: `Specialist` / `متخصص` (500–999 XP)
+    - Level 5: `Master` / `استاد باغبان` (1000+ XP)
+    - Clamps negative XP safely to Level 1.
+  - **Tier 5 (XP Rewards)**:
+    - `water_plant`: 10 XP
+    - `daily_complete`: 25 XP
+    - `streak_milestone`: 50 XP
+
+---
+
+## 3. Verification & Execution Commands
 
 ```bash
-# Strict Mode (Final gatekeeper: exits with 1 if total expansion < 50)
-node scripts/validate-blog.mjs
+# 1. Run all 4 new gamification test suites
+npx vitest run src/lib/__tests__/daily-advice-cache.test.ts src/lib/__tests__/mascot.test.ts src/lib/__tests__/care-tasks.test.ts src/lib/__tests__/gamification.test.ts
 
-# Progressive Mode (Permits partial expansion count while strictly auditing populated posts)
-node scripts/validate-blog.mjs --allow-partial
+# 2. Run individual test suites
+npx vitest run src/lib/__tests__/daily-advice-cache.test.ts
+npx vitest run src/lib/__tests__/mascot.test.ts
+npx vitest run src/lib/__tests__/care-tasks.test.ts
+npx vitest run src/lib/__tests__/gamification.test.ts
 
-# JSON Reporting Mode (Outputs structured machine-readable JSON)
-node scripts/validate-blog.mjs --json
+# 3. Run full regression test suite (38 test files, 342 tests)
+npm test
 
-# Combined Progressive JSON
-node scripts/validate-blog.mjs --allow-partial --json
-```
-
-### Enforced Quality & SEO Checks
-
-| Check # | Category | Description | Acceptance Criteria |
-|---|---|---|---|
-| 1 | **Article Count** | Verifies 50 expansion posts (25 Batch 1 + 25 Batch 2) and total 104 blog posts. | R1, R4 |
-| 2 | **Slug Format & Uniqueness** | Enforces Persian kebab-case regex `/^[\u0600-\u06FF0-9a-zA-Z]+(-[\u0600-\u06FF0-9a-zA-Z]+)*$/`, 0% collision with 27 legacy Persian articles, 0% internal collision. | R1, R3 |
-| 3 | **Anti-Cannibalization** | Enforces zero duplicate primary keywords across all Persian articles using normalized text comparison (half-spaces, Arabic Yeh/Kaf). | R1, R4 |
-| 4 | **Meta Description** | Enforces `description.trim().length <= 160` and `description.trim().length >= 20`. | R2 |
-| 5 | **Category & Cluster** | Enforces `categoryEn` is strictly `"care" | "plants" | "tutorials"` and `cluster` is one of 7 valid `BlogCluster` types. | R2, R3 |
-| 6 | **Reading Time** | Enforces non-empty Persian reading time containing `"دقیقه"`. | R2 |
-| 7 | **Keywords Diversity** | Enforces `keywords` array has >= 4 non-empty string items. | R2 |
-| 8 | **Content Quality** | Enforces stripped text length > 1500 chars, `<h2>` tags, `<ul>`/`<ol>` lists, and natural Jaliz CTAs (`/plants/diagnose`, `/schedule`, `/marketplace`). | R2, R3 |
-| 9 | **FAQ Schema Quality** | Enforces `faqs.length >= 2`, each question >= 5 chars, each answer >= 10 chars. | R2 |
-| 10 | **Internal Linking Network** | Scans all `<a href="/blog/...">` tags across all articles; guarantees zero broken links and flags self-referential links. | R3, R4 |
-| 11 | **Metadata & ISO Dates** | Validates `lang === "fa"`, ISO 8601 date format `YYYY-MM-DD`, icons, gradients, and author fields. | R2 |
-
----
-
-## 3. Vitest 4-Tier Test Suite (`src/lib/__tests__/blogExpansion.test.ts`)
-
-The Vitest test suite is structured into 4 distinct verification tiers:
-
-### Tier 1: Feature Coverage
-- **Population Status**: Reports progressive expansion progress (M2 -> M3 -> M4 -> M5) and validates expected batch counts.
-- **Baseline Preservation**: Verifies all 27 legacy Persian articles (and 27 English counterparts) remain intact and untouched.
-- **Schema & Type Conformance**: Confirms all populated posts satisfy the `BlogPost` TypeScript interface contract with non-null required fields.
-
-### Tier 2: Boundary & Corner Cases
-- **Meta Description Boundary**: Asserts description length is within 20 to 160 characters.
-- **FAQ Count Boundary**: Asserts every article has at least 2 FAQs, validating question and answer min lengths.
-- **Content Length Boundary**: Strips HTML tags and asserts text length strictly exceeds 1500 characters.
-- **Semantic Structure**: Asserts presence of `<h2>` subheadings and ordered/unordered lists.
-- **Date & Format Boundaries**: Asserts valid ISO 8601 calendar dates (`YYYY-MM-DD`) and valid reading time strings.
-- **Keyword Array Boundary**: Asserts `keywords.length >= 4`.
-
-### Tier 3: Cross-Feature & Uniqueness Integrity
-- **Global Slug Uniqueness**: Asserts 0 duplicate slugs across all 104 articles in `blogPosts`.
-- **Persian Slug Syntax**: Validates all expansion slugs against kebab-case regex without illegal URL characters.
-- **Zero Keyword Cannibalization**: Cross-references every expansion primary keyword against the 27 legacy Persian articles (0% overlap).
-- **Expansion Keyword Uniqueness**: Asserts 0 duplicate primary keywords among expansion articles.
-- **Planned Inventory Alignment**: Verifies that the authoritative 50-article inventory defined in `PROJECT.md` has 0% collision with legacy articles and contains 50 unique planned slugs and keywords.
-
-### Tier 4: Real-world Linkage & Navigation
-- **Zero Broken Links**: Parses all `<a href="/blog/...">` links across the entire blog; asserts 100% of target slugs resolve to existing articles.
-- **Conversion Funnels (CTAs)**: Confirms that every expansion article features at least one organic conversion CTA linking to Jaliz tools:
-  - `/plants/diagnose` (AI Plant Disease Diagnosis)
-  - `/schedule` (Watering & Care Reminders)
-  - `/marketplace` (Plant & Gardening Marketplace)
-- **No Self-Links**: Prevents internal circular links pointing from an article to itself.
-
----
-
-## 4. Progressive Testability & Milestone Lifecycle
-
-To prevent intermediate milestones (M2, M3, M4) from blocking CI builds while content is being authored, tests implement **Progressive Testability**:
-
-1. **Milestone M2 (Now)**:
-   - Expansion arrays are empty (`0/50`).
-   - The test suite reports current status gracefully via `console.info` while executing baseline audits and inventory validation (19 tests pass).
-   - `node scripts/validate-blog.mjs --allow-partial` passes with exit code 0.
-   - `node scripts/validate-blog.mjs` (strict) exits with code 1 indicating content production pending.
-
-2. **Milestone M3 (Batch 1: Articles 1–25)**:
-   - `expansionPosts1.ts` populated with 25 articles.
-   - All 25 articles are immediately audited across all 4 tiers.
-   - Validator reports 25/50 loaded.
-
-3. **Milestone M4 (Batch 2: Articles 26–50)**:
-   - `expansionPosts2.ts` populated with 25 articles.
-   - All 50 articles audited.
-
-4. **Milestone M5 (Final Integration Gate)**:
-   - Both `node scripts/validate-blog.mjs` and `npm test` require 100% pass rate in strict mode with all 50 expansion articles (104 total articles).
-
----
-
-## 5. Verification Commands
-
-```bash
-# 1. Run Vitest blog expansion suite
-npx vitest run src/lib/__tests__/blogExpansion.test.ts
-
-# 2. Run all blog tests (legacy + expansion)
-npx vitest run src/lib/__tests__/blogData.test.ts src/lib/__tests__/blogExpansion.test.ts
-
-# 3. Run validation script in progressive mode (for intermediate development)
-node scripts/validate-blog.mjs --allow-partial
-
-# 4. Run validation script in strict mode (for final milestone verification)
-node scripts/validate-blog.mjs
-
-# 5. Type-checking verification
+# 4. Verify TypeScript type safety
 npx tsc --noEmit
 ```
+
+---
+
+## 4. TDD Lifecycle & Progressive Readiness
+
+- **Milestone M1 (Current)**:
+  - All 4 test suites created (70 tests total).
+  - Type-safe placeholder stubs in `src/lib/` created conforming to `PROJECT.md § Interface Contracts`.
+  - Tests compile with 0 TypeScript errors (`npx tsc --noEmit` passes).
+  - Test suites execute in Vitest and fail as expected (RED state) on unimplemented placeholder stubs.
+  - Existing 34 test files (272 tests) pass 100% without regression.
+- **Milestone M2 (Downstream Implementation)**:
+  - The implementation agent implements the core logic in:
+    - `src/lib/daily-advice-cache.ts`
+    - `src/lib/mascot-dialogue.ts`
+    - `src/lib/care-tasks.ts`
+    - `src/lib/gamification.ts`
+    - `getWateringStreakAction` in `src/app/actions/plants.ts`
+  - All 70 tests in the M1 suite transition to GREEN (100% passing).

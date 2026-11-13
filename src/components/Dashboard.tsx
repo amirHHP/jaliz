@@ -6,10 +6,12 @@ import { WeatherAdvice } from "@/components/WeatherAdvice"
 import { useAuth } from "@/components/AuthProvider"
 import { useLanguage } from "@/components/LanguageProvider"
 import { WateringSchedule } from "@/components/WateringSchedule"
+import { MascotCompanion } from "@/components/mascot/MascotCompanion"
+import { PlantMascot } from "@/components/mascot/PlantMascot"
 import { createSubscriptionPaymentAction } from "@/app/actions/payments"
 import { SUBSCRIPTION_PRICE_TOMAN, isSubscriptionActive } from "@/lib/subscription"
 import { Button } from "@/components/ui/button"
-import { Droplets, CloudRain, Lock, Loader2 } from "lucide-react"
+import { Droplets, CloudRain, Lock, Loader2, Sparkles } from "lucide-react"
 
 function formatToman(amount: number, language: string): string {
   const formatted = new Intl.NumberFormat(language === "fa" ? "fa-IR" : "en-US").format(amount)
@@ -18,8 +20,9 @@ function formatToman(amount: number, language: string): string {
 
 /**
  * Authenticated irrigation & care view (/schedule).
- * Displays smart watering schedule and hyper-local weather advice.
- * Fully locked for users without an active subscription.
+ * Displays Duolingo-style gamified companion mascot, smart watering schedule,
+ * and hyper-local automated weather advice.
+ * Fully locked with a preview paywall for users without an active subscription.
  */
 export function Dashboard() {
   const { t, language } = useLanguage()
@@ -40,7 +43,11 @@ export function Dashboard() {
     } else if (payment === "cancelled") {
       setBanner(language === "fa" ? "پرداخت لغو شد." : "Payment was cancelled.")
     } else if (payment === "failed") {
-      setBanner(language === "fa" ? "تأیید پرداخت ناموفق بود. دوباره تلاش کنید." : "Payment verification failed. Please try again.")
+      setBanner(
+        language === "fa"
+          ? "تأیید پرداخت ناموفق بود. دوباره تلاش کنید."
+          : "Payment verification failed. Please try again."
+      )
     }
   }, [language, refreshUser])
 
@@ -59,17 +66,15 @@ export function Dashboard() {
       setCheckoutError(
         language === "fa"
           ? "شروع پرداخت ممکن نشد. دوباره تلاش کنید."
-          : "Could not start checkout. Please try again.",
+          : "Could not start checkout. Please try again."
       )
     } finally {
       setCheckoutLoading(false)
     }
   }
 
-  // Greet the signed-in user by their first name; fall back to the generic
-  // welcome string for anonymous visitors
+  // Greet the signed-in user by their first name
   const firstName = user?.fullName?.trim().split(/\s+/)[0]
-
   const [timeGreetingKey, setTimeGreetingKey] = useState<string>("morning_greeting")
 
   useEffect(() => {
@@ -93,11 +98,13 @@ export function Dashboard() {
       <Header />
 
       <main className="container mx-auto px-4 py-8 space-y-8 max-w-4xl">
-        <section className="space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
-            {welcomeTitle}
+        {/* Welcome Section Header */}
+        <section className="space-y-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <span>{welcomeTitle}</span>
+            <span className="text-emerald-600 inline-block">🌿</span>
           </h1>
-          <p className="text-slate-600 text-lg max-w-2xl">{t("welcome_desc")}</p>
+          <p className="text-slate-600 text-base md:text-lg max-w-2xl">{t("welcome_desc")}</p>
         </section>
 
         {banner && (
@@ -106,16 +113,34 @@ export function Dashboard() {
           </div>
         )}
 
+        {/* Hero Section: Mascot Companion for Subscribed Users */}
+        {subscribed && (
+          <div className="animate-in fade-in slide-in-from-bottom-5 duration-700 delay-75 fill-mode-both">
+            <MascotCompanion />
+          </div>
+        )}
+
         {!subscribed ? (
-          /* Entire irrigation & weather section is locked */
+          /* Entire irrigation & weather section is locked with Paywall */
           <div className="relative overflow-hidden rounded-3xl border border-emerald-100/60 bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 text-emerald-950 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
             <div className="pointer-events-none absolute inset-0 opacity-40">
               <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-emerald-200/50 blur-3xl" />
               <div className="absolute -bottom-12 -left-8 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl" />
             </div>
 
-            {/* Blurred preview of both watering and weather sections */}
-            <div className="select-none p-6 md:p-8 blur-[3px] opacity-40 space-y-6" aria-hidden="true">
+            {/* Blurred preview of companion, watering, and weather sections */}
+            <div className="select-none p-6 md:p-8 blur-[4px] opacity-40 space-y-6" aria-hidden="true">
+              {/* Blurred Mascot Companion Preview */}
+              <div className="rounded-3xl border border-emerald-200/70 bg-white/70 p-5 flex items-center gap-4">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                  <PlantMascot state="thriving" size={64} />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-32 rounded bg-emerald-300/60" />
+                  <div className="h-3 w-64 rounded bg-emerald-200/50" />
+                </div>
+              </div>
+
               {/* Blurred Watering Schedule preview */}
               <div className="rounded-2xl border border-emerald-100/70 bg-white/70 p-5 space-y-4">
                 <div className="flex items-center gap-3">
@@ -129,7 +154,10 @@ export function Dashboard() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                   {[1, 2].map((n) => (
-                    <div key={n} className="flex items-center gap-3 rounded-2xl border border-emerald-100/50 bg-white/80 p-3">
+                    <div
+                      key={n}
+                      className="flex items-center gap-3 rounded-2xl border border-emerald-100/50 bg-white/80 p-3"
+                    >
                       <div className="h-12 w-12 rounded-xl bg-emerald-100" />
                       <div className="flex-1 space-y-2">
                         <div className="h-3.5 w-24 rounded bg-emerald-200/70" />
@@ -168,12 +196,14 @@ export function Dashboard() {
                   <Lock className="h-7 w-7" />
                 </div>
                 <h3 className="text-xl font-bold text-emerald-950">
-                  {language === "fa" ? "بخش آبیاری و هواشناسی هوشمند قفل است" : "Smart Watering & Weather Advice are Locked"}
+                  {language === "fa"
+                    ? "بخش آبیاری، همراه برگچه و مشاوره هوشمند قفل است"
+                    : "Smart Watering, Bargcheh Companion & Weather Advice are Locked"}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-emerald-800/80">
                   {language === "fa"
-                    ? "با فعال‌سازی اشتراک ماهانه، به برنامه زمان‌بندی هوشمند آبیاری و تحلیل اختصاصی آب‌وهوایی گیاهانتان دسترسی داشته باشید."
-                    : "Unlock smart watering schedule and hyper-local weather advice for your plants with a monthly subscription."}
+                    ? "با فعال‌سازی اشتراک ماهانه، همراه با برگچه برنامه زمان‌بندی هوشمند آبیاری، استمرار روزانه و تحلیل آب‌وهوایی گیاهانتان را دریافت کنید."
+                    : "Unlock smart watering schedule, Bargcheh mascot companion, and hyper-local weather advice with a monthly subscription."}
                 </p>
                 <div className="mt-5 rounded-2xl bg-emerald-50/80 border border-emerald-100 p-3 text-center">
                   <p className="text-2xl font-black tracking-tight text-emerald-900">
@@ -202,8 +232,12 @@ export function Dashboard() {
                   )}
                   <span className="ms-2">
                     {checkoutLoading
-                      ? (language === "fa" ? "در حال اتصال به درگاه..." : "Connecting to checkout...")
-                      : (language === "fa" ? "خرید اشتراک و فعال‌سازی" : "Buy subscription")}
+                      ? language === "fa"
+                        ? "در حال اتصال به درگاه..."
+                        : "Connecting to checkout..."
+                      : language === "fa"
+                      ? "خرید اشتراک و فعال‌سازی"
+                      : "Buy subscription"}
                   </span>
                 </Button>
               </div>

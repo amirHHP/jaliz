@@ -1,38 +1,43 @@
 # Original User Request
 
-## Initial Request — 2026-10-06T05:59:08Z
+## Initial Request — 2026-11-13T04:57:18Z
 
-تولید و پیاده‌سازی ۵۰ مقاله جامع، غنی و سئو محور به زبان فارسی برای وبلاگ پلتفرم نگهداری گیاهان آپارتمانی «جالیز» بر پایه تحلیل عمیق کلمات کلیدی، استراتژی خوشه‌ای (Topic Cluster) و ساختار داده‌ای پروژه، با هدف رتبه‌گیری در جستجوهای پرسرچ باغبانی خانگی و رفع کامل همپوشانی معنایی (Keyword Cannibalization).
+Redesign the Jaliz plant irrigation and care page (`/schedule`) into a dynamic, motivating, and gamified experience inspired by Duolingo, featuring an expressive mascot companion and automatic daily AI advice for production use.
 
-Working directory: /Users/sotoon/personal/jaliz
 Integrity mode: development
 
 ## Requirements
 
-### R1. تدوین معماری کلمات کلیدی و کلاسترهای موضوعی (Topic Clusters)
-تحلیل و استخراج دقیق ۵۰ کلمه کلیدی اصلی به همراه واژگان مرتبط (LSI) و قصد جستجو (Search Intent) در حوزه گیاهان آپارتمانی و باغبانی خانگی. سازماندهی مقالات در قالب کلاسترهای موضوعی متوازن (نظیر آبیاری و مراقبت، نور و دما، خاک و کوددهی، تشخیص و درمان آفات، معرفی گونه‌های محبوب، و گیاهان مناسب فضاهای مختلف). ثبت ماتریس عدم همپوشانی (Anti-Cannibalization Matrix) برای تضمین تفکیک شفاف زاویه دید و کلمات کلیدی هر مقاله.
+### R1. Gamified Duolingo-Style Irrigation & Care Experience
+Redesign the `/schedule` view (rendered via `src/components/Dashboard.tsx`, `src/components/WateringSchedule.tsx`, and `src/components/WeatherAdvice.tsx`) with an inviting, gamified, and vibrant aesthetic that motivates users to open the app and tend to their plants daily.
 
-### R2. نگارش ۵۰ مقاله تخصصی و سئو شده به زبان فارسی
-تولید محتوای کامل، جذاب و خواندنی برای هر ۵۰ مقاله با رعایت اصول سئوی محتوا (عنوان گیرا، توضیحات متای استاندارد، زمان مطالعه، هدینگ‌های H2 و H3 به ترتیب منطقی، پاراگراف‌های روان، بولت‌پوینت‌ها و نکات کاربردی، و حداقل ۲ سوال و پاسخ متداول FAQ برای اسکیما).
+### R2. Expressive Mascot Plant Companion
+Implement a plant companion mascot with dynamic visual states (e.g., thriving, thirsty/needs attention, celebrating) rendered via vector SVG / CSS styling directly in project components. The mascot must present contextual, encouraging, and informative speech bubbles and messages regarding the user's plants and upcoming watering tasks.
 
-### R3. یکپارچه‌سازی با پایگاه کد و سیستم وبلاگ پروژه جالیز
-افزودن مقالات جدید به ساختار داده وبلاگ در مسیر `src/lib/` و هماهنگ‌سازی متادیتاها با تایپ‌های پروژه (`BlogPost` و `BlogSeoMeta`). پیاده‌سازی شبکه لینک‌سازی داخلی هوشمند میان مقالات جدید و مقالات موجود بدون هیچ لینک شکسته‌ای، به همراه دعوت به اقدام‌های طبیعی به سرویس‌های جالیز (یادآور آبیاری، بازارچه، شناسایی هوشمند گیاه).
+### R3. Automated Daily AI Advice with Daily Caching
+Automatically fetch and display daily plant care / weather advice on page load without requiring the user to press a manual consultation button ("مشاوره"). Advice results must be cached per user per calendar day (e.g. in local storage or application state) to prevent redundant API calls and unnecessary costs on subsequent visits during the same day.
 
-### R4. اعتبارسنجی خودکار و تضمین سلامت کد
-ارائه اسکریپت یا مکانیزم راستی‌آزمایی مستقل برای بررسی خودکار معیارهای کیفی و فنی محتوا و اجرای تست بررسی تایپ‌ها برای اطمینان از عدم شکست بیلد پروژه.
+### R4. Preservation of Subscription Gating
+Preserve existing subscription gating logic: active subscribers enjoy full automated advice and gamified companion insights, while unsubscribed users see the locked paywall preview as established.
 
 ## Acceptance Criteria
 
-### استراتژی سئو و رفع همپوشانی
-- [ ] سند استراتژی سئو شامل جدول ۵۰ مقاله (کلاستر، کلمه کلیدی اصلی، کلمات کلیدی فرعی، اینتنت جستجو و خلاصه زاویه دید) تدوین شده باشد.
-- [ ] هیچ دو مقاله‌ای کلمه کلیدی اصلی، اسلاگ، یا قصد جستجوی یکسان نداشته باشند (صفر درصد همپوشانی کانبالیزیشن).
+### Gamified Page UI
+- [ ] The `/schedule` page reflects a gamified, welcoming design inspired by Duolingo that showcases daily plant care tasks.
+- [ ] Task completion and care status updates provide clear visual feedback.
 
-### کیفیت و ساختار محتوا
-- [ ] تمام ۵۰ مقاله به زبان فارسی سلیس و با لحن گرم و صمیمی جالیز نوشته شده باشند.
-- [ ] هر مقاله دارای فیلدهای الزامی: `title`، `slug`، `description` (حداکثر ۱۶۰ کاراکتر)، `category`، `readTime`، `keywords`، متن کامل `content` و حداقل ۲ پرسش‌وپاسخ `faqs` باشد.
-- [ ] در متن مقالات لینک‌سازی داخلی مرتبط به مقالات دیگر با ساختار `<a href="/blog/...">` تعبیه شده و تمام لینک‌ها به اسلاگ‌های معتبر و موجود اشاره کنند.
+### Mascot Companion
+- [ ] Mascot is rendered via vector SVG/CSS components across multiple expressive states corresponding to plant care status.
+- [ ] Speech bubbles display contextual messages reflecting the health, schedule, or pending tasks of the user's plants.
 
-### صحت فنی در ریپازیتوری
-- [ ] ۵۰ مقاله جدید در فایل‌های دیتا در `src/lib/` قرار گرفته و به ساختار وبلاگ اکسپورت شده باشند.
-- [ ] اجرای فرمان بررسی تایپ `npx tsc --noEmit` با موفقیت (Exit code 0) و بدون خطای تایپ‌اسکریپت به پایان برسد.
-- [ ] یک اسکریپت اعتبارسنجی خودکار برای شمارش دقیق ۵۰ مقاله جدید، اعتبارسنجی یکتایی اسلاگ‌ها و درستی لینک‌های داخلی با موفقیت اجرا شود.
+### Automated Advice & Caching
+- [ ] AI advice loads automatically upon navigating to the care/irrigation page without manual button clicks.
+- [ ] When advice has already been fetched for the current calendar day, opening or reloading the page uses the cached advice rather than re-requesting from the API.
+
+### Subscription Rules
+- [ ] Non-subscribed users are presented with the locked paywall preview for premium care features.
+- [ ] Subscribed users have full access to automated daily advice and mascot insights.
+
+### Build & Verification
+- [ ] Application builds without TypeScript or bundling errors (`npm run build`).
+- [ ] Existing automated test suites pass without regression.

@@ -8,6 +8,7 @@ import {
 import prisma from "@/lib/prisma";
 import { getSessionUserId } from "@/app/actions/auth";
 import { userHasActiveSubscription } from "@/lib/subscription-status";
+import { calculateWateringStreak } from "@/lib/gamification";
 
 const MAX_STATUS_LOG_ADVICE_CHARS = 80_000;
 const MAX_STATUS_LOG_IMAGE_CHARS = 550_000;
@@ -331,4 +332,18 @@ export async function addPlantStatusLogAction(
     }
     throw e;
   }
+}
+
+export async function getWateringStreakAction(): Promise<{ streak: number }> {
+  const userId = await getSessionUserId();
+  if (!userId) return { streak: 0 };
+
+  const logs = await prisma.wateringLog.findMany({
+    where: { userId },
+    select: { logDate: true },
+    orderBy: { logDate: "desc" },
+  });
+
+  const streak = calculateWateringStreak(logs.map((l) => l.logDate));
+  return { streak };
 }
