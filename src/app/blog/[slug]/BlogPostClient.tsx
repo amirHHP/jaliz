@@ -16,7 +16,10 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
-  BookOpenCheck
+  BookOpenCheck,
+  Camera,
+  Sparkles,
+  Store,
 } from "lucide-react"
 
 interface BlogPostClientProps {
@@ -133,6 +136,55 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
                   ? "این مقاله به صورت اختصاصی توسط تیم تحریریه جالیز تولید شده است. منابع علمی مورد استفاده در تدوین این مطلب شامل کتاب‌های مرجع گیاه‌شناسی آپارتمانی، مقالات آموزشی جهاد کشاورزی و تجربیات علمی باغبانان حرفه‌ای می‌باشد."
                   : "This article has been exclusively produced by the Jaliz editorial team. Scientific sources used for compiling this content include houseplant botanical reference guides, agricultural extension publications, and professional gardening experience."}
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contextual AI Plant Doctor / Diagnosis Callout */}
+        <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 text-white p-6 sm:p-8 shadow-xl relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-16 -end-16 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -start-16 h-48 w-48 rounded-full bg-teal-400/20 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-2 text-center md:text-start grow">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold mb-1">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>{isRtl ? "پزشک هوشمند گیاهان جالیز" : "Jaliz AI Plant Doctor"}</span>
+              </div>
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                {post.cluster === "diagnosis"
+                  ? (isRtl ? "برگ گیاه شما هم دچار زردی، لکه یا آفت شده؟" : "Are your plant's leaves turning yellow or spotted?")
+                  : (isRtl ? "نشانه‌های بیماری یا افت شادابی در گیاهتان می‌بینید؟" : "Noticing signs of distress in your houseplants?")}
+              </h3>
+              <p className="text-xs sm:text-sm text-emerald-100/80 max-w-xl leading-relaxed">
+                {isRtl
+                  ? "به جای حدس زدن علت بیماری و درمان‌های خودسرانه، همین الان یک عکس از برگ گیاهت آپلود کن تا هوش مصنوعی جالیز علت مشکل و دستور درمان قطعی رو بهت بگه."
+                  : "Instead of guessing symptoms, upload a photo of your plant leaf and get instant AI diagnosis and care remedies in seconds."}
+              </p>
+            </div>
+
+            <div className="shrink-0 flex flex-col sm:flex-row md:flex-col gap-2.5 w-full md:w-auto">
+              <Button
+                asChild
+                size="lg"
+                className="rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shadow-lg shadow-emerald-950/40 hover:scale-[1.02] transition-transform"
+              >
+                <Link href="/plants/diagnose" className="flex items-center justify-center gap-2">
+                  <Camera className="h-4 w-4" />
+                  <span>{isRtl ? "اسکن و تشخیص آنلاین گیاه" : "Diagnose Plant Now"}</span>
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="rounded-2xl border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs"
+              >
+                <Link href="/marketplace" className="flex items-center justify-center gap-2">
+                  <Store className="h-3.5 w-3.5" />
+                  <span>{isRtl ? "خرید و فروش در بازارچه" : "Browse Marketplace"}</span>
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

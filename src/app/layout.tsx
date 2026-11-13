@@ -97,6 +97,31 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://jalizapp.ir/#organization",
+      name: "جالیز | Jaliz",
+      url: "https://jalizapp.ir",
+      logo: "https://jalizapp.ir/icons/icon-512x512.png",
+      description:
+        "پلتفرم هوشمند مراقبت از گیاهان آپارتمانی، یادآور آبیاری، تشخیص آنلاین آفت و بازارچه تخصصی گل و گیاه.",
+      sameAs: ["https://cafebazaar.ir/app/ir.noxte.jaliz.twa"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://jalizapp.ir/#website",
+      url: "https://jalizapp.ir",
+      name: "جالیز",
+      publisher: {
+        "@id": "https://jalizapp.ir/#organization",
+      },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -110,6 +135,10 @@ export default function RootLayout({
     >
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
