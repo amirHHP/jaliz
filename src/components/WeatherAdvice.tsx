@@ -1,20 +1,48 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { CloudRain, Loader2, MapPin, Sparkles, RotateCw, CheckCircle2 } from "lucide-react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
-import { getUserPlantsAction } from "@/app/actions/plants"
+import { usePlants } from "@/components/PlantsProvider"
+import { getUserPlantsAction, getWateringStreakAction } from "@/app/actions/plants"
 import { getWeatherAdviceAction } from "@/app/actions/ai"
 import { isSubscriptionActive } from "@/lib/subscription"
 import { getCachedDailyAdvice, setCachedDailyAdvice } from "@/lib/daily-advice-cache"
+import { partitionCareTasks } from "@/lib/care-tasks"
+import {
+  resolveMascotState,
+  getMascotDialogue,
+  type MascotContext,
+} from "@/lib/mascot-dialogue"
 import { PlantMascot } from "@/components/mascot/PlantMascot"
 
+const PLAYFUL_TIPS_FA = [
+  "قلقلکم نده رفیق! برو به گل‌هات سر بزن 😄🌱",
+  "می‌دونستی صحبت کردن ملایم و موسیقی آرامش‌بخش به شادابی گیاهان کمک می‌کنه؟ 🎵🌿",
+  "آبیاری با آب بیات‌شده و هم‌دمای محیط جلوی شوک حرارتی ریشه رو می‌گیره! 💧",
+  "غبارپاشی و پاک کردن برگ‌ها با دستمال مرطوب تنفس گیاهانت رو دوبرابر می‌کنه! ✨",
+  "زهکشی مناسب گلدان راز اصلی سلامت ریشه و طول عمر گیاهه! 🪴",
+]
+
+const PLAYFUL_TIPS_EN = [
+  "No tickles, friend! Go check on your plants 😄🌱",
+  "Did you know gentle music and kind words help plants thrive? 🎵🌿",
+  "Room-temperature resting water prevents thermal shock to plant roots! 💧",
+  "Wiping dusty leaves with a damp cloth lets your plants breathe better! ✨",
+  "Good drainage is the #1 secret to root health and long plant life! 🪴",
+]
+
+/**
+ * Top Hero Section:
+ * Displays the free-standing ("ول") animated mascot Bargcheh speaking to the user,
+ * immediately accompanied by the pure, unboxed daily AI care advice text for distraction-free reading.
+ */
 export function WeatherAdvice() {
   const { user } = useAuth()
   const subscribed = isSubscriptionActive(user?.subscriptionExpiresAt)
+  const { language } = useLanguage()
+  const isFa = language === "fa"
+  const { plants } = usePlants()
 
   const [advice, setAdvice] = useState<string | null>(() => {
     if (typeof window === "undefined" || !user?.id || !subscribed) return null
@@ -23,9 +51,9 @@ export function WeatherAdvice() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<string>("")
-  const [isFromCache, setIsFromCache] = useState<boolean>(false)
-  const { language, t } = useLanguage()
-  const isFa = language === "fa"
+  const [activeStreak, setActiveStreak] = useState<number>(0)
+  const [tipIndex, setTipIndex] = useState<number | null>(null)
+  const [currentHour, setCurrentHour] = useState<number>(12)
 
   // Sync user location from localStorage
   useEffect(() => {
@@ -37,17 +65,98 @@ export function WeatherAdvice() {
     }
   }, [language])
 
+  // Avoid hydration mismatch by reading hour on client
+  useEffect(() => {
+    setCurrentHour(new Date().getHours())
+  }, [])
+
+  // Sync streak
+  useEffect(() => {
+    let cancelled = false
+    async function loadStreak() {
+      try {
+        const res = await getWateringStreakAction()
+        if (!cancelled && res && typeof res.streak === "number") {
+          setActiveStreak(res.streak)
+        }
+      } catch (err) {
+        console.error("Failed to load streak in WeatherAdvice:", err)
+      }
+    }
+    if (subscribed && user?.id) {
+      void loadStreak()
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [subscribed, user?.id])
+
+  // Derive care task status for mascot
+  const carePartition = useMemo(() => {
+    return partitionCareTasks(plants)
+  }, [plants])
+
+  const totalPlantsCount = plants.length
+  const plantsToWaterCount = Math.max(
+    0,
+    carePartition.totalDueToday - carePartition.completedCount
+  )
+  const isDoneToday = carePartition.completionPercentage === 100
+  const firstThirstyPlantName =
+    carePartition.overdue[0]?.plant?.name ?? carePartition.today[0]?.plant?.name
+
+  const userName = user?.fullName?.trim().split(/\s+/)[0]
+
+  const mascotContext: MascotContext = useMemo(() => {
+    return {
+      totalPlants: totalPlantsCount,
+      plantsToWaterCount,
+      isDoneToday,
+      streakDays: activeStreak,
+      userName,
+      firstThirstyPlantName,
+      currentHour,
+    }
+  }, [
+    totalPlantsCount,
+    plantsToWaterCount,
+    isDoneToday,
+    activeStreak,
+    userName,
+    firstThirstyPlantName,
+    currentHour,
+  ])
+
+  const mascotState = useMemo(() => {
+    return resolveMascotState(mascotContext)
+  }, [mascotContext])
+
+  const defaultDialogue = useMemo(() => {
+    return getMascotDialogue(mascotContext, isFa ? "fa" : "en")
+  }, [mascotContext, isFa])
+
+  const tipsList = isFa ? PLAYFUL_TIPS_FA : PLAYFUL_TIPS_EN
+
+  const handleInteraction = useCallback(() => {
+    setTipIndex((prev) => {
+      if (prev === null) return 0
+      if (prev >= tipsList.length - 1) return null
+      return prev + 1
+    })
+  }, [tipsList.length])
+
+  const displayedMessage =
+    tipIndex !== null ? tipsList[tipIndex] : defaultDialogue
+
   // Fetch advice implementation
   const fetchAdvice = useCallback(
     async (forceRefresh = false) => {
       if (!user?.id || !subscribed) return
 
-      // If not forced and already cached for today, use cache immediately
       if (!forceRefresh) {
         const cached = getCachedDailyAdvice(user.id)
         if (cached) {
           setAdvice(cached)
-          setIsFromCache(true)
           setLoading(false)
           return
         }
@@ -55,7 +164,6 @@ export function WeatherAdvice() {
 
       setLoading(true)
       setError(null)
-      setIsFromCache(false)
 
       try {
         let userPlants: unknown[] = []
@@ -104,7 +212,7 @@ export function WeatherAdvice() {
           err instanceof Error
             ? err.message
             : isFa
-            ? "دریافت مشاوره با خطا مواجه شد. لطفاً دوباره تلاش کنید."
+            ? "دریافت مشاوره با خطا مواجه شد."
             : "An error occurred while fetching advice."
         )
       } finally {
@@ -114,18 +222,16 @@ export function WeatherAdvice() {
     [user?.id, subscribed, userLocation, language, isFa]
   )
 
-  // Automated fetch on mount: check cache first, fetch if empty
+  // Automated fetch on mount
   useEffect(() => {
     if (!subscribed || !user?.id) return
 
     const cached = getCachedDailyAdvice(user.id)
     if (cached) {
       setAdvice(cached)
-      setIsFromCache(true)
       return
     }
 
-    // Auto-fetch with 0 clicks required
     void fetchAdvice(false)
   }, [subscribed, user?.id, fetchAdvice])
 
@@ -134,106 +240,83 @@ export function WeatherAdvice() {
   }
 
   return (
-    <Card className="overflow-hidden rounded-3xl border-2 border-emerald-100/80 bg-gradient-to-br from-white via-emerald-50/20 to-teal-50/30 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-      <CardHeader className="space-y-1 pb-4 border-b border-emerald-100/60 bg-emerald-50/40">
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-lg sm:text-xl flex items-center gap-2.5 text-emerald-950 font-bold">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-sm shadow-emerald-500/30">
-              <Sparkles className="h-5 w-5" />
-            </span>
-            <span>{isFa ? "توصیه روزانه هوشمند برگچه" : t("weather_title")}</span>
-          </CardTitle>
+    <section className="animate-in fade-in duration-500 space-y-4 pt-1">
+      {/* Top area: Mascot hanging out freely ("ول در صفحه") + Speech Bubble ("یه چیزی بگه") */}
+      <div className="flex items-start gap-3 sm:gap-5">
+        {/* Mascot Avatar: NO CONTAINER BOX, free on page */}
+        <div
+          onClick={handleInteraction}
+          className="shrink-0 cursor-pointer group transition-transform duration-300 hover:scale-105 active:scale-95 select-none"
+          title={isFa ? "برای گفتگو با برگچه بزنید!" : "Tap to chat with Bargcheh!"}
+        >
+          <PlantMascot state={mascotState} size={84} />
+        </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center text-xs text-emerald-800 bg-white/90 border border-emerald-200/80 px-2.5 py-1 rounded-full font-medium max-w-[160px] truncate shadow-2xs">
-              <MapPin className="h-3 w-3 mr-1 rtl:ml-1 rtl:mr-0 shrink-0 text-emerald-600" />
-              <span className="truncate">{userLocation}</span>
+        {/* Speech Bubble pointing to mascot */}
+        <div className="flex-1 min-w-0 pt-0.5">
+          <div
+            onClick={handleInteraction}
+            className="relative cursor-pointer inline-block max-w-full rounded-2xl sm:rounded-3xl border border-emerald-200/90 bg-white/95 px-4 py-3 shadow-xs hover:shadow-md transition-all text-slate-800"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-emerald-700">
+                {isFa ? "برگچه" : "Bargcheh"}
+              </span>
+              <span className="text-[11px] text-slate-400 font-normal ms-auto ps-2">
+                {isFa ? "برای پیام بعدی بزنید ✨" : "Tap for tips ✨"}
+              </span>
+            </div>
+            <p className="text-sm sm:text-base font-semibold leading-relaxed text-slate-900">
+              {displayedMessage}
+            </p>
+
+            {/* Bubble Tail (RTL) */}
+            <div
+              className="absolute -right-2 top-5 w-2 h-3 overflow-hidden pointer-events-none rtl:block ltr:hidden"
+              aria-hidden="true"
+            >
+              <div className="w-3 h-3 bg-white border-t border-r border-emerald-200/90 rotate-45 transform origin-top-left translate-x-[-1px] translate-y-[1px]" />
             </div>
 
-            {/* Subtle Force-Refresh Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void fetchAdvice(true)}
-              disabled={loading}
-              className="h-8 w-8 p-0 rounded-xl text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900"
-              title={isFa ? "دریافت مجدد مشاوره امروز" : "Refresh today's advice"}
+            {/* Bubble Tail (LTR) */}
+            <div
+              className="absolute -left-2 top-5 w-2 h-3 overflow-hidden pointer-events-none ltr:block rtl:hidden"
+              aria-hidden="true"
             >
-              <RotateCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-            </Button>
+              <div className="w-3 h-3 bg-white border-b border-l border-emerald-200/90 rotate-45 transform origin-bottom-right" />
+            </div>
           </div>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="pt-5 pb-5 min-h-[120px] flex flex-col justify-center">
+      {/* AI Daily Advice: Pure text, NO BOX, distraction-free */}
+      <div className="pt-2 sm:pt-3">
         {loading ? (
-          <div className="flex flex-col items-center justify-center text-emerald-700 space-y-3 py-6">
-            <PlantMascot state="thriving" size={64} className="animate-pulse" />
-            <div className="flex items-center gap-2 text-sm font-bold text-emerald-800">
-              <Loader2 className="h-4 w-4 animate-spin text-emerald-600" />
-              <span>
-                {isFa
-                  ? "برگچه در حال تحلیل شرایط آب‌وهوا و نیازهای گیاهان شماست..."
-                  : t("analyzing")}
-              </span>
-            </div>
-          </div>
+          <p className="text-sm text-slate-500 dark:text-slate-400 animate-pulse flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span>
+              {isFa
+                ? "برگچه در حال بررسی هوای امروز و احوال گیاهان شماست..."
+                : "Checking today's weather and plant conditions..."}
+            </span>
+          </p>
         ) : advice ? (
-          <div className="space-y-3 animate-in fade-in duration-300">
-            <div className="relative rounded-2xl bg-white border border-emerald-100/80 p-4 sm:p-5 shadow-inner text-slate-800 text-sm sm:text-base leading-relaxed whitespace-pre-wrap font-medium">
-              <div className="flex items-start gap-3">
-                <span className="text-xl shrink-0 mt-0.5">🌱</span>
-                <div className="flex-1 min-w-0">{advice}</div>
-              </div>
-            </div>
-
-            {/* Cache & Status Subtitle */}
-            <div className="flex items-center justify-between text-[11px] text-emerald-700/80 px-1 font-medium">
-              <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>
-                  {isFa
-                    ? "مشاوره اختصاصی برای تقویم امروز ثبت شد"
-                    : "Tailored advice registered for today"}
-                </span>
-              </span>
-              {isFromCache && (
-                <span className="bg-emerald-100/70 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
-                  {isFa ? "حافظه روزانه (بدون هزینه)" : "Cached"}
-                </span>
-              )}
-            </div>
-          </div>
+          <p className="text-slate-700 dark:text-slate-300 text-sm sm:text-base md:text-[15px] leading-relaxed whitespace-pre-wrap font-normal">
+            {advice}
+          </p>
         ) : error ? (
-          <div className="p-4 rounded-2xl bg-rose-50 text-rose-700 border border-rose-200 text-sm flex items-center justify-between gap-3">
+          <div className="text-xs text-rose-600 flex items-center gap-2">
             <span>{error}</span>
-            <Button
-              size="sm"
-              variant="outline"
+            <button
               onClick={() => void fetchAdvice(true)}
-              className="border-rose-300 text-rose-800 hover:bg-rose-100 shrink-0"
+              className="text-emerald-700 font-semibold underline hover:text-emerald-800"
             >
-              {isFa ? "تلاش دوباره" : "Retry"}
-            </Button>
+              {isFa ? "تلاش مجدد" : "Retry"}
+            </button>
           </div>
-        ) : (
-          <div className="h-4"></div>
-        )}
-      </CardContent>
-
-      {/* Footer if user wants manual refresh or error state */}
-      {error && (
-        <CardFooter className="bg-slate-50/50 pt-3 pb-3 border-t border-slate-100 flex justify-end">
-          <Button
-            size="sm"
-            onClick={() => void fetchAdvice(true)}
-            disabled={loading}
-            className="rounded-xl text-xs"
-          >
-            {isFa ? "دریافت مجدد مشاوره" : "Fetch Advice"}
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
+        ) : null}
+      </div>
+    </section>
   )
 }
