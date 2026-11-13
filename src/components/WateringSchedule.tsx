@@ -6,8 +6,6 @@ import { useAuth } from "@/components/AuthProvider"
 import {
   Check,
   Droplets,
-  Bell,
-  BellRing,
   AlertTriangle,
   CalendarDays,
   ChevronDown,
@@ -27,7 +25,6 @@ import { isSubscriptionActive } from "@/lib/subscription"
 import { toLocalDateString } from "@/lib/relative-date"
 import { partitionCareTasks } from "@/lib/care-tasks"
 import { getXpForAction } from "@/lib/gamification"
-import { useWateringNotification } from "@/components/WateringNotificationProvider"
 import { usePlants, type Plant } from "@/components/PlantsProvider"
 import { GamificationBar } from "@/components/schedule/GamificationBar"
 import { CareTaskCard } from "@/components/schedule/CareTaskCard"
@@ -38,8 +35,6 @@ export function WateringSchedule() {
   const isFa = language === "fa"
   const { user, status } = useAuth()
   const { plants, refreshPlants } = usePlants()
-  const { permission, isSupported, requestPermissionAndNotify, sendTestNotification } =
-    useWateringNotification()
 
   const [isDone, setIsDone] = useState(false)
   const [streak, setStreak] = useState(0)
@@ -48,10 +43,6 @@ export function WateringSchedule() {
   const [isUpcomingExpanded, setIsUpcomingExpanded] = useState(false)
   const [batchLoading, setBatchLoading] = useState(false)
   const [sessionWateredIds, setSessionWateredIds] = useState<Set<string>>(new Set())
-
-  // Notification button states
-  const [notifSending, setNotifSending] = useState(false)
-  const [notifFeedback, setNotifFeedback] = useState<string | null>(null)
 
   const today = toLocalDateString()
   const subscribed = isSubscriptionActive(user?.subscriptionExpiresAt)
@@ -220,6 +211,12 @@ export function WateringSchedule() {
 
   const unwateredCount = dueItems.filter((i) => !isPlantWatered(i.plant.id)).length
 
+  const hasItemsAboveUpcoming =
+    (partition.overdue.length > 0 && !isDone) ||
+    (partition.today.length > 0 && !isDone) ||
+    ((isDone || unwateredCount === 0) && dueItems.length > 0) ||
+    plants.length === 0
+
   return (
     <div className="space-y-6">
       {/* 1. Gamification Bar */}
@@ -232,84 +229,13 @@ export function WateringSchedule() {
       />
 
       {/* 2. Main Schedule Container */}
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white p-5 md:p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      <div className="relative overflow-hidden rounded-3xl border border-emerald-100/70 bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white p-4 sm:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
         {/* Decorative background glows */}
         <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-200/30 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-teal-200/30 blur-2xl" />
 
-        {/* Section Header */}
-        <div className="relative z-10 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h3 className="flex items-center gap-2.5 text-xl font-bold text-emerald-950">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 shadow-inner">
-                <Droplets className="h-5 w-5" />
-              </span>
-              <span>{isFa ? "برنامه آبیاری و مراقبت روزانه" : "Daily Irrigation & Care"}</span>
-            </h3>
-            <p className="mt-1.5 text-xs sm:text-sm font-medium text-emerald-800/80">
-              {isDone
-                ? isFa
-                  ? "عالی بود! تمام گیاهان شما امروز سیراب و شاداب شدند. ✨"
-                  : "Awesome! All your plants are happily hydrated today. ✨"
-                : unwateredCount > 0
-                ? isFa
-                  ? `امروز ${unwateredCount} گیاه منتظر توجه و آبیاری شما هستند.`
-                  : `${unwateredCount} plants are waiting for water today.`
-                : isFa
-                ? "تمامی گیاهان شما شاداب و بی‌نیاز از آبیاری هستند. 🌿"
-                : "All plants are hydrated and happy. 🌿"}
-            </p>
-          </div>
-
-          {/* Test & Notification Controls */}
-          {isSupported && (
-            <div className="flex items-center gap-2 shrink-0">
-              {permission === "granted" ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => {
-                    setNotifSending(true)
-                    await sendTestNotification(dueItems.length > 0 ? dueItems.map((d) => d.plant) : plants)
-                    setNotifSending(false)
-                    setNotifFeedback(isFa ? "اعلان ارسال شد!" : "Alert sent!")
-                    setTimeout(() => setNotifFeedback(null), 3000)
-                  }}
-                  disabled={notifSending}
-                  className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border border-emerald-200 bg-white/80 hover:bg-emerald-100 text-emerald-800 shadow-sm"
-                  title={isFa ? "ارسال تست نوتیفیکیشن آبیاری" : "Test watering notification"}
-                >
-                  <Bell className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{notifFeedback || (isFa ? "تست اعلان" : "Test alert")}</span>
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    setNotifSending(true)
-                    const success = await requestPermissionAndNotify()
-                    setNotifSending(false)
-                    if (success) {
-                      setNotifFeedback(isFa ? "اعلان فعال شد!" : "Enabled!")
-                    } else {
-                      setNotifFeedback(isFa ? "دسترسی رد شد" : "Denied")
-                    }
-                    setTimeout(() => setNotifFeedback(null), 3000)
-                  }}
-                  disabled={notifSending}
-                  className="h-8 px-2.5 text-xs gap-1.5 rounded-xl border-emerald-200 bg-white/90 hover:bg-emerald-100 text-emerald-800 shadow-sm"
-                >
-                  <BellRing className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{notifFeedback || (isFa ? "فعال‌سازی اعلان" : "Enable alert")}</span>
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* 3. Task Segmentation Sections */}
-        <div className="relative z-10 space-y-6">
+        {/* Task Segmentation Sections */}
+        <div className="relative z-10 space-y-5">
           {/* SECTION A: OVERDUE TASKS (🚨 نیازمند رسیدگی فوری) */}
           {partition.overdue.length > 0 && !isDone && (
             <div className="space-y-3 rounded-2xl border border-rose-200/90 bg-rose-50/50 p-4">
@@ -419,7 +345,7 @@ export function WateringSchedule() {
 
           {/* SECTION C: UPCOMING FORECAST (🌱 پیش‌بینی روزهای آینده) */}
           {partition.upcoming.length > 0 && (
-            <div className="pt-4 border-t border-emerald-200/50">
+            <div className={hasItemsAboveUpcoming ? "pt-4 border-t border-emerald-200/50" : ""}>
               <button
                 type="button"
                 onClick={() => setIsUpcomingExpanded((prev) => !prev)}
