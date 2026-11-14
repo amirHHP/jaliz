@@ -126,9 +126,13 @@ export function LandingPage() {
               </Link>
 
               <div className="pt-3 border-t border-slate-100 w-full text-center">
-                <div className="flex items-center justify-center gap-4 text-xs font-semibold text-emerald-700 mb-2">
+                <div className="flex items-center justify-center gap-3 sm:gap-4 text-xs font-semibold text-emerald-700 mb-2">
+                  <Link href="/wiki" className="hover:underline">
+                    {language === "fa" ? "دانشنامه گیاهان" : "Encyclopedia"}
+                  </Link>
+                  <span className="text-slate-300">•</span>
                   <Link href="/blog" className="hover:underline">
-                    {language === "fa" ? "وبلاگ نگهداری گیاهان" : "Care Blog"}
+                    {language === "fa" ? "وبلاگ نگهداری" : "Care Blog"}
                   </Link>
                   <span className="text-slate-300">•</span>
                   <Link href="/marketplace" className="hover:underline">
@@ -222,6 +226,12 @@ export function LandingPage() {
             <span className="font-bold text-slate-800 tracking-tight">{t("app_title")}</span>
           </div>
           <div className="hidden xs:flex sm:flex items-center gap-1 sm:gap-2 me-1">
+            <Link
+              href="/wiki"
+              className="text-xs font-semibold text-slate-600 hover:text-emerald-700 transition-colors px-2.5 py-1 rounded-full hover:bg-white/60"
+            >
+              {language === "fa" ? "دانشنامه" : "Wiki"}
+            </Link>
             <Link
               href="/blog"
               className="text-xs font-semibold text-slate-600 hover:text-emerald-700 transition-colors px-2.5 py-1 rounded-full hover:bg-white/60"

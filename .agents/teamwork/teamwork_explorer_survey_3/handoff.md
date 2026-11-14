@@ -1,438 +1,561 @@
-# Handoff Report — Explorer Survey 3: Automated Daily AI Advice, Caching & Subscription Gating
+# Survey Handoff Report: Marketplace Architecture & Dynamic Blog/Wiki Cross-Linking (R3)
 
-- **Agent ID**: explorer_survey_3
-- **Role**: Codebase Researcher (Advice & Subscription Logic)
-- **Working Directory**: `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3`
-- **Target Requirements**: R3 (Automated Daily AI Advice & Caching) & R4 (Preservation of Subscription Gating)
-- **Status**: Completed
+**Author**: `teamwork_explorer_survey_3`  
+**Date**: 2026-11-13  
+**Status**: Completed  
+**Milestone**: Investigation & Architecture for Requirement R3 (Blog-to-Marketplace Cross-Linking) & Shared Wiki CTAs  
 
 ---
 
 ## 1. Observation
 
-### 1.1 Current `WeatherAdvice.tsx` Implementation & Manual Button Flow
-Direct inspection of `src/components/WeatherAdvice.tsx` (lines 13–76, 116–124):
-```tsx
-export function WeatherAdvice() {
-  const { user } = useAuth()
-  const subscribed = isSubscriptionActive(user?.subscriptionExpiresAt)
+Direct observations from the Jaliz codebase:
 
-  const [loading, setLoading] = useState(false)
-  const [advice, setAdvice] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [userLocation, setUserLocation] = useState<string>("")
-  const { language, t } = useLanguage()
+### 1.1 Marketplace Routing and Page Structure
+- **Routes observed**:
+  - `src/app/marketplace/page.tsx`: Client-rendered marketplace catalog (`"use client"`).
+    - Lines 28–36 define filter tabs: `"all"` (`ArrowLeftRight`), `"seed"` (`Sprout`), `"cutting"` (`Scissors`), `"tool"` (`Wrench`), `"produce"` (`Apple`), and `"mine"`.
+    - Lines 81–82 initialize filter state:
+      ```tsx
+      const [activeTab, setActiveTab] = useState<Tab>("all")
+      const [search, setSearch] = useState("")
+      ```
+    - Lines 92–102 compute filtered listings via `list({ query: search, type: activeTab })`.
+  - `src/app/marketplace/[id]/page.tsx`: SSR listing product page with `generateMetadata`, canonical link, and JSON-LD `schema.org/Product` structured data (lines 79–100).
+  - `src/app/marketplace/chats/page.tsx`: Direct message inbox between buyers and sellers.
+  - `src/app/marketplace/layout.tsx`: Layout setting metadata ("بازارچه خرید و فروش بذر، قلمه و ابزار باغبانی").
 
-  useEffect(() => {
-    // Read user location from localStorage or fallback
-    const loc = localStorage.getItem("jaliz-location")
-    if (loc) {
-      setUserLocation(loc)
-    } else {
-      setUserLocation(language === "en" ? "Tehran, IR" : "تهران، ایران")
-    }
-  }, [language])
-
-  if (!subscribed) {
-    return null
-  }
-
-  const fetchAdvice = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      let userPlants: unknown[] = []
-      const data = await getUserPlantsAction()
+### 1.2 Query Parameter Ingestion in `/marketplace`
+- In `src/app/marketplace/page.tsx`:
+  - Lines 38–74 implement `MarketplaceOpenFromQuery`:
+    ```tsx
+    function MarketplaceOpenFromQuery({ setSelectedId, onOpenCreate }: ...) {
+      const searchParams = useSearchParams()
       ...
-      const mockLocation = { latitude: 35.6892, longitude: 51.3890 }
-      const responseData = await getWeatherAdviceAction({
-        latitude: mockLocation.latitude,
-        longitude: mockLocation.longitude,
-        userLocation: userLocation,
-        language: language,
-        plants: userPlants
-      })
-      if (responseData && responseData.error) {
-        throw new Error(responseData.error)
-      }
-      setAdvice(typeof responseData.advice === "string" ? responseData.advice : JSON.stringify(responseData.advice))
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred.")
-    } finally {
-      setLoading(false)
-    }
-  }
-  ...
-  <CardFooter className="bg-slate-50/50 pt-4 border-t border-slate-100">
-    <Button
-      onClick={fetchAdvice}
-      disabled={loading}
-      className="w-full"
-    >
-      {loading ? t("generating_btn") : t("generate_btn")}
-    </Button>
-  </CardFooter>
-```
-**Observations**:
-1. When mounted, `advice` is initialized to `null` and `loading` is `false`.
-2. There is no `useEffect` or lifecycle hook that calls `fetchAdvice()` on mount. The card content displays empty space (`<div className="h-4"></div>`) until the user manually clicks the button.
-3. No caching mechanism exists: advice is kept strictly in component local state (`useState<string | null>(null)`). Navigating away from `/schedule` or reloading the page loses the advice completely, requiring another manual button click and another billable LLM request.
-4. `getUserPlantsAction()` is called on every manual click even though `usePlants()` context already caches plants in `PlantsProvider`.
-
----
-
-### 1.2 Backend API & Server Action Flow
-Direct inspection of `src/app/actions/ai.ts` (lines 298–339, 410–418):
-```ts
-export async function getWeatherAdviceAction(data: { latitude: number, longitude: number, userLocation?: string, language?: string, plants: any[] }): Promise<any> {
-  try {
-    const userId = await getSessionUserId();
-    if (!userId || !(await userHasActiveSubscription(userId))) {
-      return {
-        error: data.language === "fa"
-          ? "دسترسی به هواشناسی هوشمند نیازمند اشتراک فعال است."
-          : "Smart weather advice requires an active subscription."
-      };
-    }
-
-    const { apiKey: globalApiKey, model: globalModel, provider } = await getAiConfig();
-    ...
-    if (process.env.API_URL) {
-      const response = await fetch(`${getApiBase()}/api/advice`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, api_key, model_name, provider }),
-      });
-      ...
-      return await response.json();
-    }
-
-    // Direct JS call fallback
-    const weatherData = await fetchWeather(data.latitude, data.longitude);
-    ...
-    const advice = await callLlmDirect({ provider, apiKey: api_key, modelName: model_name, prompt, temperature: 0.7 });
-    return { advice };
-  }
-```
-**Observations**:
-1. The server action enforces strict server-side subscription validation:
-   `if (!userId || !(await userHasActiveSubscription(userId)))`
-   Returns localized error if not subscribed.
-2. Supports both Python FastAPI backend (`/api/advice`) via `process.env.API_URL` and direct JS fallback via `fetchWeather` and `callLlmDirect` (Gemini, Sotoon, GapGPT, or TokenBazaar).
-3. If LLM call times out, returns friendly localized error advising the user to try a faster model.
-
----
-
-### 1.3 Subscription Gating & Paywall Architecture
-Direct inspection of `src/components/Dashboard.tsx` (lines 26–28, 109–218):
-```tsx
-export function Dashboard() {
-  const { t, language } = useLanguage()
-  const { user, refreshUser } = useAuth()
-  const subscribed = isSubscriptionActive(user?.subscriptionExpiresAt)
-  ...
-  {!subscribed ? (
-    /* Entire irrigation & weather section is locked */
-    <div className="relative overflow-hidden rounded-3xl border border-emerald-100/60 bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-50 text-emerald-950 shadow-[0_8px_30px_rgb(0,0,0,0.04)] ...">
-      {/* Blurred preview of both watering and weather sections */}
-      <div className="select-none p-6 md:p-8 blur-[3px] opacity-40 space-y-6" aria-hidden="true">
-        {/* Blurred Watering Schedule preview */}
+      useEffect(() => {
+        if (!ready) return
+        const raw = searchParams.get("open")
+        const action = searchParams.get("action")
+        const shouldCreate = action === "new" || searchParams.get("create") === "1"
         ...
-        {/* Blurred Weather Advice preview */}
-        ...
-      </div>
+      }, [searchParams, ready, ...])
+    }
+    ```
+  - **Direct Observation & Gap**: `searchParams.get("query")` and `searchParams.get("q")` are **never read anywhere** in `src/app/marketplace/page.tsx`.
+  - When a user or link navigates to `/marketplace?query=سانسوریا`, `search` state remains `""`, meaning the incoming query parameter does not currently populate the search input or filter listings.
 
-      {/* Lock card overlay */}
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-emerald-950/20 px-5 backdrop-blur-[2px]">
-        <div className="w-full max-w-md rounded-3xl border border-white/50 bg-white/95 p-6 md:p-8 text-center shadow-2xl backdrop-blur-md ...">
-          <Lock className="h-7 w-7" />
-          <h3 className="text-xl font-bold text-emerald-950">
-            {language === "fa" ? "بخش آبیاری و هواشناسی هوشمند قفل است" : "Smart Watering & Weather Advice are Locked"}
-          </h3>
-          ...
-          <div className="mt-5 rounded-2xl bg-emerald-50/80 border border-emerald-100 p-3 text-center">
-            <p className="text-2xl font-black tracking-tight text-emerald-900">
-              {formatToman(SUBSCRIPTION_PRICE_TOMAN, language)}
-              <span className="ms-1.5 text-sm font-semibold text-emerald-700/70">
-                {language === "fa" ? "/ ماه" : "/ month"}
-              </span>
-            </p>
-          </div>
-          ...
-          <Button onClick={handleBuySubscription} disabled={checkoutLoading} className="...">
-            ... {language === "fa" ? "خرید اشتراک و فعال‌سازی" : "Buy subscription"}
-          </Button>
-        </div>
-      </div>
-    </div>
-  ) : (
-    /* Unlocked view: Watering Schedule & Weather Advice */
-    <div className="space-y-8 ...">
-      <WateringSchedule />
-      <WeatherAdvice />
-    </div>
-  )}
-```
-**Observations**:
-1. When `subscribed` is false:
-   - Neither `WateringSchedule` nor `WeatherAdvice` is mounted.
-   - The user sees a blurred preview overlaying both watering and weather advice placeholders.
-   - A lock card appears with subscription pricing (`99,000 تومان / ماه`) and a button triggering `createSubscriptionPaymentAction()`.
-2. When `subscribed` is true:
-   - The unlocked container mounts `WateringSchedule` and `WeatherAdvice`.
-3. In `WeatherAdvice.tsx`, line 33:
-   `if (!subscribed) return null;`
-   Provides an additional client-side guard.
-4. In `src/lib/subscription.ts`, `isSubscriptionActive(expiresAt)` returns `true` iff `new Date(expiresAt).getTime() > now.getTime()`.
+### 1.3 Data Persistence and Providers
+- **Prisma Schema** (`prisma/schema.prisma` lines 120–145):
+  - Model `MarketplaceListing` holds: `id`, `ownerId`, `title`, `description`, `type` (`seed` | `cutting` | `tool` | `produce`), `mode` (`sell` | `exchange` | `free`), `price` (Int?), `exchangeFor`, `location`, `image`, `contactPhone`, `status` (`active` | `completed`), `createdAt`, `completedAt`.
+- **Server Actions** (`src/app/actions/marketplace.ts`):
+  - `getMarketplaceListingsAction()` fetches all listings ordered by status and createdAt.
+  - `getListingByIdAction(id)` and `getListingWithOwnerAction(id)` fetch single listings with owner info.
+- **Client Providers** (`src/components/MarketplaceProvider.tsx` & `src/components/MarketplaceListingsProvider.tsx`):
+  - `MarketplaceListingsProvider` provides `ready`, `revision`, `list(filter)`, `get(id)`.
+  - `useMarketplace({ loadListings = true })`:
+    - Calling `useMarketplace()` with `loadListings: true` (default) triggers `ensureLoaded()` which calls `getMarketplaceListingsAction()`.
+    - `list({ query, type, mode, status })` performs local in-memory filtering:
+      ```ts
+      if (q && !`${l.title} ${l.description}`.toLowerCase().includes(q)) return false
+      ```
 
----
+### 1.4 Existing AI Advice Matching Mechanism
+- `src/lib/marketplace/advice-listing-match.ts`:
+  - `ADVICE_PRODUCT_TERM_GROUPS` defines synonym clusters for fertilizers, fungicides, pesticides, soil, pots, seeds, cuttings, pruning shears, mulch, and tools (lines 4–15).
+  - `normalizeForMatch(text)` removes `\u200c`, `\u200f`, `\u00a0`, collapses whitespace, and lowercases.
+  - `matchListingsToAdvice(adviceText, contextText, listings, options)` scores active listings and returns the top matches.
+- `src/components/marketplace/AdviceMarketplaceStrip.tsx`:
+  - Renders a horizontal scrolling strip of matching listing cards inside `PlantModal.tsx` when `aiAdvice` is present.
 
-### 1.4 Date Handling & Existing Local Date Utilities
-Direct inspection of `src/lib/relative-date.ts` (lines 11–17):
-```ts
-/** Local calendar date as YYYY-MM-DD (avoids UTC shift from toISOString). */
-export function toLocalDateString(date: Date = new Date()): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, "0")
-  const d = String(date.getDate()).padStart(2, "0")
-  return `${y}-${m}-${d}`
-}
-```
-**Observations**:
-1. `src/lib/relative-date.ts` already contains a tested, robust `toLocalDateString()` function specifically built to prevent UTC shift (avoiding timezone bugs for users in Iran, UTC+3:30).
-2. It returns ISO format `YYYY-MM-DD` in the user's local timezone.
+### 1.5 Blog System Structure & Existing Cross-Linking
+- `src/lib/blogTopics.ts`:
+  - `BlogPost` interface:
+    - `slug: string`
+    - `lang: "fa" | "en"`
+    - `title: string`
+    - `description: string`
+    - `category: string` (e.g. `"معرفی گیاهان"`, `"نگهداری"`, `"آموزش‌های کاربردی"`)
+    - `categoryEn: string` (e.g. `"plants"`, `"care"`, `"tutorials"`)
+    - `keywords: string[]`
+    - `primaryKeyword: string`
+    - `cluster: BlogCluster` (`"species"` | `"diagnosis"` | `"season"` | `"space"` | `"tutorial"` | `"care"` | `"plants"`)
+- `src/app/blog/[slug]/BlogPostClient.tsx`:
+  - Lines 143–190 render a dark callout banner ("پزشک هوشمند گیاهان جالیز") with links to `/plants/diagnose` and a generic static button to `/marketplace`.
+  - Lines 226–270 render related blog articles (`relatedPosts`).
+  - **Direct Observation & Gap**: There is currently NO dynamic matching of plant species or keywords to related marketplace listings on blog post pages.
 
----
-
-### 1.5 Storage & Testing Patterns in Existing Codebase
-Inspection of `src/lib/install-prompt.ts` and `src/lib/__tests__/install-prompt.test.ts`:
-```ts
-export function isInstallPromptDismissed(
-  now: number = Date.now(),
-  storage: Pick<Storage, "getItem"> | null = typeof window !== "undefined" ? localStorage : null
-): boolean { ... }
-```
-And its test pattern in `src/lib/__tests__/install-prompt.test.ts`:
-```ts
-function memoryStorage(initial: Record<string, string> = {}) {
-  const data = { ...initial }
-  return {
-    getItem: (key: string) => (key in data ? data[key] : null),
-    setItem: (key: string, value: string) => { data[key] = value },
-    _data: data,
-  }
-}
-```
-Inspection of `vitest.config.ts`:
-```ts
-export default defineConfig({
-  resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
-  test: {
-    environment: "node",
-    include: ["src/**/__tests__/**/*.test.ts"],
-  },
-})
-```
-**Observations**:
-1. `vitest` runs in `node` environment (not jsdom) and only executes files matching `src/**/__tests__/**/*.test.ts` (notice `.test.ts`, NOT `.tsx`).
-2. Codebase uses dependency-injected storage (`storage: Pick<Storage, ...> | null = typeof window !== "undefined" ? localStorage : null`) to enable 100% unit test coverage in Vitest Node environment without requiring DOM/jsdom dependencies.
-3. Test suite execution: `npm test` ran 34 test files, all 272 tests passed.
-4. **Current Test Gap**: Zero tests exist for `WeatherAdvice.tsx` or daily advice caching.
+### 1.6 Blog Validation Rules (`scripts/validate-blog.mjs`)
+- Line 78 defines allowed CTA targets:
+  `const JALIZ_CTA_TARGETS = ["/plants/diagnose", "/schedule", "/marketplace"]`
+- Linking to `/marketplace` is an officially recognized core CTA target in the project.
 
 ---
 
 ## 2. Logic Chain
 
-1. **Auto-Fetch Requirement (R3)**:
-   - *Premise*: User should not have to manually click "مشاوره" to receive care advice.
-   - *Inference*: On component mount in `WeatherAdvice.tsx` (or parent `/schedule` view), when `subscribed === true` and `user?.id` exists, an effect must automatically trigger the fetch flow.
-   - *Condition*: If valid advice is already cached for the current calendar day, use the cached advice immediately without issuing an API request or showing a loading spinner. If no cache exists, set `loading = true`, execute `getWeatherAdviceAction`, cache the successful result, and set state.
+1. **Requirement R3 Intent**:
+   - The user request explicitly demands:
+     *"In species blog articles or at the bottom of blog articles, dynamically link to related marketplace listings based on matching plant keywords or tags to drive commercial intent."*
+   - Furthermore, requirement R1 (Encyclopedia) requires:
+     *"Include clear call-to-action (CTA) buttons on each plant page: add to user's garden / care reminder, browse matching marketplace listings (`/marketplace?query=...`), and diagnose plant leaf diseases with AI (`/plants/diagnose`)."*
+   - DISPATCH.md directs us to make this cross-linking mechanism reusable across both `/blog/[slug]` and `/wiki/[slug]`.
 
-2. **Daily Caching Strategy (R3)**:
-   - *Premise*: Advice results must be cached per user per calendar day to eliminate redundant LLM calls on repeat visits.
-   - *Key Design*:
-     Cache key must be user-isolated: `jaliz_daily_advice_${userId}`.
-     Cache payload structure:
-     ```ts
-     export interface DailyAdviceCacheEntry {
-       userId: string
-       date: string // e.g. "2026-11-13" via toLocalDateString()
-       advice: string
-       fetchedAt: number // epoch ms
-     }
-     ```
-   - *Invalidation Logic*:
-     When checking cache on mount:
-     `entry = getCachedDailyAdvice(user.id)`
-     If `entry.date !== toLocalDateString(new Date())` or `entry.userId !== user.id`, the cache is invalid (new day turnover or user switch). Invalidate cache, fetch fresh advice from API, and overwrite with new date.
-   - *Resilience*:
-     Wrap all reads/writes in `try/catch` to handle SSR (`window === undefined`), corrupt JSON, and private browsing quota restrictions.
+2. **Connecting URLs to the Marketplace Catalog**:
+   - Because both R1 and R3 rely on `/marketplace?query=...` (e.g. `/marketplace?query=سانسوریا`), the `/marketplace` page must ingest the `query` query parameter.
+   - Based on Observation 1.2, `MarketplacePage` currently ignores `query`. Therefore, modifying `src/app/marketplace/page.tsx` to read `searchParams.get("query") || searchParams.get("q")` and synchronize it to the `search` state is a foundational prerequisite for the entire cross-linking experience to work.
 
-3. **Subscription Gating (R4)**:
-   - *Premise*: Non-subscribed users must see the paywall preview; subscribed users must receive automated advice & mascot insights.
-   - *Inference*:
-     - In `Dashboard.tsx`, the paywall gating `!subscribed` must be preserved. The blurred preview and lock card directing to ZarinPal checkout (`createSubscriptionPaymentAction()`) must remain active for non-subscribers.
-     - Auto-fetch MUST NOT execute if `!subscribed`. This prevents unnecessary server action errors and preserves backend security.
-     - Even if client code were manipulated, server action `getWeatherAdviceAction` enforces `userHasActiveSubscription(userId)` and rejects non-subscribers with a 403 error.
+3. **Topic & Species Resolution Strategy**:
+   - Houseplant articles fall into two distinct groups:
+     1. **Species-specific articles** (`cluster === "species"` or specific plant in title/slug/keywords):
+        - e.g. "نگهداری سانسوریا" -> plant name: "سانسوریا", query: "سانسوریا".
+        - e.g. "نگهداری پتوس" -> plant name: "پتوس", query: "پتوس".
+        - e.g. "نگهداری زامیفولیا" -> plant name: "زامیفولیا", query: "زامیفولیا".
+        - e.g. "نگهداری برگ انجیری" -> plant name: "برگ انجیری", query: "برگ انجیری".
+        - e.g. "نگهداری آگلونما" -> plant name: "آگلونما", query: "آگلونما".
+        - e.g. "نگهداری فیکوس" -> plant name: "فیکوس", query: "فیکوس".
+        - e.g. "نگهداری یوکا" -> plant name: "یوکا", query: "یوکا".
+        - e.g. "نگهداری دیفن باخیا" -> plant name: "دیفن باخیا", query: "دیفن باخیا".
+        - e.g. "نگهداری شفلرا" -> plant name: "شفلرا", query: "شفلرا".
+        - e.g. "نگهداری پپرومیا / قاشقی" -> plant name: "قاشقی", query: "قاشقی".
+        - e.g. "نگهداری اسپاتی فیلوم" -> plant name: "اسپاتی فیلوم", query: "اسپاتی فیلوم".
+     2. **Care & Equipment articles** (`cluster` in `"care"`, `"tutorial"`, `"diagnosis"`, `"space"`):
+        - Repotting / potting mix -> "خاک", "گلدان"
+        - Fertilization -> "کود"
+        - Pest diagnosis -> "سم", "قارچ‌کش"
+        - Moss pole / propagation -> "قیم خزه", "قلمه", "ابزار"
+        - Grow lights -> "لامپ رشد"
+   - By structuring a dictionary of plant synonyms and care topics with canonical Persian terms, we can reliably map any blog post or encyclopedia page to a commercial intent query.
 
-4. **Architecture & Testability**:
-   - Because `vitest.config.ts` runs in `node` environment and matches `src/**/__tests__/**/*.test.ts`, extracting the caching logic into a pure module `src/lib/daily-advice-cache.ts` allows writing comprehensive, fast, and robust unit tests in `src/lib/__tests__/daily-advice-cache.test.ts` without browser dependencies.
+4. **Component Design: Two-Tier Commercial Presentation**:
+   - In a production environment or active user base, there might be active listings matching "سانسوریا", or there might be periods where no seller has an active listing for that specific species yet.
+   - A robust cross-linking component must handle both states gracefully:
+     - **Tier 1 (Live Listings Preview)**: If `useMarketplace()` has active matching listings (`listing.title` or `listing.description` includes the topic query), display a responsive horizontal strip or grid of listing cards with photo, title, price in Toman, and direct link to `/marketplace?open=${listing.id}` (or `/marketplace/${listing.id}`).
+     - **Tier 2 (Commercial Action Banner)**: Regardless of whether active individual listings exist, ALWAYS display an attractive, high-converting commercial banner:
+       - Title: e.g. "خرید، فروش و تبادل قلمه و گیاه [سانسوریا] در بازارچه جالیز"
+       - Description: e.g. "دنبال خرید قلمه ریشه‌دار یا فروش پاجوش‌های گیاهت هستی؟ آگهی‌های ثبت‌شده کاربران در بازارچه گل و گیاه جالیز رو ببین."
+       - Primary CTA button: `<Link href={`/marketplace?query=${encodeURIComponent(query)}`}>مشاهده آگهی‌های [نام گیاه] در بازارچه</Link>`
+       - Secondary CTA button: `<Link href="/marketplace?action=new">ثبت رایگان آگهی</Link>`
+   - This guarantees that the page ALWAYS satisfies commercial intent without displaying an empty blank block when zero listings are seeded.
 
 ---
 
 ## 3. Caveats
 
-1. **No `@testing-library/react`**: The project does not currently have `@testing-library/react` or a jsdom environment configured in Vitest. Testing UI component lifecycles directly as `.tsx` is not supported by the current `vitest.config.ts` pattern (`environment: "node"`). Therefore, all caching, validation, and gating logic should be housed in TypeScript utility modules (`.ts`) where Vitest has 100% test capabilities.
-2. **Location Fallback**: Currently `WeatherAdvice.tsx` hardcodes coordinates `{ latitude: 35.6892, longitude: 51.3890 }` (Tehran). If the user hasn't set `jaliz-location` in Settings, it falls back to Tehran. This is existing expected behavior and does not block R3/R4.
-3. **Mascot Companion Synergy**: The mascot companion (R2) will be rendered on the same `/schedule` view. The mascot should be able to consume the daily advice (or care tips) to populate speech bubbles when advice is ready.
+1. **Client vs Server Rendering**:
+   - `src/app/blog/[slug]/page.tsx` uses `generateStaticParams()` to pre-render at build time.
+   - Because live marketplace listings fluctuate as users post, sell, or delete listings, live listing queries MUST run on the client via `useMarketplace()` inside `BlogPostClient.tsx`, rather than baking dynamic listings into the static HTML at build time.
+   - However, the contextual links and SEO-friendly CTA links (`href="/marketplace?query=..."`) are deterministic based on the post's species/topic, so they can be rendered in the initial HTML or hydrated immediately.
+2. **Database Seeding in Test Environments**:
+   - Tests in `src/lib/marketplace/__tests__/` use mock `Listing` objects and `InMemoryStore`. The topic matcher module must be pure TypeScript so it can be thoroughly unit tested in Vitest without database or browser dependencies.
+3. **URL Slug Preservation**:
+   - Slugs of existing blog posts must NEVER be changed, as this would break existing inbound links, backlinks, and search indexation. All topic matching operates on `slug`, `title`, `primaryKeyword`, `keywords`, and `cluster` as inputs.
 
 ---
 
-## 4. Conclusion & Actionable Design
+## 4. Conclusion & Architecture Proposal
 
-### Recommended Architecture for Implementers
+### 4.1 Component & File Architecture
 
-#### A. New Helper Module: `src/lib/daily-advice-cache.ts`
-Create a clean, tested cache helper:
-```ts
-import { toLocalDateString } from "@/lib/relative-date"
+```
+src/
+├── lib/
+│   └── marketplace/
+│       ├── topic-matcher.ts          # Pure logic: Persian normalization & topic detection
+│       └── __tests__/
+│           └── topic-matcher.test.ts  # Comprehensive Vitest unit tests
+├── components/
+│   └── marketplace/
+│       ├── MarketplaceCrossLink.tsx   # Reusable client component (strip + CTA banner)
+│       └── ...
+└── app/
+    ├── marketplace/
+    │   └── page.tsx                   # Updated to ingest `?query=...` search param
+    ├── blog/[slug]/
+    │   └── BlogPostClient.tsx         # Integrated with <MarketplaceCrossLink post={post} />
+    └── wiki/[slug]/                   # (R1) Integrates <MarketplaceCrossLink plantName={...} />
+```
 
-export interface DailyAdviceCacheEntry {
-  userId: string
-  date: string // YYYY-MM-DD
-  advice: string
-  fetchedAt: number
+---
+
+### 4.2 Detailed Specifications
+
+#### A. Topic Matcher (`src/lib/marketplace/topic-matcher.ts`)
+
+```typescript
+export interface MarketplaceTopic {
+  id: string
+  nameFa: string
+  nameEn: string
+  searchQuery: string
+  synonyms: string[]
+  isSpecies: boolean
+  headlineFa: string
+  descriptionFa: string
+  ctaTextFa: string
 }
 
-export function getDailyAdviceCacheKey(userId: string): string {
-  return `jaliz_daily_advice_${userId}`
+export const MARKETPLACE_PLANT_TOPICS: readonly MarketplaceTopic[] = [
+  {
+    id: "sansevieria",
+    nameFa: "سانسوریا",
+    nameEn: "Snake Plant",
+    searchQuery: "سانسوریا",
+    synonyms: ["سانسوریا", "شمشیری", "snake plant", "sansevieria"],
+    isSpecies: true,
+    headlineFa: "خرید، فروش و تبادل قلمه و پاجوش سانسوریا",
+    descriptionFa: "دنبال قلمه ریشه‌دار یا بوته شاداب سانسوریا ابلق و شمشیری هستید؟ آگهی‌های کاربران جالیز را در بازارچه ببینید.",
+    ctaTextFa: "مشاهده آگهی‌های سانسوریا در بازارچه",
+  },
+  {
+    id: "pothos",
+    nameFa: "پتوس",
+    nameEn: "Pothos",
+    searchQuery: "پتوس",
+    synonyms: ["پتوس", "پوتوس", "pothos", "epipremnum"],
+    isSpecies: true,
+    headlineFa: "خرید و تبادل قلمه پتوس سبز، ابلق و نئون",
+    descriptionFa: "انواع قلمه‌های ریشه‌دار در آب و گلدان‌های پرپشت پتوس را بدون واسطه از عاشقان گل و گیاه بخرید.",
+    ctaTextFa: "مشاهده آگهی‌های پتوس در بازارچه",
+  },
+  {
+    id: "zz-plant",
+    nameFa: "زامیفولیا",
+    nameEn: "ZZ Plant",
+    searchQuery: "زامیفولیا",
+    synonyms: ["زامیفولیا", "زاموفیلیا", "zz plant", "zamioculcas"],
+    isSpecies: true,
+    headlineFa: "خرید و فروش پیاز و ریزوم زامیفولیا بلک و سبز",
+    descriptionFa: "پاجوش‌ها و ریزوم‌های سالم زامیفولیا با مقاومت بالا را در بازارچه محلی جالیز پیدا کنید.",
+    ctaTextFa: "مشاهده آگهی‌های زامیفولیا در بازارچه",
+  },
+  {
+    id: "monstera",
+    nameFa: "برگ انجیری",
+    nameEn: "Monstera",
+    searchQuery: "برگ انجیری",
+    synonyms: ["برگ انجیری", "مونسترا", "monstera"],
+    isSpecies: true,
+    headlineFa: "خرید و تبادل قلمه و بوته برگ انجیری (مونسترا)",
+    descriptionFa: "قلمه‌های ریشه‌هوایی‌دار و برگ‌های شیاردار غول‌پیکر مونسترا را در بازارچه گل و گیاه جالیز جستجو کنید.",
+    ctaTextFa: "مشاهده آگهی‌های برگ انجیری در بازارچه",
+  },
+  {
+    id: "ficus",
+    nameFa: "فیکوس",
+    nameEn: "Ficus",
+    searchQuery: "فیکوس",
+    synonyms: ["فیکوس", "الاستیکا", "لیراتا", "بنجامین", "ficus"],
+    isSpecies: true,
+    headlineFa: "خرید و فروش انواع فیکوس لیراتا، الاستیکا و بنجامین",
+    descriptionFa: "درختچه‌ها و قلمه‌های زیبا و شاداب فیکوس را مستقیم از گلخانه‌داران و کاربران جالیز تهیه کنید.",
+    ctaTextFa: "مشاهده آگهی‌های فیکوس در بازارچه",
+  },
+  {
+    id: "aglaonema",
+    nameFa: "آگلونما",
+    nameEn: "Aglaonema",
+    searchQuery: "آگلونما",
+    synonyms: ["آگلونما", "aglaonema"],
+    isSpecies: true,
+    headlineFa: "خرید و فروش آگلونما برفی، صورتی و سفید",
+    descriptionFa: "پاجوش‌ها و گلدان‌های شاداب آگلونما مقاوم به کم‌نوری را در بازارچه گل و گیاه جالیز بیابید.",
+    ctaTextFa: "مشاهده آگهی‌های آگلونما در بازارچه",
+  },
+  {
+    id: "yucca",
+    nameFa: "یوکا",
+    nameEn: "Yucca",
+    searchQuery: "یوکا",
+    synonyms: ["یوکا", "yucca"],
+    isSpecies: true,
+    headlineFa: "خرید و تبادل قلمه و نخل یوکا آپارتمانی",
+    descriptionFa: "تنه و قلمه‌های مقاوم یوکا را برای فضای منزل یا محیط کار در بازارچه جستجو کنید.",
+    ctaTextFa: "مشاهده آگهی‌های یوکا در بازارچه",
+  },
+  {
+    id: "dieffenbachia",
+    nameFa: "دیفن باخیا",
+    nameEn: "Dieffenbachia",
+    searchQuery: "دیفن باخیا",
+    synonyms: ["دیفن باخیا", "دیفن‌باخیا", "dieffenbachia"],
+    isSpecies: true,
+    headlineFa: "خرید و فروش قلمه و بوته دیفن باخیا",
+    descriptionFa: "گیاهان پهن‌برگ و قلمه‌های شاداب دیفن باخیا در بازارچه گل و گیاه جالیز.",
+    ctaTextFa: "مشاهده آگهی‌های دیفن باخیا در بازارچه",
+  },
+  {
+    id: "schefflera",
+    nameFa: "شفلرا",
+    nameEn: "Schefflera",
+    searchQuery: "شفلرا",
+    synonyms: ["شفلرا", "schefflera"],
+    isSpecies: true,
+    headlineFa: "خرید و تبادل قلمه و درختچه شفلرا ابلق و سبز",
+    descriptionFa: "قلمه‌های ریشه‌دار و گلدان‌های چندشاخه شفلرا در بازارچه جالیز.",
+    ctaTextFa: "مشاهده آگهی‌های شفلرا در بازارچه",
+  },
+  {
+    id: "peperomia",
+    nameFa: "قاشقی",
+    nameEn: "Peperomia",
+    searchQuery: "قاشقی",
+    synonyms: ["قاشقی", "پپرومیا", "peperomia"],
+    isSpecies: true,
+    headlineFa: "خرید و فروش قلمه و بوته پپرومیا قاشقی",
+    descriptionFa: "گیاهان مینیاتوری و برگ‌گوشتی قاشقی ابلق و سبز در بازارچه جالیز.",
+    ctaTextFa: "مشاهده آگهی‌های قاشقی در بازارچه",
+  },
+  {
+    id: "spathiphyllum",
+    nameFa: "اسپاتی فیلوم",
+    nameEn: "Peace Lily",
+    searchQuery: "اسپاتی فیلوم",
+    synonyms: ["اسپاتی فیلوم", "اسپاتی‌فیلوم", "اسپاتی", "peace lily"],
+    isSpecies: true,
+    headlineFa: "خرید و تبادل بوته گلدار اسپاتی فیلوم (گل صلح)",
+    descriptionFa: "اسپاتی فیلوم تصفیه‌کننده هوا و شاداب با گل‌های سفید را در بازارچه جالیز پیدا کنید.",
+    ctaTextFa: "مشاهده آگهی‌های اسپاتی فیلوم در بازارچه",
+  },
+  // Care & Product Topics
+  {
+    id: "fertilizer",
+    nameFa: "کود و تقویتی",
+    nameEn: "Fertilizer",
+    searchQuery: "کود",
+    synonyms: ["کود", "کوددهی", "فسفر", "آهن", "npk", "fertilizer", "fertiliser"],
+    isSpecies: false,
+    headlineFa: "خرید انواع کودهای تقویتی، آهن و NPK",
+    descriptionFa: "کودهای تخصصی رشد برگ، ریشه‌زایی و اسید هیومیک را بدون واسطه در بازارچه باغبانی جالیز بیابید.",
+    ctaTextFa: "مشاهده کودهای گیاهان در بازارچه",
+  },
+  {
+    id: "soil",
+    nameFa: "خاک و بستر کشت",
+    nameEn: "Soil & Potting Mix",
+    searchQuery: "خاک",
+    synonyms: ["خاک", "پیت ماس", "پرلیت", "کوکوپیت", "لیکا", "soil", "potting"],
+    isSpecies: false,
+    headlineFa: "خرید خاک سبک، پرلیت و پیت‌ماس ارگانیک",
+    descriptionFa: "بسترهای کشت آماده، پرلیت دانه‌درشت و پوکه معدنی مخصوص گلدان‌های آپارتمانی در بازارچه جالیز.",
+    ctaTextFa: "مشاهده خاک و بستر کشت در بازارچه",
+  },
+  {
+    id: "pot",
+    nameFa: "گلدان",
+    nameEn: "Pots & Planters",
+    searchQuery: "گلدان",
+    synonyms: ["گلدان", "سفالی", "پلاستیکی", "سرامیکی", "pot", "planter"],
+    isSpecies: false,
+    headlineFa: "خرید انواع گلدان‌های سفالی، پلاستیکی و تزیینی",
+    descriptionFa: "گلدان‌های دارای زهکشی استاندارد، سفال طبیعی و زیرگلدانی مناسب در بازارچه جالیز.",
+    ctaTextFa: "مشاهده گلدان‌ها در بازارچه",
+  },
+  {
+    id: "pest-control",
+    nameFa: "سم و آفت‌کش",
+    nameEn: "Pest Control",
+    searchQuery: "سم",
+    synonyms: ["سم", "قارچ کش", "قارچ‌کش", "شپشک", "آفت کش", "آفت‌کش", "کنه", "pesticide", "fungicide"],
+    isSpecies: false,
+    headlineFa: "خرید سموم ارگانیک، آفت‌کش و قارچ‌کش گل و گیاه",
+    descriptionFa: "درمان قطعی شپشک آردآلود، کنه تارعنکبوتی و قارچ ریشه با سموم معتبر در بازارچه باغبانی جالیز.",
+    ctaTextFa: "مشاهده سموم و آفت‌کش‌ها در بازارچه",
+  },
+  {
+    id: "tools",
+    nameFa: "ابزار باغبانی و قیم",
+    nameEn: "Garden Tools",
+    searchQuery: "ابزار",
+    synonyms: ["قیم", "قیم خزه", "قیچی", "بیلچه", "رطوبت سنج", "ابزار", "tool", "shears"],
+    isSpecies: false,
+    headlineFa: "خرید قیم خزه، قیچی باغبانی و ابزار نگهداری",
+    descriptionFa: "ابزارهای هرس، رطوبت‌سنج خاک و قیم‌های خزه‌ای استاندارد برای رشد صعودی گیاهان در بازارچه.",
+    ctaTextFa: "مشاهده ابزارهای باغبانی در بازارچه",
+  },
+] as const
+```
+
+#### B. Topic Resolution Engine
+```typescript
+export function normalizePersian(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[\u200c\u200b\u200f\u00a0]/g, "")
+    .replace(/[ي]/g, "ی")
+    .replace(/[ك]/g, "ک")
+    .replace(/[ة]/g, "ه")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
-export function getCachedDailyAdvice(
-  userId: string,
-  todayDate: string = toLocalDateString(),
-  storage: Pick<Storage, "getItem"> | null = typeof window !== "undefined" ? localStorage : null
-): string | null {
-  if (!storage || !userId) return null
-  try {
-    const raw = storage.getItem(getDailyAdviceCacheKey(userId))
-    if (!raw) return null
-    const entry: DailyAdviceCacheEntry = JSON.parse(raw)
-    if (entry.userId === userId && entry.date === todayDate && typeof entry.advice === "string" && entry.advice.trim().length > 0) {
-      return entry.advice
+export function detectMarketplaceTopic(input: {
+  title?: string
+  slug?: string
+  keywords?: string[]
+  primaryKeyword?: string
+  cluster?: string
+  plantName?: string
+}): MarketplaceTopic {
+  // If an explicit plant name is provided (e.g. from Wiki), prioritize it
+  if (input.plantName) {
+    const normTarget = normalizePersian(input.plantName)
+    const found = MARKETPLACE_PLANT_TOPICS.find(
+      (t) => normalizePersian(t.nameFa) === normTarget || t.synonyms.some((s) => normalizePersian(s) === normTarget)
+    )
+    if (found) return found
+    return {
+      id: "custom",
+      nameFa: input.plantName,
+      nameEn: input.plantName,
+      searchQuery: input.plantName,
+      synonyms: [input.plantName],
+      isSpecies: true,
+      headlineFa: `خرید، فروش و تبادل قلمه و گیاه ${input.plantName}`,
+      descriptionFa: `قلمه‌ها و گلدان‌های شاداب ${input.plantName} را در بازارچه محلی گل و گیاه جالیز جستجو کنید.`,
+      ctaTextFa: `مشاهده آگهی‌های ${input.plantName} در بازارچه`,
     }
-  } catch {
-    // Malformed JSON or storage error
   }
-  return null
-}
 
-export function setCachedDailyAdvice(
-  userId: string,
-  advice: string,
-  todayDate: string = toLocalDateString(),
-  storage: Pick<Storage, "setItem"> | null = typeof window !== "undefined" ? localStorage : null
-): void {
-  if (!storage || !userId || !advice) return
-  try {
-    const entry: DailyAdviceCacheEntry = {
-      userId,
-      date: todayDate,
-      advice,
-      fetchedAt: Date.now(),
+  const combinedHaystack = normalizePersian(
+    [
+      input.primaryKeyword ?? "",
+      input.title ?? "",
+      input.slug ? input.slug.replace(/-/g, " ") : "",
+      ...(input.keywords ?? []),
+    ].join(" ")
+  )
+
+  // 1. Check for species matches first (higher priority for commercial plant trading)
+  for (const topic of MARKETPLACE_PLANT_TOPICS.filter((t) => t.isSpecies)) {
+    for (const syn of topic.synonyms) {
+      if (combinedHaystack.includes(normalizePersian(syn))) {
+        return topic
+      }
     }
-    storage.setItem(getDailyAdviceCacheKey(userId), JSON.stringify(entry))
-  } catch {
-    // Storage quota or error
   }
-}
 
-export function clearDailyAdviceCache(
-  userId: string,
-  storage: Pick<Storage, "removeItem"> | null = typeof window !== "undefined" ? localStorage : null
-): void {
-  if (!storage || !userId) return
-  try {
-    storage.removeItem(getDailyAdviceCacheKey(userId))
-  } catch {}
+  // 2. Check for care / product matches
+  for (const topic of MARKETPLACE_PLANT_TOPICS.filter((t) => !t.isSpecies)) {
+    for (const syn of topic.synonyms) {
+      if (combinedHaystack.includes(normalizePersian(syn))) {
+        return topic
+      }
+    }
+  }
+
+  // 3. Fallback to general marketplace topic
+  return {
+    id: "general",
+    nameFa: "گل و گیاه",
+    nameEn: "Plants & Tools",
+    searchQuery: "گیاه",
+    synonyms: [],
+    isSpecies: false,
+    headlineFa: "بازارچه خرید، فروش و تبادل گل، گیاه و بذر",
+    descriptionFa: "انواع گیاهان خانگی، قلمه، بذر و ادوات باغبانی را بدون واسطه در بازارچه جالیز بخرید یا بفروشید.",
+    ctaTextFa: "ورود به بازارچه گل و گیاه جالیز",
+  }
 }
 ```
 
-#### B. Updated `WeatherAdvice.tsx` Flow
-1. **Initial State with Cache Read**:
-   ```tsx
-   const [advice, setAdvice] = useState<string | null>(() => {
-     if (typeof window === "undefined" || !user?.id || !subscribed) return null
-     return getCachedDailyAdvice(user.id)
-   })
-   ```
-2. **Auto-Fetch Effect on Mount**:
-   ```tsx
-   useEffect(() => {
-     if (!subscribed || !user?.id) return
+---
 
-     const cached = getCachedDailyAdvice(user.id)
-     if (cached) {
-       setAdvice(cached)
-       return
-     }
+#### C. Cross-Link UI Component (`src/components/marketplace/MarketplaceCrossLink.tsx`)
+Key features:
+1. Calls `useMarketplace({ loadListings: true })`.
+2. Filters matching active listings using `list({ query: topic.searchQuery, status: "active" })`.
+3. If listings exist: renders a sleek, snap-scrolling carousel of mini listing cards (image, title, formatted price in Toman, link to `/marketplace?open=${listing.id}`).
+4. Always renders a high-converting gradient banner with:
+   - ShoppingBag / Store icon badge
+   - Title: `topic.headlineFa`
+   - Description: `topic.descriptionFa`
+   - Primary button: `<Link href={`/marketplace?query=${encodeURIComponent(topic.searchQuery)}`}>`
+   - Secondary button: `<Link href="/marketplace?action=new">ثبت آگهی رایگان</Link>`
+5. Clean, dark-mode-ready styling conforming to Jaliz design:
+   - RTL direction support (`dir="rtl"`)
+   - Emerald & amber gradient highlights
+   - Responsive layout (`flex-col md:flex-row`, smooth hover animations).
 
-     // Auto-fetch if not cached for today
-     void fetchAdvice()
-   }, [subscribed, user?.id])
-   ```
-3. **On Fetch Success**:
-   ```tsx
-   const text = typeof responseData.advice === "string" ? responseData.advice : JSON.stringify(responseData.advice)
-   setAdvice(text)
-   if (user?.id) {
-     setCachedDailyAdvice(user.id, text)
-   }
-   ```
-4. **UI Refinement**:
-   - Remove the requirement to click the button.
-   - Show Duolingo-style gamified advice card with mascot integration.
-   - Provide an optional subtle refresh / retry button if `error` occurs or user explicitly requests a re-check.
+---
 
-#### C. Preserving Paywall in `Dashboard.tsx`
-- Ensure `!subscribed` branch continues to display the blurred preview and payment lock card.
-- Subscribed users receive the unlocked experience with automated daily advice and companion mascot.
+#### D. Updating `/marketplace/page.tsx` for `?query=` Search Ingestion
+Modify `MarketplaceOpenFromQuery` in `src/app/marketplace/page.tsx`:
+```tsx
+function MarketplaceOpenFromQuery({
+  setSelectedId,
+  onOpenCreate,
+  setSearch,
+}: {
+  setSelectedId: (id: string) => void
+  onOpenCreate: () => void
+  setSearch: (query: string) => void
+}) {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const { get, ready } = useMarketplace()
+
+  useEffect(() => {
+    if (!ready) return
+    const raw = searchParams.get("open")
+    const action = searchParams.get("action")
+    const shouldCreate = action === "new" || searchParams.get("create") === "1"
+    const queryParam = searchParams.get("query") || searchParams.get("q")
+
+    if (queryParam) {
+      setSearch(queryParam)
+    }
+
+    if (shouldCreate) {
+      onOpenCreate()
+    } else if (raw) {
+      const openId = decodeURIComponent(raw)
+      if (get(openId)) setSelectedId(openId)
+    }
+
+    // Clean up modal query params while preserving the search query in URL
+    if (raw || shouldCreate) {
+      const sp = new URLSearchParams(searchParams.toString())
+      sp.delete("open")
+      sp.delete("action")
+      sp.delete("create")
+      const q = sp.toString()
+      router.replace(`${pathname}${q ? `?${q}` : ""}`, { scroll: false })
+    }
+  }, [searchParams, ready, get, router, pathname, setSelectedId, onOpenCreate, setSearch])
+
+  return null
+}
+```
 
 ---
 
 ## 5. Verification Method
 
-### 5.1 Automated Unit Tests
-Run the test suite with:
-```bash
-npm test
-```
-Create a new test file: `src/lib/__tests__/daily-advice-cache.test.ts` verifying:
-1. Cache hit when `userId` and `date` match today.
-2. Cache miss and invalidation when calendar date advances to next day.
-3. Cache isolation between different user IDs.
-4. Safe fallback on corrupted JSON in localStorage.
-5. SSR safety when `storage` is null.
-6. Explicit cache clearing.
+To independently verify the implementation once executed by worker agents:
 
-### 5.2 Manual Verification Steps
-1. **Auto-Fetch on Load**:
-   - Log in as a subscribed user.
-   - Clear `localStorage`.
-   - Navigate to `/schedule`.
-   - Verify advice begins fetching automatically without clicking any button.
-   - Verify advice appears upon completion.
-2. **Daily Caching**:
-   - Refresh the page or navigate away and back to `/schedule`.
-   - Verify advice appears immediately with zero loading spinner and zero network requests to `/api/advice` or `getWeatherAdviceAction`.
-   - Check `localStorage.getItem("jaliz_daily_advice_<userId>")` contains today's date in `YYYY-MM-DD`.
-3. **Day Invalidation**:
-   - In DevTools console, modify the cached date to yesterday:
-     `const c = JSON.parse(localStorage.getItem("jaliz_daily_advice_<userId>")); c.date = "2026-11-01"; localStorage.setItem("jaliz_daily_advice_<userId>", JSON.stringify(c));`
-   - Reload `/schedule`.
-   - Verify a fresh fetch is automatically triggered for the new day.
-4. **Subscription Paywall**:
-   - Log in as an unsubscribed user.
-   - Navigate to `/schedule`.
-   - Verify paywall blurred preview and lock card are shown with price 99,000 Toman.
-   - Verify no advice API calls are made in the Network tab.
+1. **Unit Tests**:
+   - Run vitest test suite for topic detection:
+     `npm test src/lib/marketplace/__tests__/topic-matcher.test.ts`
+   - Test that each species post (`نگهداری-سانسوریا`, `نگهداری-پتوس`, `نگهداری-زامیفولیا`, `نگهداری-برگ-انجیری`, `نگهداری-آگلونما`, `نگهداری-یوکا`, `نگهداری-دیفن-باخیا`, `نگهداری-شفلرا`, `نگهداری-پپرومیا`, `نگهداری-اسپاتی-فیلوم`) accurately maps to its expected query.
+   - Test that care/tutorial posts map to appropriate product queries (`کود`, `خاک`, `گلدان`, `سم`, `ابزار`).
+
+2. **End-to-End Build & Lint**:
+   - `npm run lint` — Must report 0 errors and 0 warnings.
+   - `npm run build` — Must compile all static and dynamic pages with 0 TypeScript errors.
+
+3. **In-Browser / Route Verification**:
+   - Navigate to `/blog/نگهداری-سانسوریا`:
+     - Inspect rendered HTML to confirm `<MarketplaceCrossLink>` appears.
+     - Verify link href points to `/marketplace?query=%D8%B3%D8%A7%D9%86%D8%B3%D9%88%D8%B1%DB%8C%D8%A7` (URL encoded "سانسوریا").
+   - Click the CTA button:
+     - Verify navigation to `/marketplace?query=سانسوریا`.
+     - Confirm search input automatically displays `"سانسوریا"`.
+     - Confirm listing catalog filters by `"سانسوریا"`.
+   - Verify on `/wiki/[slug]` (once R1 lands):
+     - Confirm that browsing matching marketplace listings directs to `/marketplace?query=[plantName]`.
+
+4. **Invalidation Conditions**:
+   - If `/marketplace?query=...` fails to filter listings on page load.
+   - If blog posts fail to display relevant marketplace CTAs or crash when no listings exist.
+   - If TypeScript errors arise in `npm run build`.

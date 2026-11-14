@@ -1,7 +1,11 @@
-# BRIEFING — 2026-11-13T06:30:00Z
+# BRIEFING — 2026-11-13T21:31:00Z
 
 ## Mission
-Redesign the Jaliz plant irrigation and care page (`/schedule`) into a dynamic, motivating, and gamified experience inspired by Duolingo, featuring an expressive mascot companion, contextual speech bubbles, automated daily AI advice with per-user daily caching, and strict preservation of subscription gating.
+Implement the remaining SEO Master strategy items for Jaliz (jalizapp.ir):
+1. Programmatic Houseplant Encyclopedia under `/wiki` and `/wiki/[slug]` with structured care details, valid JSON-LD, CTAs (garden care reminder, marketplace query, AI leaf disease diagnosis), and sitemap/robots registration.
+2. HowTo JSON-LD schema for tutorial blog articles in `src/app/blog/[slug]/page.tsx`.
+3. Dynamic blog-to-marketplace cross-linking driving commercial intent.
+4. CTR optimization for blog titles in blog data (emojis, brackets, hooks).
 
 ## 🔒 My Identity
 - Archetype: orchestrator
@@ -10,6 +14,7 @@ Redesign the Jaliz plant irrigation and care page (`/schedule`) into a dynamic, 
 - Original parent: Sentinel
 - Original parent conversation ID: b1486dee-c761-4300-94e0-5b47c0f4cd5a
 - Mission 2 Parent ID: fe0c94df-3599-4b17-ba56-9d77175980d3
+- Mission 3 Parent ID: 34bd9723-e430-4171-a2dd-caf18ee16ed4
 
 ## 🔒 My Workflow
 - **Pattern**: Project
@@ -20,20 +25,13 @@ Redesign the Jaliz plant irrigation and care page (`/schedule`) into a dynamic, 
 4. **Succession**: At 16 spawns, write handoff.md, spawn successor.
 - **Work items**:
   1. Survey & Codebase Analysis [done]
-  2. SEO Architecture & Article Specification [done]
-  3. E2E Validation Script & Test Infrastructure [done]
-  4. Content Implementation Batches (Milestones 3 & 4) [done]
-  5. Full Validation & Verification Gate (Milestone 5) [done]
-- **Current phase**: 4 (Final Acceptance & Sentinel Reporting)
-- **Current focus**: Final verification, hard handoff, and completion report to Sentinel
-- **Mission 2 (Gamified Schedule & Mascot)**:
-  - Phase 0: Survey codebase (3 parallel Explorers) [done]
-  - Phase 1: PROJECT.md & Milestones architecture [done]
-  - Milestone 1: Automated Test Suite Infrastructure (M1) [done]
-  - Milestone 2: Core Gamification, Dialogue & Caching Logic (M2) [done]
-  - Milestone 3: Gamified UI, Mascot Components & Integration (M3) [done]
-  - Milestone 4: Gate verification Iteration 1 (FAIL: challenger 1 requested fix for storage SecurityError) [done]
-  - Milestone 4: Remediation & Gate Iteration 2 (PASS: 451/451 tests passing, tsc 0 errors, reviewers/challengers approve, audit clean) [done]
+  2. Architecture Decomposition & PROJECT.md [done]
+  3. Milestone 1: Core Engines & Data Layer [done]
+  4. Milestone 2: Wiki Encyclopedia & Routing [done]
+  5. Milestone 3: Blog HowTo, Marketplace Cross-Linking & Title CTR [in-progress]
+  6. Milestone 4: Final Gate Verification & Forensic Audit [pending]
+- **Current phase**: 2 (Dual Track Execution: Milestone 3 completion)
+- **Current focus**: Finalizing Title CTR optimizations across blog data files.
 
 ## 🔒 Key Constraints
 - Never write, modify, or create source code files directly.
@@ -45,65 +43,43 @@ Redesign the Jaliz plant irrigation and care page (`/schedule`) into a dynamic, 
 - Forensic audit is a binary veto.
 
 ## Current Parent
-- Conversation ID: fe0c94df-3599-4b17-ba56-9d77175980d3
-- Updated: 2026-11-13T06:30:00Z
+- Conversation ID: 34bd9723-e430-4171-a2dd-caf18ee16ed4
+- Updated: 2026-11-13T21:31:00Z
 
 ## Key Decisions Made
-- Milestone M4 Gate Iteration 1:
-  - reviewer_1: APPROVE
-  - reviewer_2: APPROVE
-  - challenger_2: APPROVE
-  - auditor_1: CLEAN
-  - challenger_1: REQUEST_CHANGES (unhandled SecurityError on storage access)
-- Gate Iteration 1 Result: FAIL. Dispatched worker_m4_remediation_1 to wrap window.localStorage in try/catch in resolveStorage.
-- Milestone M4 Gate Iteration 2:
-  - worker_m4_remediation_1: DONE (resolveStorage try/catch fix, 74/74 stress tests pass, 451/451 total tests pass, tsc 0 errors)
-  - challenger_1: RESOLVED / APPROVE
-  - Gate Result: PASS. Project complete.
+- Safety timer refreshed to task-245.
+- worker_m3_2 verified actively executing.
 
 ## Team Roster
 | Agent | Type | Work Item | Status | Conv ID |
 |-------|------|-----------|--------|---------|
-| explorer_survey_1 | teamwork_explorer | Schedule UI & Gamification Survey | completed | 835d2838-a213-4294-8be5-162a25eb32bb |
-| explorer_survey_2 | teamwork_explorer | Mascot Design & Visual States Survey | completed | 01d2a525-43ab-429c-b78c-5d6bdb84363e |
-| explorer_survey_3 | teamwork_explorer | AI Advice Caching & Subscription Survey | completed | 9a3e188a-b5c3-46f9-b624-9efb6a72c580 |
-| test_writer_m1_1 | teamwork_test_writer | Automated Test Suite Infrastructure (M1) | completed | 77cac740-2ef3-4cca-b65b-a760685cab54 |
-| worker_m2_1 | teamwork_worker | Core Gamification, Dialogue & Caching Logic (M2) | completed | 55aa589d-17cb-4da3-a867-a995f91a39a9 |
-| worker_m3_1 | teamwork_worker | Gamified UI, Mascot Components & Integration (M3) | completed | 478ffddf-4e71-4aa8-8cee-addbdadf9840 |
-| reviewer_m4_1 | teamwork_reviewer | Code Quality & Architecture Review | completed | f13490a7-e8b4-4a1e-943c-02e81579ba16 |
-| reviewer_m4_2 | teamwork_reviewer | UX & Robustness Review | completed | 111873af-8798-40e5-a610-b15b48bee4ee |
-| challenger_m4_1 | teamwork_challenger | Adversarial State & Caching Stress Test | completed | e79a203f-12bf-47ae-9c76-0b0656ad25fd |
-| challenger_m4_2 | teamwork_challenger | Adversarial Task & Gamification Verification | completed | 03386b33-0fe1-46e0-9e71-995e20a912e4 |
-| auditor_m4_1 | teamwork_auditor | Forensic Integrity Audit | completed | 8bacb009-403b-462f-a466-a799ebf2b5b9 |
-| worker_m4_remediation_1 | teamwork_worker | Remediation for Storage SecurityError | completed | 563cfaf1-fa21-4fca-9a60-39a398971331 |
+| explorer_survey_1 | teamwork_explorer | Plant Encyclopedia & Routing Survey | completed | 7c5c7993-ec5a-4be7-8c35-f2905103ab55 |
+| explorer_survey_2 | teamwork_explorer | Blog System & HowTo Schema Survey | completed | d24b7956-2bbe-4c47-882a-5dbd4bf72d72 |
+| explorer_survey_3 | teamwork_explorer | Marketplace & Cross-Linking Survey | completed | c548825d-24f6-4edc-8031-6063488f7e20 |
+| test_writer_e2e_1 | teamwork_test_writer | E2E Testing Suite (Tiers 1-4) | completed | 59f39ecb-6209-4e87-92a4-ed4065e08d2e |
+| worker_m1_1 | teamwork_worker | Milestone 1: Core Engines & Data Layer | completed | 6a808f51-fcf5-4bab-a706-fc4e251601e2 |
+| worker_m2_1 | teamwork_worker | Milestone 2: Wiki Encyclopedia & Routing | completed | a05ff217-90f3-404e-b169-2137b3b7f3e9 |
+| worker_m3_1 | teamwork_worker | Milestone 3: Blog Enhancements & Cross-Linking | failed (network) | 4b583237-5a1f-46d8-8cef-afa3f14fe9d1 |
+| worker_m3_2 | teamwork_worker | Milestone 3: CTR Title Polish & Verification | in-progress | 404b4e92-4de9-4cf8-91c4-5314f15efb95 |
 
 ## Succession Status
 - Succession required: no
-- Spawn count: 12 / 16
-- Pending subagents: none
+- Spawn count: 8 / 16
+- Pending subagents: 404b4e92-4de9-4cf8-91c4-5314f15efb95
 - Predecessor: none
 - Successor: not required
 
 ## Active Timers
-- Heartbeat cron: None (completed all work)
-- Safety timer: None
+- Heartbeat cron: task-62 (*/10 * * * *)
+- Safety timer: task-245 (600s)
 
 ## Artifact Index
 - /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md — Authoritative User Request
-- /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/DISPATCH.md — Dispatch log from Sentinel
+- /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/DISPATCH.md — Dispatch log
 - /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/BRIEFING.md — Persistent state
 - /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/progress.md — Progress tracker
-- /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/PROJECT.md — Project plan & feature inventory
-- /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/GATE_STATUS.md — Structured gate verdict tracking
-- /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/handoff.md — Hard handoff report
+- /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/PROJECT.md — Scope document
 - /Users/sotoon/personal/jaliz/TEST_INFRA.md — Test infrastructure documentation
-- /Users/sotoon/personal/jaliz/TEST_READY.md — Test ready declaration and coverage matrix
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_test_writer_m1_1/handoff.md — M1 test writer report
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m2_1/handoff.md — M2 worker report
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1/handoff.md — M3 worker report
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_reviewer_m4_1/handoff.md — Reviewer 1 report (APPROVE)
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_reviewer_m4_2/handoff.md — Reviewer 2 report (APPROVE)
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_challenger_m4_1/handoff.md — Challenger 1 report (REQUEST_CHANGES)
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_challenger_m4_2/handoff.md — Challenger 2 report (APPROVE)
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_auditor_m4_1/handoff.md — Auditor report (CLEAN)
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m4_remediation_1/handoff.md — Remediation worker report (DONE)
+- /Users/sotoon/personal/jaliz/TEST_READY.md — Test ready declaration and tier matrix
+- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m1_1/handoff.md — M1 handoff report
+- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m2_1/handoff.md — M2 handoff report

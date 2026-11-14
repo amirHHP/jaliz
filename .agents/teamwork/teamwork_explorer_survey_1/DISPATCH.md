@@ -1,33 +1,49 @@
-# Dispatch for Explorer 1: Schedule UI, Care Tasks & Gamified Experience
+# Task Assignment: Plant Encyclopedia & Routing Survey
 
-- Agent ID: explorer_survey_1
-- Archetype: teamwork_explorer
-- Role: Codebase Researcher (Schedule UI & Gamification)
-- Working Directory: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1
+## Working Directory
+/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1
+
+## User Request
+Read: /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md
 
 ## Objective
-Read `/Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md` and investigate the existing codebase for the plant irrigation and care page (`/schedule`), focusing on:
-1. Routing and component structure: `src/app/schedule/` (or equivalent), `src/components/Dashboard.tsx`, `src/components/WateringSchedule.tsx`, etc.
-2. Current plant care state management: how plants, watering schedules, overdue/today/upcoming tasks, and task completion are handled.
-3. Visual feedback & UX: how completing a watering task currently behaves, visual indicators, animations.
-4. Duolingo-style gamification elements: streak tracking, daily progress/completion rings, XP/points/badges, motivating Persian micro-copy, vibrant color palette, card styling.
-5. Identify existing tests touching schedule/dashboard/watering.
+Investigate how to build the scalable programmatic plant encyclopedia directory at `/wiki` and dynamic pages `/wiki/[slug]` for popular houseplants in Jaliz (Next.js App Router).
+Specifically investigate:
+1. Existing plant data, schemas, or care guide data in `src/` (e.g. `src/data/`, `src/lib/`, `src/types/`, etc.). Is there an existing database or mock data for plants?
+2. The requirements for the plant data:
+   - Must cover popular houseplants (e.g., سانسوریا، پتوس، زامیفولیا، برگ انجیری، فیکوس، آگلونما، یوکا، دیفن باخیا، شفلرا، کالانکوئه، قاشقی، اسپاتی فیلوم, and more).
+   - Structured care specifications: Light (نور), Watering (آبیاری), Temperature (دما), Soil (خاک), Pet Safety (سمیت برای حیوانات), Common Problems (مشکلات رایج).
+   - Valid JSON-LD structured data schema (e.g. Article, Thing, or custom schema structure suited for plant guides/species).
+3. The CTAs required on each plant page:
+   - Add to user's garden / care reminder (how does Jaliz handle adding plants to care schedule or user garden? e.g. `/schedule`, modal, or action)
+   - Browse matching marketplace listings (`/marketplace?query=...`)
+   - Diagnose plant leaf diseases with AI (`/plants/diagnose` or existing diagnosis route)
+4. Routing, sitemap, and SEO:
+   - `src/app/sitemap.ts` (current structure and how `/wiki` and dynamic slugs should be registered)
+   - `src/app/robots.ts` or `public/robots.txt` (ensure `/wiki` is crawlable)
+   - Breadcrumb navigation, metadata generation (`generateMetadata`), open graph tags, Persian typography, responsive layout.
 
-## Deliverables
-Write your comprehensive analysis to `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1/handoff.md`.
-Report back when finished.
+## Output Requirements
+Produce a comprehensive handoff report at `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1/handoff.md` with:
+- Codebase evidence (file paths, exact types, existing routes)
+- Recommended plant encyclopedia data structure and file locations
+- Step-by-step implementation plan for R1
 
 
-## 2026-11-13T05:00:10Z
-You are explorer_survey_1, a teamwork_explorer subagent.
+## 2026-11-13T19:59:22Z
+You are teamwork_explorer_survey_1, a read-only exploration agent.
 Your working directory is: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1
-Read your dispatch instructions in /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1/DISPATCH.md.
-MANDATORY: You MUST read /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md before starting work.
-Focus on:
-1. Routing and component structure for /schedule (`src/app/schedule/`, `src/components/Dashboard.tsx`, `src/components/WateringSchedule.tsx`, etc.).
-2. Plant care state, task lists (overdue, today, upcoming), and completion handlers.
-3. Duolingo-style gamification opportunities (streaks, XP, level, progress rings, celebration feedback, Persian micro-copy).
-4. Identify existing test files related to schedule and dashboard.
-Write your complete structured handoff report to:
-/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1/handoff.md
-When done, notify your orchestrator via send_message.
+Your task assignment is in: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1/DISPATCH.md
+The authoritative user request is in: /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md
+
+You MUST read /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md first before starting your investigation.
+Follow all instructions in DISPATCH.md.
+Investigate the codebase thoroughly to map the plant encyclopedia directory under `/wiki`, individual dynamic pages `/wiki/[slug]`, structured care details, JSON-LD schema, CTAs, sitemap, and robots.txt.
+Produce a comprehensive handoff report at /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_1/handoff.md.
+When done, message me with your completion notification.
+
+
+## 2026-11-13T20:18:35Z
+**Context**: Server restart recovery
+**Content**: The server was restarted. Please resume your exploration of the plant encyclopedia directory (/wiki), dynamic plant pages (/wiki/[slug]), structured care specifications, JSON-LD, CTAs, sitemap, and robots.txt per DISPATCH.md.
+**Action**: Complete your survey investigation, write your findings to handoff.md, and message me when finished.

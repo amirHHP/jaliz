@@ -1,118 +1,114 @@
-# Jaliz Plant Care & Gamification — Testing Infrastructure (Milestone M1)
+# Jaliz SEO Master Strategy — Testing Infrastructure (Tiers 1-4)
 
-This document details the automated testing infrastructure created for the **Jaliz Plant Care & Schedule Gamification Redesign** (`/schedule`), satisfying user requirements **R1–R4** and interface contracts established in `PROJECT.md § Interface Contracts`.
+This document details the automated testing infrastructure created for the **Jaliz SEO Master Strategy Implementation**, satisfying user requirements **R1–R4** and interface contracts established in `PROJECT.md` and `ORIGINAL_REQUEST.md`.
 
 ---
 
-## 1. Architectural Overview
+## 1. Architectural Overview & Test Philosophy
 
-The test infrastructure establishes opaque-box, contract-driven unit test suites under `src/lib/__tests__/` to support test-driven development (TDD) across all gamification, mascot dialogue, task partitioning, and AI advice caching modules.
+The test infrastructure provides opaque-box, contract-driven, non-facade test suites located under `src/lib/__tests__/`. It enforces rigorous end-to-end coverage across all botanical encyclopedia data models, Schema.org HowTo generators, marketplace topic matchers, CTR title enhancements, and search engine crawlers.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│               Jaliz Gamified Care Testing Infrastructure               │
+│            Jaliz SEO Master Strategy Testing Infrastructure            │
 ├──────────────────────────────────┬─────────────────────────────────────┤
-│ Module Test Suite                │ Scope & Interface Contract          │
+│ Test Suite                       │ Scope & Interface Contract          │
 ├──────────────────────────────────┼─────────────────────────────────────┤
-│ 1. `daily-advice-cache.test.ts`  │ Advice caching, date invalidation,  │
-│    (17 unit tests)               │ user isolation, SSR/null resilience │
+│ 1. `wiki-data.test.ts`           │ Botanical encyclopedia data model,  │
+│    (14 tests, Tiers 1–4)         │ 12+ required species, care specs,   │
+│                                  │ pet safety, and common problems     │
 ├──────────────────────────────────┼─────────────────────────────────────┤
-│ 2. `mascot.test.ts`              │ Emotional state engine, hour cutoffs│
-│    (18 unit tests)               │ Persian/English contextual dialogue │
+│ 2. `blog-how-to.test.ts`         │ Tutorial article detection,         │
+│    (10 tests, Tiers 1–4)         │ Schema.org HowTo JSON-LD generator, │
+│                                  │ non-tutorial safe null fallback     │
 ├──────────────────────────────────┼─────────────────────────────────────┤
-│ 3. `care-tasks.test.ts`          │ Task partitioning (overdue, today,  │
-│    (15 unit tests)               │ upcoming), progress %, due text     │
+│ 3. `topic-matcher.test.ts`       │ Persian species & care topic engine,│
+│    (13 tests, Tiers 1–4)         │ zero-width non-joiner & Arabic norm,│
+│                                  │ marketplace search query synthesis  │
 ├──────────────────────────────────┼─────────────────────────────────────┤
-│ 4. `gamification.test.ts`        │ Consecutive care streaks, gaps,     │
-│    (20 unit tests)               │ gardener levels (1-5), XP rewards   │
+│ 4. `blog-titles-ctr.test.ts`     │ 104 frozen slugs (zero route break),│
+│    (10 tests, Tiers 1–4)         │ CTR enhancements (emojis, brackets, │
+│                                  │ hooks), primary keyword preservation│
+├──────────────────────────────────┼─────────────────────────────────────┤
+│ 5. `seo-sitemap-routes.test.ts`  │ `/wiki` encyclopedia & plant slugs  │
+│    (8 tests, Tiers 1–4)          │ sitemap registration, robots.txt    │
+│                                  │ crawl permissions, URL deduplication│
 └──────────────────────────────────┴─────────────────────────────────────┘
 ```
 
-Total: **70 comprehensive test cases** covering Tiers 1 through 5.
+Total: **55 comprehensive test cases** spanning Tiers 1 through 4.
 
 ---
 
 ## 2. Test Suites Specification
 
-### 1. Daily Advice Cache (`src/lib/__tests__/daily-advice-cache.test.ts`)
-- **Target Module**: `src/lib/daily-advice-cache.ts`
+### 1. Botanical Encyclopedia Data (`src/lib/__tests__/wiki-data.test.ts`)
+- **Target Module**: `src/lib/wikiData.ts`
 - **Tiers Covered**:
-  - **Tier 1 (Key Naming & Storage)**: Validates `jaliz_daily_advice_${userId}` key structure and JSON payload schema (`userId`, `date`, `advice`, `fetchedAt`).
-  - **Tier 2 (Date Boundary & Invalidation)**: Verifies cache hit on matching calendar date (`today`), cache miss/invalidation when advancing to next calendar day (`todayDate !== cachedDate`), and default fallback to local date (`toLocalDateString()`).
-  - **Tier 3 (User Isolation)**: Ensures User A's advice never leaks to User B; cache clearing for User A does not disturb User B's cache.
-  - **Tier 4 (Resilience & SSR Safety)**: Validates graceful `null` return on corrupted JSON, non-object primitives, missing properties, mismatched userId, storage quota exceptions (`QuotaExceededError`), and `null`/undefined storage in SSR contexts without throwing.
+  - **Tier 1 (Core Inventory & Retrieval)**: Validates `getAllWikiPlants()` returns >= 12 plants, ensures all 12 authoritative species from R1 exist (سانسوریا، پتوس، زامیفولیا، برگ انجیری، فیکوس، آگلونما، یوکا، دیفن باخیا، شفلرا، کالانکوئه، قاشقی، اسپاتی فیلوم), guarantees 100% unique URL-safe slugs, and tests `getPopularWikiPlants()`.
+  - **Tier 2 (Care Specifications Schema Integrity)**: Enforces strict typing and presence of `light` (level, description, windowPlacement), `watering` (schedule, description, defaultIntervalDays > 0), `temperature` (range, minCelsius, maxCelsius, frostTolerance), `soil` (type, description, drainageTips), `petSafety` (isToxic boolean, warningFa), and `commonProblems` (array >= 2, problemFa, causeFa, solutionFa, severity).
+  - **Tier 3 (Boundary & Resilience Testing)**: Graceful `undefined` return on nonexistent slugs, empty strings, and whitespace strings. Safe handling of URL-encoded slugs (`encodeURIComponent`) and empty array return on nonexistent categories.
+  - **Tier 4 (Botanical Accuracy & Persian Localization)**: Disallows placeholder tokens (`[TBD]`, `undefined`, `NaN`). Validates toxicological accuracy for high-risk plants (Dieffenbachia) and physical realism of watering intervals (ZZ drought resistance vs Peace Lily moisture requirements).
 
-### 2. Mascot State & Dialogue (`src/lib/__tests__/mascot.test.ts`)
-- **Target Module**: `src/lib/mascot-dialogue.ts`
+### 2. Blog HowTo Schema (`src/lib/__tests__/blog-how-to.test.ts`)
+- **Target Module**: `src/lib/blogHowTo.ts`
 - **Tiers Covered**:
-  - **Tier 1 (Thirsty State)**: Resolves `"thirsty"` when `plantsToWaterCount > 0 && !isDoneToday` during active daytime hours.
-  - **Tier 2 (Celebrating State)**: Resolves `"celebrating"` when `isDoneToday === true`.
-  - **Tier 3 (Thriving State)**: Resolves `"thriving"` when all plants are hydrated (`totalPlants > 0 && plantsToWaterCount === 0`).
-  - **Tier 4 (Resting State & Hour Boundaries)**: Resolves `"resting"` when `totalPlants === 0` or during night hours (`hour >= 20 || hour < 5`). Validates hour boundaries (0, 4, 5, 19, 20, 23) and default system hour.
-  - **Tier 5 (Persian/English Micro-copy)**: Generates encouraging Persian micro-copy for thirsty plants (with plant name injection), celebrated completion, thriving garden, empty garden, and streak milestones. Enforces 0% `undefined`/`null` leakage and validates English output mode.
+  - **Tier 1 (Tutorial Post Classification)**: Correctly identifies tutorial posts by cluster (`"tutorial"`), category (`"آموزش‌های کاربردی"`, `"tutorials"`), tags, and procedural content. Correctly rejects non-tutorial posts (care overviews, species showcases).
+  - **Tier 2 (HowTo JSON-LD Structure)**: Verifies Schema.org specification conformance (`@type: "HowTo"`, `name`, `description`, `inLanguage`, sequential 1-based `position` integers for `HowToStep` items). Verifies optional supplies and tools extraction.
+  - **Tier 3 (Exception Immunity & Safe Fallbacks)**: Guarantees non-tutorial articles return `null` without throwing. Handles malformed or empty content strings safely.
+  - **Tier 4 (Adversarial HTML Sanitization)**: Strips raw HTML markup, bold tags, and dangerous `<script>` tags from step names and descriptions. Ensures gapless sequential numbering.
 
-### 3. Care Tasks Partitioning (`src/lib/__tests__/care-tasks.test.ts`)
-- **Target Module**: `src/lib/care-tasks.ts`
+### 3. Marketplace Topic Matcher (`src/lib/__tests__/topic-matcher.test.ts`)
+- **Target Module**: `src/lib/marketplace/topic-matcher.ts`
 - **Tiers Covered**:
-  - **Tier 1 (Partitioning Structure)**: Partitions plant collections into `overdue`, `today`, and `upcoming` buckets. Handles empty plant collections with 100% completion.
-  - **Tier 2 (Boundary Calculations & Formatted Text)**: Calculates exact `dueDays` offsets (`-2` overdue, `0` today, `+3` upcoming) and formatted localized strings ("امروز", "۲ روز تاخیر", "۳ روز دیگر"). Falls back to `lastWatered + wateringInterval` when `nextWateringDate` is absent.
-  - **Tier 3 (Progress Percentage)**: Accurately computes `totalDueToday`, `completedCount` (based on `lastWatered` matching today), and `completionPercentage`. Enforces 100% completion when `isDoneToday === true` and rounds fractional percentages to nearest integer.
-  - **Sorting Order**: Validates that overdue items are sorted with most overdue first, and upcoming items are sorted soonest first.
+  - **Tier 1 (Species Keyword Extraction)**: Matches exact Persian species names (سانسوریا, پتوس, زامیفولیا, برگ انجیری, فیکوس, آگلونما, یوکا, دیفن باخیا, شفلرا, کالانکوئه, قاشقی, اسپاتی فیلوم) across titles, slugs, and keywords. Populates engaging commercial titleFa and descriptionFa.
+  - **Tier 2 (Care Topics & Supplies Matching)**: Maps care subjects to marketplace queries: soil/substrates (`خاک`), fertilizers (`کود`), pest control/fungicides (`سم`), moss poles (`قیم`), and pots (`گلدان`).
+  - **Tier 3 (Persian Normalization & Character Resilience)**: Seamlessly normalizes zero-width non-joiners (`\u200c`), Arabic `ي` to Persian `ی`, Arabic `ك` to Persian `ک`, and strips punctuation and noisy hashtags.
+  - **Tier 4 (Robust Fallbacks & Contract Guarantees)**: Returns a sensible general houseplant marketplace query when input is empty or non-botanical without throwing. Prioritizes specific plant species over generic accessories.
 
-### 4. Gamification Mechanics (`src/lib/__tests__/gamification.test.ts`)
-- **Target Module**: `src/lib/gamification.ts`
+### 4. Blog Titles CTR & Route Stability (`src/lib/__tests__/blog-titles-ctr.test.ts`)
+- **Target Modules**: `src/lib/blogData.ts`, `src/lib/blogPostsNew.ts`, `src/lib/blogPostsSeo.ts`, `src/lib/blogPostsExpansion1.ts`, `src/lib/blogPostsExpansion2.ts`
 - **Tiers Covered**:
-  - **Tier 1 (Consecutive Day Calculation)**: Calculates streaks from date arrays (`string` | `Date`), supports unsorted arrays, and deduplicates multiple logs on the same calendar day.
-  - **Tier 2 (Streak Continuity / Pending Today)**: Preserves active streak when today is not yet logged, but yesterday was logged (streak remains intact, waiting for today's routine).
-  - **Tier 3 (Streak Break)**: Enforces reset to 0 when a gap of 2 or more days occurs. Ignores invalid date strings gracefully.
-  - **Tier 4 (Gardener Levels)**: Maps XP to levels:
-    - Level 1: `Sprout` / `جوانه` (0–99 XP)
-    - Level 2: `Seedling` / `نهال` (100–249 XP)
-    - Level 3: `Green Bush` / `بوته سبز` (250–499 XP)
-    - Level 4: `Specialist` / `متخصص` (500–999 XP)
-    - Level 5: `Master` / `استاد باغبان` (1000+ XP)
-    - Clamps negative XP safely to Level 1.
-  - **Tier 5 (XP Rewards)**:
-    - `water_plant`: 10 XP
-    - `daily_complete`: 25 XP
-    - `streak_milestone`: 50 XP
+  - **Tier 1 (Frozen Slug Invariance & Zero Route Breakage)**: Strictly verifies all 104 slugs remain frozen and unchanged, guarantees 0% duplicate slugs, and preserves bilingual `alternateSlug` pairings.
+  - **Tier 2 (Title Integrity & Bracket Balancing)**: Enforces character limits (10–120 chars) and validates that Unicode full-width brackets (`【...】`), square brackets (`[...]`), and parentheses are strictly balanced and closed. Disallows unrendered template markers.
+  - **Tier 3 (CTR Optimization & Hooks)**: Verifies presence of CTR enhancement elements (emojis like 🪴, 🌱, 🌿, 💧, ✂️; brackets `【...】`; and compelling Persian action hooks like "راهنمای جامع", "علت", "روش طلایی", "تضمینی").
+  - **Tier 4 (Topical Relevancy & Keyword Preservation)**: Guarantees titles retain primary keywords and essential topic terms, preventing clickbait drift.
+
+### 5. SEO Sitemap & Robots Registration (`src/lib/__tests__/seo-sitemap-routes.test.ts`)
+- **Target Modules**: `src/app/sitemap.ts`, `src/app/robots.ts`
+- **Tiers Covered**:
+  - **Tier 1 (Static Route Inclusion)**: Verifies `sitemap()` includes the `/wiki` encyclopedia index with search priority >= 0.8 and valid changeFrequency. Preserves existing static routes.
+  - **Tier 2 (Dynamic Plant Routes)**: Verifies `sitemap()` includes dynamic entries for every plant slug from `getAllWikiPlants()` with priority >= 0.7.
+  - **Tier 3 (Robots.txt Crawl Directives)**: Verifies `robots()` does NOT disallow `/wiki` or `/wiki/`, and confirms `sitemap.xml` is registered.
+  - **Tier 4 (URL Sanity & Deduplication)**: Guarantees zero duplicate URLs across the sitemap and prevents double slashes in paths.
 
 ---
 
-## 3. Verification & Execution Commands
+## 3. Progressive Testability & TDD Status Matrix
 
+| Test Suite | Total Tests | M1 Status | Downstream Target Milestone |
+|------------|-------------|-----------|-----------------------------|
+| `wiki-data.test.ts` | 14 | ✅ 14 PASSED | M1 Complete |
+| `blog-how-to.test.ts` | 10 | ✅ 10 PASSED | M1 Complete |
+| `topic-matcher.test.ts` | 13 | ✅ 13 PASSED | M1 Complete |
+| `blog-titles-ctr.test.ts` | 10 | 🟡 9 Passed / 1 RED | M3 (CTR Title Polish) |
+| `seo-sitemap-routes.test.ts` | 8 | 🟡 6 Passed / 2 RED | M2 (Sitemap Registration) |
+| **Total** | **55** | **52 Passed / 3 RED** | **Full Green in M2 & M3** |
+
+---
+
+## 4. How to Execute Tests
+
+To run the full E2E SEO test suite:
 ```bash
-# 1. Run all 4 new gamification test suites
-npx vitest run src/lib/__tests__/daily-advice-cache.test.ts src/lib/__tests__/mascot.test.ts src/lib/__tests__/care-tasks.test.ts src/lib/__tests__/gamification.test.ts
-
-# 2. Run individual test suites
-npx vitest run src/lib/__tests__/daily-advice-cache.test.ts
-npx vitest run src/lib/__tests__/mascot.test.ts
-npx vitest run src/lib/__tests__/care-tasks.test.ts
-npx vitest run src/lib/__tests__/gamification.test.ts
-
-# 3. Run full regression test suite (38 test files, 342 tests)
-npm test
-
-# 4. Verify TypeScript type safety
-npx tsc --noEmit
+npx vitest run src/lib/__tests__/wiki-data.test.ts src/lib/__tests__/blog-how-to.test.ts src/lib/__tests__/topic-matcher.test.ts src/lib/__tests__/blog-titles-ctr.test.ts src/lib/__tests__/seo-sitemap-routes.test.ts
 ```
 
----
-
-## 4. TDD Lifecycle & Progressive Readiness
-
-- **Milestone M1 (Current)**:
-  - All 4 test suites created (70 tests total).
-  - Type-safe placeholder stubs in `src/lib/` created conforming to `PROJECT.md § Interface Contracts`.
-  - Tests compile with 0 TypeScript errors (`npx tsc --noEmit` passes).
-  - Test suites execute in Vitest and fail as expected (RED state) on unimplemented placeholder stubs.
-  - Existing 34 test files (272 tests) pass 100% without regression.
-- **Milestone M2 (Downstream Implementation)**:
-  - The implementation agent implements the core logic in:
-    - `src/lib/daily-advice-cache.ts`
-    - `src/lib/mascot-dialogue.ts`
-    - `src/lib/care-tasks.ts`
-    - `src/lib/gamification.ts`
-    - `getWateringStreakAction` in `src/app/actions/plants.ts`
-  - All 70 tests in the M1 suite transition to GREEN (100% passing).
+To run individual test suites:
+```bash
+npx vitest run src/lib/__tests__/wiki-data.test.ts
+npx vitest run src/lib/__tests__/blog-how-to.test.ts
+npx vitest run src/lib/__tests__/topic-matcher.test.ts
+npx vitest run src/lib/__tests__/blog-titles-ctr.test.ts
+npx vitest run src/lib/__tests__/seo-sitemap-routes.test.ts
+```

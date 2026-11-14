@@ -1,56 +1,64 @@
-# BRIEFING — 2026-11-13T05:37:30Z
+# BRIEFING — 2026-11-13T21:15:00Z
 
 ## Mission
-Implement core gamification, mascot dialogue, daily advice cache, care tasks partitioning, and getWateringStreakAction for Milestone 2.
+Implement Milestone 2: Programmatic Houseplant Encyclopedia directory under `/wiki`, dynamic pages `/wiki/[slug]`, JSON-LD structured data, 3 CTAs, garden reminder pre-population in `src/app/plants/new/page.tsx`, and sitemap registration in `src/app/sitemap.ts`.
 
 ## 🔒 My Identity
-- Archetype: teamwork_worker
+- Archetype: implementer
 - Roles: implementer, qa, specialist
 - Working directory: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m2_1
-- Original parent: c1c9a3e8-15d3-43cc-ad22-0cfdbfe15413
-- Milestone: milestone_2
+- Original parent: eed6eb13-3f90-4d26-9c91-172933d897e5
+- Milestone: milestone_2 (Programmatic Encyclopedia UI & Routing)
 
 ## 🔒 Key Constraints
 - DO NOT CHEAT. All implementations must be genuine. DO NOT hardcode test results, create dummy/facade implementations, or circumvent the intended task.
-- Only edit files in exclusive write ownership: `src/lib/daily-advice-cache.ts`, `src/lib/mascot-dialogue.ts`, `src/lib/care-tasks.ts`, `src/lib/gamification.ts`, `src/app/actions/plants.ts`.
-- All vitest tests and tsc must pass with 0 regressions.
+- Exclusive write ownership:
+  - `src/app/wiki/page.tsx` (create)
+  - `src/app/wiki/WikiIndexClient.tsx` (create)
+  - `src/app/wiki/[slug]/page.tsx` (create)
+  - `src/app/wiki/__tests__/wiki-pages.test.ts` (create)
+  - `src/app/plants/new/page.tsx` (edit query prefill)
+  - `src/app/sitemap.ts` (edit)
+- DO NOT modify blog data files or HowTo schema files.
+- All vitest tests (`src/lib/__tests__/seo-sitemap-routes.test.ts`, `src/app/wiki/__tests__/wiki-pages.test.ts`) and `npx tsc --noEmit` must pass with 0 regressions.
 
 ## Current Parent
-- Conversation ID: c1c9a3e8-15d3-43cc-ad22-0cfdbfe15413
-- Updated: 2026-11-13T05:26:17Z
+- Conversation ID: eed6eb13-3f90-4d26-9c91-172933d897e5
+- Updated: 2026-11-13T21:15:00Z
 
 ## Task Summary
-- **What to build**: Implement `daily-advice-cache.ts`, `mascot-dialogue.ts`, `care-tasks.ts`, `gamification.ts`, and `getWateringStreakAction` in `src/app/actions/plants.ts`.
-- **Success criteria**: 70 tests in the 4 target test suites pass, all 342 project tests pass, tsc --noEmit passes.
-- **Interface contracts**: `/Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/PROJECT.md`
-- **Code layout**: `src/lib` and `src/app/actions`
+- **What to build**:
+  1. `/wiki` directory index page (`src/app/wiki/page.tsx` & `src/app/wiki/WikiIndexClient.tsx`) with search, 5 category filters, responsive Persian typography, and SEO metadata.
+  2. `/wiki/[slug]` dynamic plant pages (`src/app/wiki/[slug]/page.tsx`) with SSG (`generateStaticParams`), metadata (`generateMetadata`), Article + BreadcrumbList + FAQPage JSON-LD schemas, care specifications (Light, Watering, Temperature, Soil, Pet Safety, Common Problems), 3 CTAs, related plants, and related blog links.
+  3. Pre-fill plant draft in `src/app/plants/new/page.tsx` from `useSearchParams` (`name`, `interval`, `light`, `type`) wrapped in Suspense with automatic transition to step 2.
+  4. Sitemap registration in `src/app/sitemap.ts` (`/wiki` and all plant slugs).
+  5. Verify `robots.ts` allows `/wiki`.
+- **Success criteria**:
+  - `npx vitest run src/lib/__tests__/seo-sitemap-routes.test.ts` passes 100%.
+  - `npx vitest run src/app/wiki/__tests__/wiki-pages.test.ts` passes 100%.
+  - `npx tsc --noEmit` completes with 0 errors.
 
 ## Key Decisions Made
-- `daily-advice-cache.ts`: Robust error-resilient storage access using `resolveStorage` with full try/catch wrapping, JSON validation against schema and userId/date match.
-- `mascot-dialogue.ts`: Clean state machine prioritizing night resting hours (<5, >=20) and empty gardens, then celebrating if isDoneToday, then thirsty if count > 0, then thriving. Bilingual Persian/English micro-copy with zero null/undefined leakage.
-- `care-tasks.ts`: UTC midnight math for exact day-difference calculations immune to local timezone drift. Persian digit formatting for relative due text. Accurate 100% completion handling for empty/completed states.
-- `gamification.ts`: Deduplicated date sets supporting Date objects, local strings, and ISO strings. Backward day walk with active streak protection when today is pending. 5-tier gardener levels with negative XP clamping.
-- `plants.ts`: Added `getWateringStreakAction` server action backed by Prisma `wateringLog.findMany`.
-
-## Artifact Index
-- `DISPATCH.md` — Task dispatch and instructions
-- `progress.md` — Liveness heartbeat and task execution log
-- `handoff.md` — Final completion handoff report
+- Used Next.js client component pattern (`WikiIndexClient.tsx`) with server component wrapper (`page.tsx`) for `/wiki` to ensure static metadata generation for SEO while maintaining interactive search and client-side filtering.
+- Implemented `@graph` JSON-LD schema on `/wiki/[slug]` with `Article`, `BreadcrumbList`, and `FAQPage` (dynamically derived from `plant.care.commonProblems`).
+- Wrapped `NewPlantContent` in `<Suspense>` in `src/app/plants/new/page.tsx` and mapped incoming `light`, `interval`, and `name` parameters, pre-setting step to 2 when plant is specified.
+- Registered `/wiki` (priority 0.9, weekly) and all plant slugs (priority 0.8, weekly) in `src/app/sitemap.ts`.
 
 ## Change Tracker
 - **Files modified**:
-  - `src/lib/daily-advice-cache.ts` — Per-user calendar-day storage caching and invalidation logic
-  - `src/lib/mascot-dialogue.ts` — Mascot state resolution and Persian/English dialogue micro-copy
-  - `src/lib/care-tasks.ts` — Plant care task partitioner (Overdue, Today, Upcoming) and progress calculator
-  - `src/lib/gamification.ts` — Consecutive care streak calculator, gardener level evaluator, XP rewards
-  - `src/app/actions/plants.ts` — Exported `getWateringStreakAction` server action
+  - `src/app/wiki/page.tsx` — Encyclopedia index Server Component with metadata
+  - `src/app/wiki/WikiIndexClient.tsx` — Interactive encyclopedia client with search and category filters
+  - `src/app/wiki/[slug]/page.tsx` — Dynamic plant care guide with 6 care cards, JSON-LD, 3 CTAs
+  - `src/app/wiki/__tests__/wiki-pages.test.ts` — Tests for metadata, static params, and CTA bindings
+  - `src/app/plants/new/page.tsx` — Suspense-wrapped query parameter pre-fill for garden reminder CTA
+  - `src/app/sitemap.ts` — Registered `/wiki` and dynamic plant encyclopedia pages
 - **Build status**: PASS (`tsc --noEmit` exit code 0)
 - **Pending issues**: none
 
 ## Quality Status
-- **Build/test result**: PASS (70/70 target tests passing, 342/342 repository tests passing, 0 failures)
-- **Lint status**: clean
-- **Tests added/modified**: 0 (all 70 tests pre-authored in M1 now 100% GREEN)
+- **Build/test result**: PASS (13/13 vitest tests passing in target suites, tsc exit code 0)
+- **Lint status**: clean (0 errors in `src/app/wiki` and `src/app/sitemap.ts`)
+- **Tests added/modified**: `src/app/wiki/__tests__/wiki-pages.test.ts` (5 tests added)
 
 ## Loaded Skills
 - None

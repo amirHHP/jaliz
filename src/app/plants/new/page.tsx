@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useRef, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useLanguage } from "@/components/LanguageProvider"
 import { useAuth } from "@/components/AuthProvider"
 import { 
@@ -58,13 +58,37 @@ interface PlantDraft {
   wateringInterval: number
 }
 
-export default function NewPlantPage() {
+function parseLightExposure(lightParam: string | null): "Low Light" | "Partial Shade" | "Bright Indirect" | "Full Sun" {
+  if (!lightParam) return "Bright Indirect"
+  const val = lightParam.trim().toLowerCase()
+  if (val === "full sun" || val.includes("مستقیم") || val.includes("آفتاب کامل")) {
+    return "Full Sun"
+  }
+  if (val === "low light" || val.includes("کم‌نور") || val.includes("کم نور") || val.includes("سایه") || val.includes("کم تا متوسط")) {
+    return "Low Light"
+  }
+  if (val === "partial shade" || val.includes("نیم‌سایه") || val.includes("نیم سایه") || val.includes("متوسط")) {
+    return "Partial Shade"
+  }
+  if (val === "bright indirect" || val.includes("زیاد") || val.includes("روشن") || val.includes("غیرمستقیم")) {
+    return "Bright Indirect"
+  }
+  return "Bright Indirect"
+}
+
+function NewPlantContent() {
   const { t, language } = useLanguage()
   const { user, status } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const isRtl = language === "fa"
 
-  const [step, setStep] = useState(1) // 1 = Upload, 2 = Review & Confirm
+  const nameParam = searchParams.get("name")
+  const intervalParam = searchParams.get("interval")
+  const lightParam = searchParams.get("light")
+  const typeParam = searchParams.get("type")
+
+  const [step, setStep] = useState(() => (nameParam ? 2 : 1)) // 1 = Upload, 2 = Review & Confirm
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [dragActive, setDragActive] = useState(false)
@@ -86,24 +110,50 @@ export default function NewPlantPage() {
     "Jaliz botanist is preparing care guidelines..."
   ]
 
-  const [draft, setDraft] = useState<PlantDraft>({
-    name: "",
-    type: "",
-    locationType: "Indoor",
-    lightExposure: "Bright Indirect",
-    potType: "Plastic",
-    growingMedium: "Soil",
-    hasDrainage: true,
-    lastWatered: toLocalDateString(),
-    recentlyReplanted: false,
-    lastSoilChange: toLocalDateString(),
-    health: "Excellent",
-    image: "",
-    careTips: "",
-    wateringTips: "",
-    soilChangeTips: "",
-    wateringInterval: 7,
+  const [draft, setDraft] = useState<PlantDraft>(() => {
+    const initialName = nameParam || ""
+    const initialType = typeParam || initialName
+    const parsedInterval = intervalParam ? parseInt(intervalParam, 10) : NaN
+    const initialInterval = !isNaN(parsedInterval) && parsedInterval > 0 ? parsedInterval : 7
+    const initialLight = parseLightExposure(lightParam)
+
+    return {
+      name: initialName,
+      type: initialType,
+      locationType: "Indoor",
+      lightExposure: initialLight,
+      potType: "Plastic",
+      growingMedium: "Soil",
+      hasDrainage: true,
+      lastWatered: toLocalDateString(),
+      recentlyReplanted: false,
+      lastSoilChange: toLocalDateString(),
+      health: "Excellent",
+      image: "",
+      careTips: "",
+      wateringTips: "",
+      soilChangeTips: "",
+      wateringInterval: initialInterval,
+    }
   })
+
+  // Synchronize state when query parameters change (e.g. navigation from wiki)
+  useEffect(() => {
+    if (nameParam) {
+      const parsedInterval = intervalParam ? parseInt(intervalParam, 10) : NaN
+      const intervalVal = !isNaN(parsedInterval) && parsedInterval > 0 ? parsedInterval : 7
+      const lightVal = parseLightExposure(lightParam)
+
+      setDraft(prev => ({
+        ...prev,
+        name: nameParam,
+        type: typeParam || nameParam,
+        wateringInterval: intervalVal,
+        lightExposure: lightVal,
+      }))
+      setStep(2)
+    }
+  }, [nameParam, intervalParam, lightParam, typeParam])
 
   // Redirect if unauthenticated
   useEffect(() => {
@@ -792,5 +842,19 @@ export default function NewPlantPage() {
         </footer>
       </div>
     </div>
+  )
+}
+
+export default function NewPlantPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
+          <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+        </div>
+      }
+    >
+      <NewPlantContent />
+    </Suspense>
   )
 }

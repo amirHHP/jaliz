@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider"
 import { Header } from "@/components/Header"
 import { BlogPost } from "@/lib/blogData"
 import { BlogIcon } from "@/components/BlogIcon"
+import { MarketplaceCrossLink } from "@/components/marketplace/MarketplaceCrossLink"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -222,6 +223,9 @@ export function BlogPostClient({ post, relatedPosts }: BlogPostClientProps) {
             </div>
           </Card>
         )}
+
+        {/* Marketplace Cross-Link Component */}
+        <MarketplaceCrossLink topicQuery={post.primaryKeyword} speciesName={post.title} />
 
         {/* Related Articles Section */}
         {relatedPosts.length > 0 && (

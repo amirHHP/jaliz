@@ -1,7 +1,7 @@
-# BRIEFING — 2026-11-13T05:52:00Z
+# BRIEFING — 2026-11-13T20:53:00Z
 
 ## Mission
-Implement gamified UI, plant companion mascot ("برگچه"), daily advice with calendar-day caching, and integrate with Dashboard while preserving subscription gating.
+Implement Milestone 3: Blog HowTo Schema injection, MarketplaceCrossLink component & integration, and Title CTR Optimization across all blog files while preserving 100% of 104 slugs.
 
 ## 🔒 My Identity
 - Archetype: teamwork_worker
@@ -9,6 +9,11 @@ Implement gamified UI, plant companion mascot ("برگچه"), daily advice with 
 - Working directory: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1
 - Original parent: c1c9a3e8-15d3-43cc-ad22-0cfdbfe15413
 - Milestone: M3 - Gamified UI, Mascot Components & Integration
+- Archetype: teamwork_worker_m3_1
+- Roles: implementer, qa
+- Working directory: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1
+- Original parent: eed6eb13-3f90-4d26-9c91-172933d897e5
+- Milestone: M3 (Blog Enhancements, HowTo Schema, Cross-Linking & Title CTR)
 
 ## 🔒 Key Constraints
 - DO NOT CHEAT. All implementations must be genuine.
@@ -19,49 +24,45 @@ Implement gamified UI, plant companion mascot ("برگچه"), daily advice with 
 - All 38 test suites (342 tests) must pass with 0 errors.
 - TypeScript check (`npx tsc --noEmit`) must pass with 0 errors.
 - Next.js build (`npm run build`) must compile cleanly with 0 errors.
+- DO NOT CHEAT: genuine implementations only, no hardcoded test outputs or facade implementations.
+- All 104 `post.slug` properties MUST REMAIN 100% UNCHANGED AND IDENTICAL TO BASELINE!
+- Write ownership for current assignment:
+  - `src/components/marketplace/MarketplaceCrossLink.tsx` (create)
+  - `src/app/blog/[slug]/page.tsx` (edit HowTo schema)
+  - `src/app/blog/[slug]/BlogPostClient.tsx` (edit cross-link placement)
+  - `src/lib/blogData.ts`, `src/lib/blogPostsNew.ts`, `src/lib/blogPostsSeo.ts`, `src/lib/blogPostsExpansion1.ts`, `src/lib/blogPostsExpansion2.ts` (edit display titles)
+- DO NOT modify `src/app/wiki/` or `src/app/sitemap.ts`.
+- Must pass `npx vitest run src/lib/__tests__/blog-titles-ctr.test.ts src/lib/__tests__/blog-how-to.test.ts` and `npx tsc --noEmit`.
 
 ## Current Parent
-- Conversation ID: c1c9a3e8-15d3-43cc-ad22-0cfdbfe15413
-- Updated: 2026-11-13T05:39:22Z
+- Conversation ID: eed6eb13-3f90-4d26-9c91-172933d897e5
+- Updated: 2026-11-13T20:51:13Z
 
 ## Task Summary
-- **What to build**: Vector SVG Mascot (`PlantMascot.tsx`), RTL Speech Bubble (`MascotSpeechBubble.tsx`), Hero Companion (`MascotCompanion.tsx`), Gamification Bar (`GamificationBar.tsx`), Care Task Card (`CareTaskCard.tsx`), Redesigned `WateringSchedule.tsx`, Updated `WeatherAdvice.tsx`, Updated `Dashboard.tsx`.
-- **Success criteria**: Tests pass, tsc passes, build passes, genuine gamification & mascot functionality.
-- **Interface contracts**: /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/PROJECT.md
-- **Code layout**: /Users/sotoon/personal/jaliz/.agents/teamwork/orchestrator/PROJECT.md
-
-## Key Decisions Made
-- Built pure vector SVG Bargcheh mascot with zero external dependencies and 4 distinct visual states (thriving, thirsty, celebrating with sunglasses & confetti, resting with Zzz).
-- Built Duolingo-style RTL speech bubble with directional tail and contextual Persian micro-copy.
-- Integrated hero MascotCompanion with interactive tap quotes.
-- Implemented GamificationBar with streak flame, XP badge, gardener level, and circular progress ring.
-- Redesigned WateringSchedule with task segmentation (overdue, today, upcoming) and single plant watering (+10 XP) and batch watering (+ bonus XP), plus celebration modal.
-- Automated WeatherAdvice fetching on mount with daily calendar caching via `daily-advice-cache.ts` and subtle force-refresh button.
-- Preserved paywall modal and blurred preview in Dashboard for unsubscribed users.
-
-## Artifact Index
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1/DISPATCH.md — Dispatch instructions
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1/BRIEFING.md — Persistent context
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1/progress.md — Liveness heartbeat
-- /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_worker_m3_1/handoff.md — Final handoff report
+- **What to build**:
+  1. Inject `HowTo` schema into `@graph` in `src/app/blog/[slug]/page.tsx` using `generateHowToSchema` and `isTutorialPost` from `@/lib/blogHowTo`.
+  2. Create reusable, responsive, commercial intent component `src/components/marketplace/MarketplaceCrossLink.tsx` with two tiers (live listings from `useMarketplace` + always-displayed high-converting commercial banner).
+  3. Integrate `<MarketplaceCrossLink topicQuery={post.primaryKeyword} speciesName={post.title} />` in `src/app/blog/[slug]/BlogPostClient.tsx`.
+  4. Optimize blog titles with emojis, brackets (`【...】`), and hooks across 5 blog data files without touching slugs.
+- **Success criteria**:
+  - `npx vitest run src/lib/__tests__/blog-titles-ctr.test.ts src/lib/__tests__/blog-how-to.test.ts` passes.
+  - `npx tsc --noEmit` passes with 0 errors.
+  - 100% of 104 slugs preserved.
+- **Interface contracts**: PROJECT.md § Interface Contracts
+- **Code layout**: PROJECT.md § Code Layout
 
 ## Change Tracker
-- **Files modified**:
-  - `src/components/mascot/PlantMascot.tsx`: Pure SVG mascot with 4 dynamic states
-  - `src/components/mascot/MascotSpeechBubble.tsx`: Duolingo-style RTL bubble
-  - `src/components/mascot/MascotCompanion.tsx`: Hero companion with tap quotes and status
-  - `src/components/schedule/GamificationBar.tsx`: Streak flame, XP, level badge, circular ring
-  - `src/components/schedule/CareTaskCard.tsx`: Plant care card with due badge and water action
-  - `src/components/WateringSchedule.tsx`: Redesigned segmented schedule + celebration modal
-  - `src/components/WeatherAdvice.tsx`: Auto-fetch on mount with calendar cache
-  - `src/components/Dashboard.tsx`: Integrated hero mascot and preserved paywall
-- **Build status**: PASS (all 38 test suites / 342 tests pass; tsc 0 errors; next build clean)
-- **Pending issues**: None
+- **Files modified**: none yet
+- **Build status**: pending
+- **Pending issues**: none
 
 ## Quality Status
-- **Build/test result**: Pass (38/38 suites, 342/342 tests, Next.js build success)
-- **Lint status**: Clean (tsc --noEmit 0 errors)
-- **Tests added/modified**: 100% verified across existing test suites
+- **Build/test result**: pending
+- **Lint status**: pending
+- **Tests added/modified**: pending
 
-## Loaded Skills
-- None specified by task message.
+## Key Decisions Made
+- [TBD]
+
+## Artifact Index
+- handoff.md — will be generated upon completion

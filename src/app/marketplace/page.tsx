@@ -38,14 +38,23 @@ const TAB_DEFS: { id: Tab; key: string; icon: React.ComponentType<{ className?: 
 function MarketplaceOpenFromQuery({
   setSelectedId,
   onOpenCreate,
+  setSearch,
 }: {
   setSelectedId: (id: string) => void
   onOpenCreate: () => void
+  setSearch: (query: string) => void
 }) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
   const { get, ready } = useMarketplace()
+
+  useEffect(() => {
+    const queryParam = searchParams.get("query") || searchParams.get("q")
+    if (queryParam) {
+      setSearch(queryParam.trim())
+    }
+  }, [searchParams, setSearch])
 
   useEffect(() => {
     if (!ready) return
@@ -144,6 +153,7 @@ export default function MarketplacePage() {
         <MarketplaceOpenFromQuery
           setSelectedId={setSelectedId}
           onOpenCreate={handlePostClick}
+          setSearch={setSearch}
         />
       </Suspense>
       <Header />

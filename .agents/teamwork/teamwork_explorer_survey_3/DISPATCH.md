@@ -1,45 +1,46 @@
-# Dispatch for Explorer 3: Automated Daily AI Advice, Caching & Subscription Gating
+# Task Assignment: Blog & Marketplace Cross-Linking & Marketplace Survey
 
-- Agent ID: explorer_survey_3
-- Archetype: teamwork_explorer
-- Role: Codebase Researcher (Advice & Subscription Logic)
-- Working Directory: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3
+## Working Directory
+/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3
+
+## User Request
+Read: /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md
 
 ## Objective
-Read `/Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md` and investigate the codebase for requirements R3 & R4:
-1. `src/components/WeatherAdvice.tsx` and related services/APIs:
-   - How weather data and AI care advice are currently fetched.
-   - The manual consultation button ("مشاوره") and how the API request is made.
-   - Any API keys, mock endpoints, or Gemini/OpenAI integrations in `src/lib/` or `src/app/api/`.
-2. Automated fetching on page load:
-   - How to trigger advice fetching automatically on mounting without user button clicks.
-   - Loading states, error fallbacks, skeleton screens.
-3. Daily Caching Mechanism:
-   - Caching per user per calendar day (e.g. Tehran timezone or local date `YYYY-MM-DD`).
-   - Storage strategy (localStorage key naming, structure containing timestamp/date, user ID, cached advice).
-   - Invalidation logic: ensuring subsequent visits on the same day use cached advice without re-calling the API, while a new day triggers a fresh fetch.
-4. Subscription Gating (R4):
-   - How subscription state is checked (e.g. `useSubscription`, `useAuth`, `isSubscribed`, premium feature flags).
-   - How the locked paywall preview is currently rendered for non-subscribed users.
-   - How to strictly preserve paywall gating for non-subscribers while giving full automated advice & mascot insights to subscribers.
-5. Identify existing tests touching WeatherAdvice, subscription gating, or advice APIs.
+Investigate the marketplace feature and how to implement dynamic cross-linking between blog articles and the marketplace:
+1. Marketplace investigation:
+   - What does `src/app/marketplace` look like? (routes, components, query parameters like `?query=...` or category filters).
+   - What data exists for marketplace listings (e.g., plants, pots, fertilizers, care tools)? Is it in `src/data/`, `src/lib/`, or a component?
+2. Cross-linking strategy:
+   - In species blog articles or at the bottom of blog articles, how can we dynamically detect the relevant plant species or topic (from blog post tags, category, slug, or title) and display related marketplace cards or CTAs?
+   - How can we make this reusable across both the blog posts (`/blog/[slug]`) and the encyclopedia (`/wiki/[slug]`)?
+   - Design matching plant/keyword mapping to marketplace queries (e.g. "سانسوریا" -> `/marketplace?query=سانسوریا`).
+3. Visual styling and component conventions:
+   - What UI components, icons (lucide-react etc.), Tailwind classes, and Persian typography patterns are used in Jaliz?
+   - Ensure components follow existing clean styling and responsive RTL design.
 
-## Deliverables
-Write your comprehensive analysis to `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3/handoff.md`.
-Report back when finished.
+## Output Requirements
+Produce a comprehensive handoff report at `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3/handoff.md` with:
+- Marketplace architecture and search/query mechanisms
+- Proposed cross-linking component design and keyword matching algorithm
+- Reusable linking patterns for both `/blog/[slug]` and `/wiki/[slug]`
+- Step-by-step implementation plan for R3
 
 
-## 2026-11-13T05:00:24Z
-You are explorer_survey_3, a teamwork_explorer subagent.
+## 2026-11-13T19:59:39Z
+You are teamwork_explorer_survey_3, a read-only exploration agent.
 Your working directory is: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3
-Read your dispatch instructions in /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3/DISPATCH.md.
-MANDATORY: You MUST read /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md before starting work.
-Focus on:
-1. Automated daily AI advice (R3): examine `src/components/WeatherAdvice.tsx`, current manual "مشاوره" button and fetch flows.
-2. Auto-fetch on page load without manual clicks, error handling, and loading states.
-3. Daily caching: per user per calendar day (localStorage or state), cache key design, invalidation on new calendar day.
-4. Subscription gating (R4): how active vs non-subscribed users are handled, paywall preview preservation, and ensuring subscribers get full access while non-subscribers see paywall.
-5. Identify existing tests touching advice or subscription.
-Write your complete structured handoff report to:
-/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3/handoff.md
-When done, notify your orchestrator via send_message.
+Your task assignment is in: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3/DISPATCH.md
+The authoritative user request is in: /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md
+
+You MUST read /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md first before starting your investigation.
+Follow all instructions in DISPATCH.md.
+Investigate the codebase thoroughly regarding the marketplace feature, marketplace listings/queries, dynamic cross-linking from blog posts to marketplace listings, and styling conventions.
+Produce a comprehensive handoff report at /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_3/handoff.md.
+When done, message me with your completion notification.
+
+
+## 2026-11-13T20:18:46Z
+**Context**: Server restart recovery
+**Content**: The server was restarted. Please resume your exploration of the marketplace architecture, dynamic blog-to-marketplace cross-linking, and UI styling conventions per DISPATCH.md.
+**Action**: Complete your survey investigation, write your findings to handoff.md, and message me when finished.

@@ -1,133 +1,144 @@
-# Project: Jaliz Plant Care & Schedule Gamification Redesign
+# Project: Jaliz SEO Master Strategy Implementation
 
 ## Architecture
-- **Framework**: Next.js 16 (App Router), React 19, Tailwind CSS v4, TypeScript 5, Vitest.
-- **Scope**: Redesign `/schedule` page (`src/app/schedule/page.tsx`, `src/components/Dashboard.tsx`, `src/components/WateringSchedule.tsx`, `src/components/WeatherAdvice.tsx`) into a Duolingo-inspired gamified care experience.
-- **Key Modules**:
-  - `src/lib/daily-advice-cache.ts`: Per-user per-calendar-day advice caching (`jaliz_daily_advice_${userId}`).
-  - `src/lib/mascot-dialogue.ts`: State machine and contextual Persian dialogue generator for the companion mascot.
-  - `src/lib/care-tasks.ts`: Task categorization logic (Overdue, Today, Upcoming) and progress calculation.
-  - `src/lib/gamification.ts`: Streak derivation from `WateringLog`, XP point awarding, gardener level progression.
-  - `src/components/mascot/`: Vector SVG companion mascot (`PlantMascot.tsx`), RTL speech bubble (`MascotSpeechBubble.tsx`), and hero companion card (`MascotCompanion.tsx`).
-  - `src/components/schedule/`: Gamification status bar (`GamificationBar.tsx`), individual plant task cards (`CareTaskCard.tsx`), and celebration overlay.
-  - `src/components/WeatherAdvice.tsx`: Automated fetching on mount, seamless daily cache lookup, error fallbacks.
-  - `src/components/Dashboard.tsx`: Hero companion presentation, Duolingo aesthetic, preserved subscription gating paywall.
+Jaliz (Next.js 16 App Router, React 19, TypeScript, Tailwind CSS) SEO expansion:
+- **Encyclopedia Subsystem (`/wiki`, `/wiki/[slug]`)**:
+  - Static botanical knowledge base in `src/lib/wikiData.ts` with comprehensive care specs, pet safety, common problems, and companion plant data.
+  - Directory index page `src/app/wiki/page.tsx` with search, category filtering, responsive Persian typography.
+  - Dynamic plant species page `src/app/wiki/[slug]/page.tsx` with SSG (`generateStaticParams`), SEO metadata (`generateMetadata`), and structured data (`Article`, `BreadcrumbList`, `FAQPage`).
+  - Direct CTAs: Add to user garden (`/plants/new?name=...`), browse matching marketplace listings (`/marketplace?query=...`), and diagnose leaf diseases with AI (`/plants/diagnose`).
+  - Sitemap registration in `src/app/sitemap.ts` and crawler permission in `src/app/robots.ts`.
+- **Tutorial Blog HowTo Schema Subsystem**:
+  - HowTo detection and schema generator in `src/lib/blogHowTo.ts`.
+  - Rich result integration in `src/app/blog/[slug]/page.tsx` adding schema.org `HowTo` to `@graph` for tutorial posts while preserving `Article` schema for non-tutorial posts.
+- **Dynamic Blog & Marketplace Cross-Linking Subsystem**:
+  - Query parameter ingestion in `src/app/marketplace/page.tsx` (`?query=...` and `?q=...`).
+  - Topic and species matcher `src/lib/marketplace/topic-matcher.ts`.
+  - Reusable commercial component `src/components/marketplace/MarketplaceCrossLink.tsx` linking species/topics to live listings and direct commercial intent CTAs.
+  - Integration into `src/app/blog/[slug]/BlogPostClient.tsx` and `src/app/wiki/[slug]/page.tsx`.
+- **CTR Title Optimization**:
+  - Polishing blog titles across `src/lib/blogData.ts`, `src/lib/blogPostsNew.ts`, `src/lib/blogPostsSeo.ts`, `src/lib/blogPostsExpansion1.ts`, `src/lib/blogPostsExpansion2.ts` with emojis, brackets, and engaging hooks while keeping all 104 slugs strictly immutable.
 
 ## Feature Inventory
-
 | # | Feature | Description | Milestone | Source |
 |---|---------|-------------|-----------|--------|
-| 1 | Automated Daily Advice Caching | `src/lib/daily-advice-cache.ts` caching advice per user per calendar day (`toLocalDateString()`) with invalidation on day turnover | M2 | R3 |
-| 2 | Mascot State & Dialogue Engine | `src/lib/mascot-dialogue.ts` mapping plant health/task status to 4 visual states (thriving, thirsty, celebrating, resting) & contextual Persian messages | M2 | R2 |
-| 3 | Care Task Segmentation & Progress | `src/lib/care-tasks.ts` partitioning user plants into Overdue, Today, and Upcoming, plus completion percentage | M2 | R1 |
-| 4 | Streak & XP Gamification Mechanics | `src/lib/gamification.ts` & `getWateringStreakAction()` calculating consecutive care streaks from `WateringLog`, XP rewards, and gardener levels | M2 | R1 |
-| 5 | Vector SVG Plant Mascot Component | `src/components/mascot/PlantMascot.tsx` pure SVG character with distinct visual states (happy, droopy leaves/tear, sunglasses/confetti, resting) | M3 | R2 |
-| 6 | Direction-Aware Mascot Speech Bubble | `src/components/mascot/MascotSpeechBubble.tsx` RTL-styled Duolingo speech bubble displaying dynamic contextual messages | M3 | R2 |
-| 7 | Mascot Hero Companion Card | `src/components/mascot/MascotCompanion.tsx` top hero card displaying mascot, speech bubble, quick care status, and tap interactions | M3 | R2 |
-| 8 | Gamified Care Status Bar | `src/components/schedule/GamificationBar.tsx` featuring streak flame (🔥), XP count, gardener level badge, and circular progress ring | M3 | R1 |
-| 9 | Segmented Care Task List & Cards | `src/components/WateringSchedule.tsx` & `CareTaskCard.tsx` with Overdue/Today/Upcoming sections, individual plant checkoff, and batch "Water All" | M3 | R1 |
-| 10 | Task Completion Visual Feedback | Animated celebration modal, confetti bursts, and instant visual checkmark feedback upon completing daily watering tasks | M3 | R1 |
-| 11 | Automated Page-Load Advice Fetching | `src/components/WeatherAdvice.tsx` auto-loads advice on mount for subscribed users without manual button clicks | M3 | R3 |
-| 12 | Preservation of Subscription Paywall | `src/components/Dashboard.tsx` ensures unsubscribed users see the locked paywall preview (99k Toman/mo) while subscribed users get full gamified experience | M3 | R4 |
-| 13 | Comprehensive Opaque-Box Test Suite | Unit test suites for caching, dialogue engine, care tasks, and gamification in `src/lib/__tests__/` (Tier 1-4) | M1 | AC |
-| 14 | Build & Test Regression Verification | Full `npm test` (all tests passing) and `npm run build` passing with 0 errors | M4 | AC |
+| 1 | Botanical Data Model & Dataset | Complete care specs for 12+ popular species in `src/lib/wikiData.ts` | M1 | R1 |
+| 2 | Topic Matcher & Query Handling | Persian species/topic matching engine and marketplace `?query=` support | M1 | R3 |
+| 3 | HowTo Schema Extraction Engine | Rule-based parser & schema generator for tutorial articles | M1 | R2 |
+| 4 | Encyclopedia Directory (`/wiki`) | Responsive Persian directory with search and category filtering | M2 | R1 |
+| 5 | Plant Detail Pages (`/wiki/[slug]`) | Dynamic plant care pages with specs, FAQ, and 3 CTAs | M2 | R1 |
+| 6 | Structured Data (JSON-LD) for Wiki | Article + Breadcrumb + FAQPage schema in wiki plant pages | M2 | R1 |
+| 7 | SEO Sitemap & Robots Registration | Register `/wiki` and all plant slugs in `sitemap.ts`; verify `robots.ts` | M2 | R1 |
+| 8 | Garden Reminder Pre-population | Enable `NewPlantPage` to ingest query params (`?name=...`) for 1-click CTA | M2 | R1 |
+| 9 | Blog HowTo JSON-LD Integration | Inject valid HowTo schema into `@graph` in `src/app/blog/[slug]/page.tsx` | M3 | R2 |
+| 10 | Reusable Marketplace Cross-Linker | Two-tier commercial component (`MarketplaceCrossLink.tsx`) | M3 | R3 |
+| 11 | Blog Marketplace Cross-Linking | Embed dynamic marketplace cross-linking in `BlogPostClient.tsx` | M3 | R3 |
+| 12 | Blog Title CTR Optimization | Update display titles with emojis, brackets, and hooks across blog data | M3 | R4 |
+| 13 | E2E Testing Suite (Tiers 1-4) | Comprehensive test suite for wiki, HowTo schema, cross-linking, titles | M-E2E / M4 | Verification |
+| 14 | Adversarial Hardening (Tier 5) & Audit | White-box stress testing, linting, build check, and forensic audit | M4 | Verification |
 
 ## Milestones
-
 | # | Name | Scope | Dependencies | Status |
 |---|------|-------|-------------|--------|
-| M1 | Automated Test Suite Infrastructure | Create test suites `daily-advice-cache.test.ts`, `mascot.test.ts`, `care-tasks.test.ts`, `gamification.test.ts`, create `TEST_INFRA.md` & `TEST_READY.md`. | none | DONE (70 tests in 4 suites, TEST_READY.md) |
-| M2 | Core Gamification, Dialogue & Caching Logic | Implement `daily-advice-cache.ts`, `mascot-dialogue.ts`, `care-tasks.ts`, `gamification.ts`, and `getWateringStreakAction`. Verify M1 tests pass. | M1 | DONE (70/70 M1 tests, 342/342 full tests) |
-| M3 | Gamified UI, Mascot Components & Integration | Implement `PlantMascot.tsx`, `MascotSpeechBubble.tsx`, `MascotCompanion.tsx`, `GamificationBar.tsx`, `CareTaskCard.tsx`, update `WateringSchedule.tsx`, `WeatherAdvice.tsx`, and `Dashboard.tsx`. | M2 | DONE (8 components integrated, build clean) |
-| M4 | Full Verification, Review, Challenge & Audit | Run all test suites, TypeScript check, build check, 2 Reviewers, 2 Challengers, Forensic Auditor gate check. | M3 | DONE (Gate Iteration 2 PASS: 451/451 tests pass, tsc 0 errors, Reviewers APPROVE, Challengers APPROVE, Auditor CLEAN) |
-
-## Code Layout
-- `src/lib/daily-advice-cache.ts` — Per-user calendar-day advice cache helpers.
-- `src/lib/mascot-dialogue.ts` — Mascot emotional state resolution & Persian micro-copy generator.
-- `src/lib/care-tasks.ts` — Plant care task partitioner (Overdue, Today, Upcoming) and progress calculator.
-- `src/lib/gamification.ts` — Streak, XP rewards, and gardener level progression.
-- `src/app/actions/plants.ts` — Server action additions for `getWateringStreakAction`.
-- `src/components/mascot/PlantMascot.tsx` — Vector SVG mascot component.
-- `src/components/mascot/MascotSpeechBubble.tsx` — RTL contextual speech bubble.
-- `src/components/mascot/MascotCompanion.tsx` — Hero companion card for `/schedule`.
-- `src/components/schedule/GamificationBar.tsx` — Streak, XP, and circular progress bar.
-- `src/components/schedule/CareTaskCard.tsx` — Interactive per-plant task card.
-- `src/components/WateringSchedule.tsx` — Redesigned segmented schedule list.
-- `src/components/WeatherAdvice.tsx` — Automated advice card with daily caching.
-- `src/components/Dashboard.tsx` — Integrated gamified dashboard layout with preserved paywall.
-- `src/lib/__tests__/daily-advice-cache.test.ts` — Unit test suite for advice caching.
-- `src/lib/__tests__/mascot.test.ts` — Unit test suite for mascot states and dialogue.
-- `src/lib/__tests__/care-tasks.test.ts` — Unit test suite for task partitioning.
-- `src/lib/__tests__/gamification.test.ts` — Unit test suite for streak, XP, and levels.
+| M1 | Core Engines & Data Layer | `src/lib/wikiData.ts`, `src/lib/blogHowTo.ts`, `src/lib/marketplace/topic-matcher.ts`, and marketplace query param handling in `src/app/marketplace/page.tsx` | Survey complete | PLANNED |
+| M2 | Programmatic Encyclopedia & Routing | `src/app/wiki/page.tsx`, `src/app/wiki/[slug]/page.tsx`, CTAs, `src/app/sitemap.ts`, `src/app/plants/new/page.tsx` prefill | M1 | PLANNED |
+| M3 | Blog Enhancements & Cross-Linking | Blog HowTo schema in `src/app/blog/[slug]/page.tsx`, `MarketplaceCrossLink.tsx` in `BlogPostClient.tsx`, and CTR title updates | M1 | PLANNED |
+| M4 | Final Acceptance Gate & Verification | Pass 100% E2E tests (Tiers 1-4), Adversarial hardening (Tier 5), Reviewers APPROVE, Challengers APPROVE, Forensic Auditor CLEAN, `npm run build` & `npm run lint` pass | M1, M2, M3 | PLANNED |
 
 ## Interface Contracts
-
-### 1. `src/lib/daily-advice-cache.ts`
-```ts
-export interface DailyAdviceCacheEntry {
-  userId: string
-  date: string // YYYY-MM-DD from toLocalDateString()
-  advice: string
-  fetchedAt: number
+### `src/lib/wikiData.ts`
+```typescript
+export interface WikiPlant {
+  slug: string
+  nameFa: string
+  nameEn: string
+  scientificName: string
+  family: string
+  origin: string
+  description: string
+  coverImage: string
+  care: {
+    light: { level: string; description: string; windowPlacement: string }
+    watering: { schedule: string; description: string; defaultIntervalDays: number }
+    temperature: { range: string; minCelsius: number; maxCelsius: number; frostTolerance: boolean }
+    soil: { type: string; description: string; drainageTips: string }
+    petSafety: { isToxic: boolean; warningFa: string; toxicPrinciples?: string }
+    commonProblems: Array<{
+      problemFa: string
+      causeFa: string
+      solutionFa: string
+      severity: "low" | "medium" | "high"
+    }>
+  }
+  tags: string[]
+  difficulty: "آسان" | "متوسط" | "سخت"
+  growthRate: "آرام" | "متوسط" | "سریع"
 }
-export function getDailyAdviceCacheKey(userId: string): string
-export function getCachedDailyAdvice(userId: string, todayDate?: string, storage?: Pick<Storage, "getItem"> | null): string | null
-export function setCachedDailyAdvice(userId: string, advice: string, todayDate?: string, storage?: Pick<Storage, "setItem"> | null): void
-export function clearDailyAdviceCache(userId: string, storage?: Pick<Storage, "removeItem"> | null): void
+
+export function getAllWikiPlants(): WikiPlant[]
+export function getWikiPlantBySlug(slug: string): WikiPlant | undefined
 ```
 
-### 2. `src/lib/mascot-dialogue.ts`
-```ts
-export type MascotState = "thriving" | "thirsty" | "celebrating" | "resting"
-
-export interface MascotContext {
-  totalPlants: number
-  plantsToWaterCount: number
-  isDoneToday: boolean
-  streakDays: number
-  userName?: string
-  firstThirstyPlantName?: string
-  currentHour?: number
+### `src/lib/blogHowTo.ts`
+```typescript
+export interface HowToStepSchema {
+  "@type": "HowToStep"
+  name: string
+  text: string
+  position: number
+  url?: string
 }
 
-export function resolveMascotState(ctx: MascotContext): MascotState
-export function getMascotDialogue(ctx: MascotContext, language?: "fa" | "en"): string
+export interface HowToSchema {
+  "@type": "HowTo"
+  name: string
+  description: string
+  inLanguage: string
+  step: HowToStepSchema[]
+  supply?: Array<{ "@type": "HowToSupply"; name: string }>
+  tool?: Array<{ "@type": "HowToTool"; name: string }>
+}
+
+export function isTutorialPost(post: BlogPost): boolean
+export function generateHowToSchema(post: BlogPost, canonicalUrl: string): HowToSchema | null
 ```
 
-### 3. `src/lib/care-tasks.ts`
-```ts
-export type TaskCategory = "overdue" | "today" | "upcoming"
-
-export interface CareTaskItem {
-  plant: Plant
-  category: TaskCategory
-  dueDays: number // negative = overdue, 0 = today, positive = upcoming
-  formattedDueText: string
-}
-
-export interface CareTasksPartition {
-  overdue: CareTaskItem[]
-  today: CareTaskItem[]
-  upcoming: CareTaskItem[]
-  totalDueToday: number // overdue + today
-  completedCount: number
-  completionPercentage: number
-}
-
-export function partitionCareTasks(plants: Plant[], isDoneToday?: boolean, now?: Date): CareTasksPartition
-```
-
-### 4. `src/lib/gamification.ts`
-```ts
-export interface GardenerLevel {
-  level: number
+### `src/lib/marketplace/topic-matcher.ts`
+```typescript
+export interface MarketplaceMatchResult {
+  query: string
   titleFa: string
-  titleEn: string
-  minXp: number
-  maxXp: number
+  descriptionFa: string
+  speciesMatch?: string
+  careTopicMatch?: string
 }
 
-export function calculateWateringStreak(logDates: (string | Date)[], now?: Date): number
-export function calculateGardenerLevel(xp: number): GardenerLevel
-export function getXpForAction(action: "water_plant" | "daily_complete" | "streak_milestone"): number
+export function resolveMarketplaceTopic(input: {
+  title?: string
+  slug?: string
+  keywords?: string[]
+  category?: string
+  content?: string
+}): MarketplaceMatchResult
 ```
+
+## Code Layout
+- Data Models & Engines:
+  - `src/lib/wikiData.ts`
+  - `src/lib/blogHowTo.ts`
+  - `src/lib/marketplace/topic-matcher.ts`
+- UI Pages & Components:
+  - `src/app/wiki/page.tsx`
+  - `src/app/wiki/[slug]/page.tsx`
+  - `src/components/marketplace/MarketplaceCrossLink.tsx`
+  - `src/app/marketplace/page.tsx` (query param parsing)
+  - `src/app/plants/new/page.tsx` (query param pre-fill)
+  - `src/app/blog/[slug]/page.tsx` (HowTo schema injection)
+  - `src/app/blog/[slug]/BlogPostClient.tsx` (MarketplaceCrossLink integration)
+  - `src/app/sitemap.ts` (wiki routes registration)
+- Blog Data (Title CTR Optimization):
+  - `src/lib/blogData.ts`
+  - `src/lib/blogPostsNew.ts`
+  - `src/lib/blogPostsSeo.ts`
+  - `src/lib/blogPostsExpansion1.ts`
+  - `src/lib/blogPostsExpansion2.ts`

@@ -8,6 +8,7 @@ import {
   getAlternatePost,
   getRelatedPosts,
 } from "@/lib/blogTopics"
+import { generateHowToSchema, isTutorialPost } from "@/lib/blogHowTo"
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -77,64 +78,73 @@ export default async function BlogPostPage({ params }: Props) {
   const canonical = blogCanonicalUrl(post.slug)
   const inLanguage = post.lang === "fa" ? "fa-IR" : "en-US"
 
+  const graph: Array<Record<string, unknown>> = [
+    {
+      "@type": "Article",
+      headline: post.title,
+      description: post.description,
+      datePublished: post.publishedAtIso,
+      inLanguage,
+      mainEntityOfPage: canonical,
+      author: {
+        "@type": "Person",
+        name: post.author,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: "جالیز | Jaliz",
+        logo: {
+          "@type": "ImageObject",
+          url: `${BLOG_SITE_URL}/icons/icon-192x192.png`,
+        },
+      },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: post.lang === "fa" ? "خانه" : "Home",
+          item: BLOG_SITE_URL,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: post.lang === "fa" ? "وبلاگ" : "Blog",
+          item: `${BLOG_SITE_URL}/blog`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: post.title,
+          item: canonical,
+        },
+      ],
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: post.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    },
+  ]
+
+  if (isTutorialPost(post)) {
+    const howToSchema = generateHowToSchema(post, canonical)
+    if (howToSchema) {
+      graph.push(howToSchema as unknown as Record<string, unknown>)
+    }
+  }
+
   const jsonLd = {
     "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Article",
-        headline: post.title,
-        description: post.description,
-        datePublished: post.publishedAtIso,
-        inLanguage,
-        mainEntityOfPage: canonical,
-        author: {
-          "@type": "Person",
-          name: post.author,
-        },
-        publisher: {
-          "@type": "Organization",
-          name: "جالیز | Jaliz",
-          logo: {
-            "@type": "ImageObject",
-            url: `${BLOG_SITE_URL}/icons/icon-192x192.png`,
-          },
-        },
-      },
-      {
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          {
-            "@type": "ListItem",
-            position: 1,
-            name: post.lang === "fa" ? "خانه" : "Home",
-            item: BLOG_SITE_URL,
-          },
-          {
-            "@type": "ListItem",
-            position: 2,
-            name: post.lang === "fa" ? "وبلاگ" : "Blog",
-            item: `${BLOG_SITE_URL}/blog`,
-          },
-          {
-            "@type": "ListItem",
-            position: 3,
-            name: post.title,
-            item: canonical,
-          },
-        ],
-      },
-      {
-        "@type": "FAQPage",
-        mainEntity: post.faqs.map((faq) => ({
-          "@type": "Question",
-          name: faq.question,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: faq.answer,
-          },
-        })),
-      },
-    ],
+    "@graph": graph,
   }
 
   return (

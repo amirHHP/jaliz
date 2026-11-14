@@ -1,287 +1,348 @@
-# Comprehensive Survey Report: Schedule UI, Care Tasks & Gamified Experience
-
-- **Author**: `explorer_survey_1` (`teamwork_explorer`)
-- **Recipient**: `orchestrator` (`c1c9a3e8-15d3-43cc-ad22-0cfdbfe15413`)
-- **Scope**: Codebase Survey on `/schedule` routing, component structure, plant care state, task lists (overdue, today, upcoming), task completion handlers, Duolingo-style gamification, and test inventory.
-
----
+# Handoff Report: Plant Encyclopedia Directory (`/wiki`) & Dynamic Pages (`/wiki/[slug]`) Survey
 
 ## 1. Observation
 
-### 1.1 Routing and Component Structure for `/schedule`
-
-#### A. Entry Point: `src/app/schedule/page.tsx`
-- **Location**: `src/app/schedule/page.tsx:1-30`
-- **Behavior**:
-  - Declares `"use client"`.
-  - Checks session via `const { status } = useAuth()` (`src/components/AuthProvider.tsx`).
-  - If `status === "unauthenticated"`, invokes `router.replace("/login?redirect=/schedule")` (lines 14–18).
-  - Renders a centered spinning loader (`<Loader2 className="h-6 w-6 animate-spin text-emerald-600" />`) while `status === "loading"` or `"unauthenticated"` (lines 20–26).
-  - On `"authenticated"`, renders `<Dashboard />` (line 28).
-
-#### B. Dashboard Container: `src/components/Dashboard.tsx`
-- **Location**: `src/components/Dashboard.tsx:24-222`
-- **Component Breakdown**:
-  - **Header**: Imports and renders `<Header />` (`src/components/Header.tsx:93`).
-  - **Greeting & Localization**:
-    - Lines 73–85: Computes dynamic time-based greeting key (`morning_greeting`, `afternoon_greeting`, `evening_greeting`, `night_greeting`) after mounting to prevent SSR hydration mismatches.
-    - Lines 87–90: Injects the user's first name (`user?.fullName?.trim().split(/\s+/)[0]`) into the localized greeting string.
-  - **Banner Messages**:
-    - Lines 33–45: Inspects URL search parameters (`?subscribed=1`, `?payment=cancelled`, `?payment=failed`) to display status alerts.
-  - **Subscription Gating**:
-    - Line 27: `const subscribed = isSubscriptionActive(user?.subscriptionExpiresAt)`.
-    - Lines 109–211: When `!subscribed`, displays a blurred locked preview of `WateringSchedule` and `WeatherAdvice` underneath a lock modal card prompting the user to buy a monthly subscription at `SUBSCRIPTION_PRICE_TOMAN` (99,000 Tomans) via `handleBuySubscription()` -> `createSubscriptionPaymentAction()`.
-    - Lines 212–218: When `subscribed`, renders:
-      ```tsx
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
-        <WateringSchedule />
-        <WeatherAdvice />
-      </div>
-      ```
-
-#### C. Navigation Context
-- **Desktop Navigation**: `src/components/Header.tsx:43, 165–193`:
-  - `NAV_LINKS` contains `{ href: "/schedule", key: "schedule", authRequired: true }`.
-  - Prefetch is disabled on `/schedule` (line 52) to avoid unnecessary origin hits.
-- **Mobile Navigation**: `src/components/BottomNav.tsx:47–52`:
-  - Tab configuration: `{ name: t("nav_schedule"), href: "/schedule", icon: CalendarDays, active: Boolean(pathname?.startsWith("/schedule")) }`.
-
----
-
-### 1.2 Plant Care State Management & Task Lists
-
-#### A. Database Schema (`prisma/schema.prisma`)
-- **`UserPlant` model (`prisma/schema.prisma:69–96`)**:
-  - Fields: `id`, `userId`, `name`, `type`, `locationType` ("Indoor"|"Outdoor"), `lightExposure` ("Low Light"|"Partial Shade"|"Bright Indirect"|"Full Sun"), `potType` ("Terracotta"|"Plastic"|"Ceramic"|"Metal"|"Other"), `growingMedium` ("Soil"|"Water"), `hasDrainage` (Boolean), `lastWatered` (DateTime?), `nextWateringDate` (DateTime?), `wateringInterval` (Int, default 7), `recentlyReplanted` (Boolean?), `lastSoilChange` (DateTime?), `health` (String, default "Excellent"), `image` (String?), `careTips` (String?), `wateringTips` (String?).
-  - Indexed on `[userId]` and `[nextWateringDate]`.
-- **`WateringLog` model (`prisma/schema.prisma:112–119`)**:
-  - Fields: `id`, `userId`, `logDate` (DateTime).
-  - Unique constraint: `@@unique([userId, logDate])`. Records daily watering completion per user.
-- **`PlantStatusLog` model (`prisma/schema.prisma:98–110`)**:
-  - Fields: `id`, `plantId`, `status`, `health`, `aiAdvice`, `image`, `createdAt`.
-
-#### B. Client State Provider: `src/components/PlantsProvider.tsx`
-- Holds in-memory array `plants: Plant[]`.
-- `fetchPlants` (lines 107–127) calls `getUserPlantsAction()` (`src/app/actions/plants.ts`) and maps Prisma rows via `dbRowToPlant` (lines 53–75).
-- Listens to window custom event `"jaliz:plants-updated"` (lines 146–154) to refresh silently when plants change across modal updates or new plant registrations.
-- Provides CRUD operations: `refreshPlants()`, `createPlant()`, `updatePlant()`, `deletePlant()`.
-
-#### C. Current Task Calculation & Execution: `src/components/WateringSchedule.tsx`
-- **Date Handling**:
-  - Line 23: `const today = new Date().toISOString().split("T")[0]`.
-- **Watering Due Heuristic (`src/lib/watering.ts:14–28`)**:
-  ```ts
-  export function plantNeedsWater(plant: WateringNeedInput, now: Date = new Date()): boolean {
-    if (plant.nextWateringDate) {
-      return new Date(plant.nextWateringDate) <= now
-    }
-    const lastWateredMs = plant.lastWatered ? new Date(plant.lastWatered).getTime() : NaN
-    if (Number.isNaN(lastWateredMs)) return false
-    const daysAgo = Math.floor((now.getTime() - lastWateredMs) / (1000 * 3600 * 24))
-    let threshold = 7
-    if (plant.locationType === "Outdoor") threshold -= 2
-    if (plant.potType === "Terracotta") threshold -= 1
-    if (plant.potType === "Plastic") threshold += 1
-    if (plant.lightExposure === "Full Sun") threshold -= 2
-    if (plant.lightExposure === "Low Light") threshold += 2
-    return daysAgo >= Math.max(1, threshold)
+### 1.1 Existing Plant Data & Schemas
+- **Prisma Database Schema (`prisma/schema.prisma` lines 69-96)**:
+  `UserPlant` model represents user-owned instances of plants in a user's private collection:
+  ```prisma
+  model UserPlant {
+    id                 String   @id @default(uuid())
+    userId             String
+    user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    name               String
+    type               String?  @default("")
+    locationType       String?  @default("Indoor")
+    lightExposure      String?  @default("Bright Indirect")
+    potType            String?  @default("Plastic")
+    growingMedium      String?  @default("Soil") // "Soil" or "Water"
+    hasDrainage        Boolean? @default(true)
+    lastWatered        DateTime?
+    nextWateringDate   DateTime?
+    wateringInterval   Int?     @default(7)
+    recentlyReplanted  Boolean? @default(false)
+    lastSoilChange     DateTime?
+    health             String?  @default("Excellent")
+    image              String?
+    careTips           String?
+    wateringTips       String?
+    createdAt          DateTime @default(now())
+    statusLogs         PlantStatusLog[]
+    @@index([userId])
+    @@index([nextWateringDate])
   }
   ```
-- **Task Partitioning in Current UI**:
-  - Lines 44–47:
-    - `const plantsToWater = plants.filter(needsWater)`
-    - `const plantsSkip = plants.filter((p) => !needsWater(p))`
-- **Task Completion Handler**:
-  - Lines 49–63 (`handleMarkAllDone`):
-    ```ts
-    const handleMarkAllDone = async () => {
-      if (!user) return
-      try {
-        const ids = plantsToWater.map((p) => p.id)
-        if (ids.length > 0) {
-          await updatePlantsLastWateredAction(ids, today)
-        }
-        await markWateringDoneAction(today)
-        await refreshPlants()
-        await loadData()
-        setIsDone(true)
-      } catch (e) {
-        console.error(e)
-      }
+  There is NO general public botanical encyclopedia database table or `src/data/` directory in the repository.
+- **Content Architecture Precedent (`src/lib/blogData.ts`, `src/lib/blogTopics.ts`)**:
+  All content-driven programmatic SEO data in Jaliz is statically structured in `src/lib/` using TypeScript models (`BlogPost`, `BlogCluster`, `BlogFaq` in `src/lib/blogTopics.ts`).
+  Blog articles covering plant care (e.g. `نگهداری-سانسوریا`, `نگهداری-پتوس`, `نگهداری-زامیفولیا`, `نگهداری-برگ-انجیری` in `src/lib/blogPostsSeo.ts`) already contain rich Persian botanical content that can be referenced or cross-linked.
+
+### 1.2 Routing & Next.js App Router Conventions
+- **Next.js Version (`package.json` line 31)**:
+  `"next": "16.2.4"`, `"react": "19.2.4"`.
+  In Next.js 16 App Router, page and metadata parameters are asynchronous:
+  `params: Promise<{ slug: string }>` (confirmed in `src/app/blog/[slug]/page.tsx` line 13, 26, 69):
+  ```tsx
+  interface Props {
+    params: Promise<{ slug: string }>
+  }
+  export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const { slug } = await params
+    ...
+  }
+  export default async function BlogPostPage({ params }: Props) {
+    const { slug } = await params
+    ...
+  }
+  ```
+- **Sitemap Architecture (`src/app/sitemap.ts` lines 8-70)**:
+  ```ts
+  export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+    const staticPages: MetadataRoute.Sitemap = [
+      { url: SITE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
+      { url: `${SITE_URL}/marketplace`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
+      { url: `${SITE_URL}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.9 },
+      { url: `${SITE_URL}/plants/diagnose`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.8 },
+      { url: `${SITE_URL}/privacy`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.3 },
+    ]
+    const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+      url: `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`,
+      lastModified: new Date(post.publishedAtIso),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }))
+    ...
+    return [...staticPages, ...blogPages, ...listingPages]
+  }
+  ```
+  Currently `/wiki` and `/wiki/[slug]` are not registered in `src/app/sitemap.ts`.
+- **Robots Configuration (`src/app/robots.ts` lines 5-23)**:
+  ```ts
+  export default function robots(): MetadataRoute.Robots {
+    return {
+      rules: [
+        {
+          userAgent: "*",
+          allow: "/",
+          disallow: [
+            "/admin",
+            "/admin/",
+            "/schedule",
+            "/plants/new",
+            "/login",
+            "/register",
+            "/api/",
+          ],
+        },
+      ],
+      sitemap: `${SITE_URL}/sitemap.xml`,
     }
-    ```
-- **Current Limitations Observed**:
-  1. **Binary Grouping Only**: Plants needing water are merged into a single `plantsToWater` array. Overdue plants (e.g. 3 days late) are not distinguished from plants due today.
-  2. **Upcoming Plants are Hidden**: Non-due plants are rendered only as static pill chips ("شاداب و بی‌نیاز:"). The user cannot see upcoming care dates (e.g., "Tomorrow", "In 3 days").
-  3. **No Individual Task Completion**: The UI only provides a single bulk button ("آبیاری انجام شد"). A user cannot check off individual plants as they water them one by one.
-  4. **Backend Readiness**: The server action `updatePlantsLastWateredAction(plantIds: string[], dateStr: string)` in `src/app/actions/plants.ts:54–87` already takes `plantIds: string[]`. When passed `[singlePlantId]`, it updates that single plant and recalculates `nextWateringDate` based on `wateringInterval` via a transaction. Thus, individual completion is fully supported by the backend without database migrations.
+  }
+  ```
+  `/wiki` is not disallowed; it falls under `allow: "/"`. No `public/robots.txt` exists.
 
----
+### 1.3 Call-to-Action (CTA) Endpoints & Deficiencies Observed
+- **CTA 1: Add to User's Garden / Care Reminder (`src/app/plants/new/page.tsx`)**:
+  - `NewPlantPage` allows users to create a plant instance.
+  - Currently lines 89-106 initialize `draft` with static defaults (`wateringInterval: 7`, empty name, etc.).
+  - `NewPlantPage` does not read `searchParams` on mount. Adding query parameter parsing (e.g. `?name=...&type=...&interval=...&light=...`) will allow 1-click pre-population from wiki plant pages.
+- **CTA 2: Matching Marketplace Listings (`src/app/marketplace/page.tsx`)**:
+  - Line 82: `const [search, setSearch] = useState("")`.
+  - Line 45: `searchParams = useSearchParams()` in `MarketplaceOpenFromQuery` only reads `open` and `action`, but does NOT read `query` or `q`!
+  - Therefore, if `/wiki/[slug]` links to `/marketplace?query=سانسوریا`, `MarketplacePage` currently ignores `query` and does not filter listings unless updated to parse `searchParams.get("query")`.
+- **CTA 3: AI Disease Diagnosis (`src/app/plants/diagnose`)**:
+  - Publicly accessible page with camera/upload flow for plant disease identification.
+  - Used successfully across `BlogPostClient.tsx` (lines 172-175: `<Link href="/plants/diagnose">`).
 
-### 1.3 Weather Advice & Automatic Daily Fetching
-
-#### A. Current Weather Advice: `src/components/WeatherAdvice.tsx`
-- **Location**: `src/components/WeatherAdvice.tsx:13–126`
-- **Current Execution**:
-  - Checks `isSubscriptionActive(user?.subscriptionExpiresAt)`.
-  - Reads location from `localStorage.getItem("jaliz-location")` or defaults to `"تهران، ایران"`.
-  - **Manual Trigger Only**: Currently requires clicking a button `<Button onClick={fetchAdvice} disabled={loading}>{loading ? t("generating_btn") : t("generate_btn")}</Button>` (lines 116–123).
-  - Fetches plant data via `getUserPlantsAction()`, then calls `getWeatherAdviceAction(...)` (`src/app/actions/ai.ts:300–433`).
-- **Gating**:
-  - Subscribed users only: `getWeatherAdviceAction` checks `userHasActiveSubscription(userId)` on the server (lines 300–307).
-
----
-
-### 1.4 Existing Tests
-
-The following existing automated tests directly or indirectly cover schedule, watering, plants, and AI advice:
-1. `src/lib/__tests__/watering.test.ts` (71 lines, 7 unit tests):
-   - Tests `plantNeedsWater` with `nextWateringDate` due vs future.
-   - Tests 7-day default fallback.
-   - Tests environmental threshold adjustments (Outdoor, Terracotta, Full Sun, Low Light).
-   - Tests 1-day minimum floor.
-   - Tests invalid/missing `lastWatered`.
-2. `src/lib/__tests__/watering-notification.test.ts` (117 lines, 6 tests):
-   - Tests `formatWateringNotification` for Persian and English (empty, 1 plant, 2-3 plants, 4+ plants).
-   - Tests `shouldTriggerDailyWateringNotification` daily throttling.
-   - Tests `checkAndDispatchWateringNotification` execution logic.
-3. `src/lib/__tests__/plants-cache.test.ts` (97 lines, 3 tests):
-   - Tests `dbRowToPlant` model conversion, fallbacks, and date parsing.
-4. `src/lib/__tests__/relative-date.test.ts` (81 lines):
-   - Tests relative date conversions (`toLocalDateString`, `dateStringDaysAgo`, etc.).
-5. `src/app/actions/__tests__/plants-settings-perf.test.ts` (99 lines):
-   - Tests `updatePlantsLastWateredAction` input validation and single batched transaction execution.
-6. `src/lib/__tests__/subscription.test.ts` (41 lines):
-   - Tests subscription prices (99,000 Tomans / 990,000 Rials), expiration checks, and duration stacking.
-7. `src/app/actions/__tests__/ai.test.ts` (65 lines):
-   - Tests TokenBazaar/Gemini model fetch and fallback.
-
-**Test Gap**: There are currently **no component-level tests** for `Dashboard.tsx`, `WateringSchedule.tsx`, or `WeatherAdvice.tsx`. Tests are purely Vitest functions for `src/lib/` and Server Actions.
+### 1.4 Typography, Layout, and Design Tokens
+- **Font (`src/app/layout.tsx` lines 5-25)**:
+  `Vazirmatn` font configured as CSS variable `--font-vazirmatn`. RTL direction is natively supported.
+- **Palette (`src/app/globals.css` lines 27-54)**:
+  Forest green brand palette: `emerald-800: #12382e`, `emerald-600: #1f5f4e`, `emerald-500: #2e7462`.
+  Card surfaces use `bg-[#fcfaf8]`, `surface-card`, `border-slate-200/60`.
 
 ---
 
 ## 2. Logic Chain
 
-### 2.1 Why the Current `/schedule` View Needs Architecture Decomposition
-- **Observation 1.1.B & 1.2.C**: `Dashboard.tsx` and `WateringSchedule.tsx` are monolithic. `WateringSchedule.tsx` handles data fetching, push notifications, task filtering, bulk completion, and UI rendering inside a single 190-line file.
-- **Deduction**: Redesigning this page into a Duolingo-style gamified experience requires breaking down `/schedule` into modular components:
-  1. `CareHeader` / `GamifiedStatusBar` (streak flame, XP count, gardener level, daily progress ring).
-  2. `MascotCompanion` (SVG plant companion with speech bubble, emotional states: thirsty, happy, celebrating, sleeping).
-  3. `CareTaskList` (organized into Overdue, Today, and Upcoming sections).
-  4. `CareTaskCard` (per-plant card with plant thumbnail, status, due tag, and individual "Water" check button).
-  5. `DailyAdviceCard` (automatic fetching, daily calendar cache, weather insight).
-  6. `CelebrationModal` / `ConfettiOverlay` (visual rewarding when daily goals are reached).
+1. **Plant Encyclopedia Architecture**:
+   - Because `prisma/schema.prisma` only models `UserPlant` for authenticated private gardens and there is no database table for public encyclopedias (Observation 1.1), storing the encyclopedia in a dedicated TypeScript module `src/lib/wikiData.ts` mirrors the established pattern in `src/lib/blogData.ts`.
+   - Storing the data in TypeScript guarantees zero runtime database latency, instant static site generation (`generateStaticParams`), type safety across components, and zero migrations required.
 
-### 2.2 Task Categorization Logic: Overdue, Today, and Upcoming
-- **Observation 1.2.B & `MyPlantsDashboard.tsx:205-228`**: In `MyPlantsDashboard`, the relative due time is calculated as:
-  ```ts
-  const diffTime = new Date(plant.nextWateringDate).getTime() - Date.now()
-  const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24))
-  ```
-- **Deduction**: We can define a deterministic task categorizer utility `getPlantCareCategory(plant: Plant, now: Date = new Date())`:
-  - **Overdue (`overdue`)**: `diffDays < 0` OR (`!plant.nextWateringDate` and `plantNeedsWater(plant, now)` and last watered > threshold). These plants need urgent attention.
-  - **Today (`today`)**: `diffDays === 0` OR (`plantNeedsWater(plant, now)` and not overdue). Tasks scheduled for today.
-  - **Upcoming (`upcoming`)**: `diffDays > 0` (e.g. tomorrow, 2 days, 3-7 days). Plants that do not need water today, grouped by future due date.
-- **Benefit**: This transforms the passive "Skip" list into an actionable calendar schedule, motivating users to check back daily.
+2. **Plant Species Coverage**:
+   - Requirement R1 explicitly asks for popular houseplants: سانسوریا، پتوس، زامیفولیا، برگ انجیری، فیکوس، آگلونما، یوکا، دیفن باخیا، شفلرا، کالانکوئه، قاشقی، اسپاتی فیلوم.
+   - We must provide all 12 required species plus companion species (e.g. آلوئه‌ورا، گندمی، فیکوس لیراتا، برگ عبایی) to ensure comprehensive topical authority for Persian houseplant search queries.
 
-### 2.3 Individual and Bulk Task Completion Flow
-- **Observation 1.2.C**: Currently, clicking "آبیاری انجام شد" calls `updatePlantsLastWateredAction(allIds, today)` and `markWateringDoneAction(today)`.
-- **Deduction**:
-  - When an individual plant card is checked off:
-    1. Optimistically update local plant state in `PlantsProvider` or local view state.
-    2. Call `await updatePlantsLastWateredAction([plant.id], today)`.
-    3. Award XP (e.g. +10 XP) with a floating celebratory animation.
-    4. If all tasks for "Today" and "Overdue" are now complete:
-       - Call `await markWateringDoneAction(today)` to persist the daily log for streak tracking.
-       - Trigger the Duolingo-style celebration burst (confetti, mascot celebration state).
-  - Bulk action ("آبیاری همه" / "Water All"):
-    - Keep this option available at the top/bottom of the Today list for power users with many plants.
+3. **Care Specifications Structure**:
+   - R1 requires: Light, Watering, Temperature, Soil, Pet Safety (سمیت برای حیوانات), and Common Problems (مشکلات رایج).
+   - In `src/lib/wikiData.ts`, each plant entry should define:
+     - `care.light`: level, description, tolerance, window placement.
+     - `care.watering`: schedule, season guidance, defaultIntervalDays (for reminder CTA).
+     - `care.temperature`: min/max temp, frost limit, humidity requirements.
+     - `care.soil`: soil mixture, drainage recommendations, pot type.
+     - `care.petSafety`: `isToxic` boolean, toxicity details (calcium oxalate, saponins, or 100% pet-friendly).
+     - `care.commonProblems`: array of objects `{ problem, cause, solution, severity }`.
 
-### 2.4 Streak and XP Mechanics Grounded in Existing Models
-- **Observation 1.2.A**: The `WateringLog` model stores `(userId, logDate)` with a unique constraint.
-- **Deduction**:
-  - We can calculate the user's active streak directly from their `WateringLog` history!
-  - If a user has a log today (`today`), current streak = consecutive days counting backward from today. If no log today yet, check if there was a log yesterday (`yesterday`): if yes, the streak is alive and pending today's completion. If no log yesterday and none today, streak = 0.
-  - Streak can also be stored/cached locally (`localStorage.getItem("jaliz_user_streak")`) with synchronization from backend logs.
-  - XP can be tracked:
-    - Base: `10 XP` per plant watered.
-    - Daily Completion Bonus: `+25 XP` when all due tasks are completed for the day.
-    - Streak Milestone Bonus: `+50 XP` for every 7-day streak milestone.
-  - Levels:
-    - Level 1 (جوانه / Sprout): 0–50 XP
-    - Level 2 (برگچه / Seedling): 51–150 XP
-    - Level 3 (بوته سبز / Green Bush): 151–350 XP
-    - Level 4 (گیاه‌شناس / Plant Specialist): 351–700 XP
-    - Level 5 (استاد جالیز / Jaliz Master): 700+ XP
+4. **SEO & Structured Data (JSON-LD)**:
+   - To achieve search rich results, each plant page at `/wiki/[slug]` must output `@graph` containing:
+     1. `Article` schema: Headline, description, botanical name, publisher info.
+     2. `BreadcrumbList`: Home (`/`) > دانشنامه گیاهان (`/wiki`) > Plant Name (`/wiki/[slug]`).
+     3. `FAQPage` schema: Formed dynamically from the plant's `commonProblems` (e.g. Q: "علت زرد شدن برگ‌های سانسوریا چیست؟" A: "علت: ... راهکار: ...").
+   - This provides Google search results with immediate FAQ drop-downs and rich sitelinks.
 
-### 2.5 Automated AI Advice with Calendar-Day Caching
-- **Observation 1.3.A**: Currently, `WeatherAdvice.tsx` requires manual button click and has no caching.
-- **Deduction**:
-  - To fulfill Requirement R3:
-    1. On component mount (inside `useEffect` when `subscribed === true`), check `localStorage.getItem("jaliz_daily_advice_cache")`.
-    2. The cache structure: `{ date: "YYYY-MM-DD", userId: string, advice: string, location: string }`.
-    3. If `cache.date === todayLocalString` and `cache.userId === user.id`, immediately populate the advice state from cache without making network requests.
-    4. If cache is missing or stale:
-       - Automatically call `getWeatherAdviceAction(...)`.
-       - On success, save `{ date: todayLocalString, userId: user.id, advice: response.advice, location: userLocation }` to `localStorage`.
-    5. Mascot companion can ingest the first sentence / key warning of the advice and display it as an interactive speech bubble!
+5. **CTA Cohesion**:
+   - For CTA 1: Linking to `/plants/new?name=${plant.nameFa}&type=${plant.nameEn}&interval=${plant.care.watering.defaultIntervalDays}&light=${encodeURIComponent(plant.care.light.level)}` enables 1-click addition into the user's garden.
+   - For CTA 2: Updating `src/app/marketplace/page.tsx` to initialize `search` from `searchParams.get("query")` ensures that clicking `/marketplace?query=سانسوریا` immediately displays matching listings.
+   - For CTA 3: Linking to `/plants/diagnose` directs users with leaf problems directly to AI diagnosis.
+
+6. **Sitemap & Robots**:
+   - Adding `/wiki` to `staticPages` and mapping all `wikiPlants` into `wikiPages` in `src/app/sitemap.ts` (Observation 1.2) guarantees search engine discovery.
+   - `src/app/robots.ts` already permits `/` (Observation 1.2); keeping `/wiki` allowed satisfies all crawler requirements.
 
 ---
 
 ## 3. Caveats
 
-1. **Local vs UTC Date Boundaries**:
-   - `new Date().toISOString().split("T")[0]` evaluates in UTC. In Iran (UTC+03:30), after 8:30 PM local time (20:30), UTC rolls over to the next day, which can cause date desync if mixed.
-   - Recommendation: Use `src/lib/relative-date.ts:toLocalDateString(new Date())` or `now.toLocaleDateString("en-CA")` (as used in `watering-notification.ts:192`) consistently across the frontend and server actions.
-2. **Offline / Network Resilience**:
-   - XP and streaks are gamification drivers. If the user marks a plant offline, optimistic updates should reflect immediately so the user experience feels instant (like Duolingo).
-3. **Mascot Styling without Heavy External Dependencies**:
-   - Per Ponytail philosophy and project guidelines, the mascot should be lightweight SVG and Tailwind CSS animations rather than adding heavy 3D or Lottie animation runtimes.
-4. **Subscription Paywall Integrity**:
-   - Gamified features (XP, mascot speech bubbles, daily advice) must not leak to non-subscribers in a way that bypasses paywall rules (R4). Non-subscribers should see a motivating teaser of the gamified interface (e.g. blurred mascot saying "با فعال‌سازی اشتراک، همراه هر روز گیاهانت هستم! 🌱").
+1. **Slug Strategy**:
+   - URL slugs could be English (e.g. `/wiki/sansevieria`) or Persian (e.g. `/wiki/سانسوریا`).
+   - We recommend setting primary slug as Latin (`sansevieria`, `pothos`, `zamioculcas`) while supporting Persian slug lookup (`slugFa: "سانسوریا"`) so that both `/wiki/sansevieria` and `/wiki/سانسوریا` resolve seamlessly. In `sitemap.ts`, the primary canonical slug is indexed.
+2. **Next.js 16 Dynamic Route Params**:
+   - In Next.js 16, route `params` is a `Promise`. The implementer must `await params` in both `generateMetadata` and `Page`.
+3. **No New Dependencies**:
+   - All icons exist in `lucide-react`. No new external packages are needed.
 
 ---
 
-## 4. Conclusion
+## 4. Conclusion & Recommended Design
 
-1. **Architecture Ready**: The codebase cleanly separates auth (`AuthProvider`), plant collection (`PlantsProvider`), subscription gating (`isSubscriptionActive`), and server actions (`updatePlantsLastWateredAction`, `markWateringDoneAction`, `getWeatherAdviceAction`).
-2. **Backend Requires No Schema Migration**:
-   - `updatePlantsLastWateredAction` already accepts `plantIds: string[]`, enabling both individual and batch task completions.
-   - `WateringLog` already tracks daily completion dates, enabling streak computation.
-3. **Core Redesign Strategy for `/schedule`**:
-   - Replace the static layout in `src/components/WateringSchedule.tsx` with a Duolingo-style Care Experience:
-     - **Top Gamification Bar**: Streak counter (🔥), XP and Level badge, Circular Progress Ring (% of today's tasks completed).
-     - **Plant Mascot Companion**: Placed beside or above the task list, displaying contextual speech bubbles ("امروز ۳ تا از دوست‌هام تشنه‌ان! 💧").
-     - **Categorized Task Cards**:
-       - 🚨 **Overdue**: Urgent alert cards with red/amber badges.
-       - 💧 **Today**: Interactive cards with animated check buttons.
-       - 🌱 **Upcoming**: Collapsible or grouped forecast cards for tomorrow and next week.
-     - **Automatic Cached Advice**: Seamless card beneath tasks that auto-loads with local calendar-day caching.
-     - **Celebration Feedback**: Confetti and modal on daily task completion.
-4. **Testing Plan**:
-   - Create unit tests for task categorization (`src/lib/__tests__/care-tasks.test.ts`).
-   - Create unit tests for streak and XP calculation (`src/lib/__tests__/gamification.test.ts`).
-   - Create unit tests for daily advice caching (`src/lib/__tests__/daily-advice-cache.test.ts`).
+### 4.1 Recommended File Structure
+```
+src/
+├── lib/
+│   ├── wikiData.ts            # WikiPlant interfaces, helpers, and 16 detailed plant datasets
+│   └── __tests__/
+│       └── wikiData.test.ts   # Comprehensive tests for wiki data integrity and lookup
+├── app/
+│   ├── wiki/
+│   │   ├── page.tsx           # Directory index (SSR metadata + SEO hero)
+│   │   ├── WikiIndexClient.tsx# Interactive search, category/pet-safety filters, grid
+│   │   └── [slug]/
+│   │       ├── page.tsx       # SSG dynamic page, generateStaticParams, generateMetadata, JSON-LD
+│   │       └── WikiPlantClient.tsx # Structured care tabs, cards, CTAs, common problems
+│   ├── sitemap.ts             # Register /wiki and all wiki plant pages
+│   └── marketplace/
+│       └── page.tsx           # Enhance to read searchParams.get("query")
+```
+
+### 4.2 Data Model Specification (`src/lib/wikiData.ts`)
+```typescript
+export interface PlantCareSpec {
+  light: {
+    level: string // e.g. "نور زیاد غیرمستقیم"
+    levelEn: "low" | "medium" | "bright-indirect" | "direct"
+    description: string
+    placementTips: string
+  }
+  watering: {
+    schedule: string // e.g. "هر ۱۰ الی ۱۴ روز در تابستان، ۳ الی ۴ هفته در زمستان"
+    rule: string // "خشک شدن کامل خاک تا عمق ۲ الی ۳ بند انگشت"
+    defaultIntervalDays: number // 10
+    winterAdjustment: string
+  }
+  temperature: {
+    range: string // "۱۶ الی ۲۸ درجه سانتی‌گراد"
+    minCelsius: number // 10
+    humidity: string // "۳۰ الی ۵۰ درصد (رطوبت معمولی اتاق)"
+    warning: string
+  }
+  soil: {
+    mixture: string // "خاک با بافت سبک و زهکشی بالا..."
+    potType: string // "گلدان سفالی یا سرامیکی سوراخ‌دار"
+    repottingInterval: string // "هر ۲ الی ۳ سال"
+  }
+  petSafety: {
+    isToxic: boolean
+    toxicityLevel: "non-toxic" | "mild" | "moderate" | "severe"
+    labelFa: string // "سمی برای گربه و سگ" or "کاملاً بی‌خطر (Pet-Friendly)"
+    details: string
+  }
+  commonProblems: Array<{
+    problem: string // e.g. "زرد شدن و نرم شدن برگ‌ها"
+    cause: string // "آبیاری بیش از حد و خفگی ریشه"
+    solution: string // "توقف آبیاری تا خشک شدن عمق خاک..."
+    severity: "low" | "medium" | "high"
+  }>
+}
+
+export interface WikiPlant {
+  id: string
+  slug: string // "sansevieria"
+  slugFa: string // "سانسوریا"
+  nameFa: string // "سانسوریا"
+  nameEn: string // "Snake Plant"
+  scientificName: string // "Dracaena trifasciata"
+  family: string // "مارچوبگان (Asparagaceae)"
+  difficulty: "آسان" | "متوسط" | "سخت"
+  difficultyEn: "easy" | "medium" | "hard"
+  growthRate: "کند" | "متوسط" | "سریع"
+  airPurifying: boolean
+  overview: string
+  propagation: string
+  fertilization: string
+  care: PlantCareSpec
+  matchingMarketplaceQuery: string // "سانسوریا"
+  tags: string[]
+  gradient: string
+  iconName: string
+}
+```
+
+### 4.3 Proposed Implementation Steps for Worker
+1. **Step 1 — Create `src/lib/wikiData.ts`**:
+   Populate all 12 required plants:
+   - سانسوریا (sansevieria)
+   - پتوس (pothos)
+   - زامیفولیا (zamioculcas)
+   - برگ انجیری (monstera)
+   - فیکوس (ficus-elastica)
+   - آگلونما (aglaonema)
+   - یوکا (yucca)
+   - دیفن باخیا (dieffenbachia)
+   - شفلرا (schefflera)
+   - کالانکوئه (kalanchoe)
+   - قاشقی (peperomia)
+   - اسپاتی فیلوم (spathiphyllum)
+   Plus companion species: آلوئه‌ورا (aloe-vera), گندمی (spider-plant), فیکوس لیراتا (ficus-lyrata), برگ عبایی (cast-iron-plant).
+   Implement helpers: `getAllWikiPlants()`, `findWikiPlant(slug: string)`, `wikiCanonicalUrl(slug: string)`.
+
+2. **Step 2 — Implement `/wiki` Directory Index**:
+   - `src/app/wiki/page.tsx`: Server component with rich SEO metadata (`title: "دانشنامه گیاهان آپارتمانی | راهنمای جامع نگهداری گل و گیاه"`, OpenGraph, Twitter card).
+   - `src/app/wiki/WikiIndexClient.tsx`: Client component providing live search, difficulty filters, pet-friendly toggle, and responsive cards with care tags.
+
+3. **Step 3 — Implement Dynamic `/wiki/[slug]` Pages**:
+   - `src/app/wiki/[slug]/page.tsx`:
+     - `generateStaticParams()` pre-rendering all slugs.
+     - `generateMetadata()` setting dynamic titles, description, canonical URL, and OpenGraph.
+     - Complete JSON-LD schema with `Article`, `BreadcrumbList`, and `FAQPage` (generated from `commonProblems`).
+   - `src/app/wiki/[slug]/WikiPlantClient.tsx`:
+     - Persian RTL layout with breadcrumbs (`خانه > دانشنامه گیاهان > [نام گیاه]`).
+     - Botanical summary badge pill (نام علمی، خانواده، سختی نگهداری، تصفیه هوا).
+     - 6 Care Cards:
+       1. ☀️ نور (Light)
+       2. 💧 آبیاری (Watering)
+       3. 🌡️ دما و رطوبت (Temperature & Humidity)
+       4. 🪴 خاک و گلدان (Soil & Pot)
+       5. 🐾 سمیت برای حیوانات خانگی (Pet Safety)
+       6. ⚠️ مشکلات رایج و درمان (Common Problems & Solutions)
+     - 3 Distinct Call-to-Action (CTA) Banners:
+       1. **افزودن به باغچه و یادآور آبیاری**: Link to `/plants/new?name=...&type=...&interval=...`.
+       2. **جستجوی قلمه و گلدان در بازارچه**: Link to `/marketplace?query=${encodeURIComponent(plant.matchingMarketplaceQuery)}`.
+       3. **عارضه‌یابی و درمان با پزشک هوش مصنوعی**: Link to `/plants/diagnose`.
+     - Related Blog Posts section linking to corresponding articles in `/blog`.
+
+4. **Step 4 — Update Sitemap & Robots**:
+   - `src/app/sitemap.ts`: Add `/wiki` entry to `staticPages` and map `wikiPlants` to `wikiPages`.
+   - Confirm `src/app/robots.ts` allows crawling `/wiki`.
+
+5. **Step 5 — Enhance Marketplace Query Pre-fill**:
+   - In `src/app/marketplace/page.tsx`: In `MarketplaceOpenFromQuery`, read `searchParams.get("query") || searchParams.get("q")` and pass to `setSearch`.
+
+6. **Step 6 — Write Tests & Validate**:
+   - Create `src/lib/__tests__/wikiData.test.ts`.
+   - Run test suite and build verification.
 
 ---
 
 ## 5. Verification Method
 
-To independently verify the observations and conclusions in this report:
+To independently verify the survey findings and subsequent implementation:
 
-1. **Verify Route & Component Files**:
-   - `view_file` on `src/app/schedule/page.tsx` (lines 1–30) — confirms redirect and rendering of `Dashboard`.
-   - `view_file` on `src/components/Dashboard.tsx` (lines 24–222) — confirms subscription gating and `WateringSchedule` + `WeatherAdvice` inclusion.
-   - `view_file` on `src/components/WateringSchedule.tsx` (lines 44–68) — confirms existing binary filter (`plantsToWater` vs `plantsSkip`) and bulk-only completion.
-   - `view_file` on `src/components/WeatherAdvice.tsx` (lines 116–123) — confirms manual consultation button and absence of auto-fetching or daily cache.
-2. **Verify Server Actions & Backend Capabilities**:
-   - `view_file` on `src/app/actions/plants.ts` (lines 54–87) — confirms `updatePlantsLastWateredAction` accepts `plantIds: string[]` and runs a single atomic transaction.
-   - `view_file` on `prisma/schema.prisma` (lines 112–119) — confirms `WateringLog` model with `userId_logDate` unique index.
-3. **Verify Existing Tests**:
-   - Run `npx vitest run src/lib/__tests__/watering.test.ts`
-   - Run `npx vitest run src/lib/__tests__/watering-notification.test.ts`
-   - Run `npx vitest run src/lib/__tests__/subscription.test.ts`
-   - Confirm all pass without regressions.
-4. **Invalidation Conditions**:
-   - If `updatePlantsLastWateredAction` were restricted to all-or-nothing updating, backend action changes would be required (invalidated: it takes `plantIds: string[]`).
-   - If `WateringLog` did not exist, a new schema migration would be required for streaks (invalidated: `WateringLog` already exists).
+1. **Data Invariants Test**:
+   ```bash
+   npx vitest run src/lib/__tests__/wikiData.test.ts
+   ```
+   Verify:
+   - All 12 required plant species + bonus species exist with unique slugs.
+   - All care fields (light, watering with `defaultIntervalDays > 0`, temperature, soil, petSafety with boolean `isToxic`, and non-empty `commonProblems`) are strictly populated.
+   - Slug resolution correctly matches English slug, Persian slug, and Persian name.
+
+2. **Sitemap Verification**:
+   Verify `src/app/sitemap.ts` includes `${SITE_URL}/wiki` and all `${SITE_URL}/wiki/[slug]` URLs.
+   Run tests or inspect sitemap output structure.
+
+3. **Build & Typecheck**:
+   ```bash
+   npm run build
+   ```
+   Must pass with 0 errors, validating static page generation for all `/wiki` and `/wiki/[slug]` routes.
+
+4. **Linting Check**:
+   ```bash
+   npm run lint
+   ```
+   Must pass with 0 lint errors.
+
+5. **Invalidation Conditions**:
+   - If any of the 12 required plants is omitted, requirement R1 is unsatisfied.
+   - If `params` is not awaited as a `Promise` in Next.js 16, build will fail.
+   - If JSON-LD output is missing or invalid, rich snippet indexing will fail.

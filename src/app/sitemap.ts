@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next"
 import prisma from "@/lib/prisma"
 import { blogPosts } from "@/lib/blogData"
+import { getAllWikiPlants } from "@/lib/wikiData"
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
 
@@ -26,6 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
+      url: `${SITE_URL}/wiki`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: `${SITE_URL}/plants/diagnose`,
       lastModified: new Date(),
       changeFrequency: "monthly",
@@ -38,6 +45,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.3,
     },
   ]
+
+  // Plant encyclopedia pages
+  let wikiPages: MetadataRoute.Sitemap = []
+  try {
+    const plants = getAllWikiPlants()
+    wikiPages = plants.map((plant) => ({
+      url: `${SITE_URL}/wiki/${encodeURIComponent(plant.slug)}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    }))
+  } catch (err) {
+    console.error("Sitemap: failed to load wiki plants", err)
+  }
 
   // Blog post pages
   const blogPages: MetadataRoute.Sitemap = blogPosts.map((post) => ({
@@ -66,5 +87,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("Sitemap: failed to fetch listings", err)
   }
 
-  return [...staticPages, ...blogPages, ...listingPages]
+  return [...staticPages, ...wikiPages, ...blogPages, ...listingPages]
 }

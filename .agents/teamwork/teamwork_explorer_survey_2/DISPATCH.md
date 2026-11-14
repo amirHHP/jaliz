@@ -1,51 +1,51 @@
-# Dispatch for Explorer 2: Plant Mascot Companion & Expressive States
+# Task Assignment: Blog System, HowTo Schema & Title Optimization Survey
 
-- Agent ID: explorer_survey_2
-- Archetype: teamwork_explorer
-- Role: Codebase Researcher (Mascot & Visual States)
-- Working Directory: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2
+## Working Directory
+/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2
+
+## User Request
+Read: /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md
 
 ## Objective
-Read `/Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md` and investigate the codebase to design and specify the Expressive Mascot Plant Companion (R2):
-1. Design system & SVG conventions: check styling patterns (Tailwind CSS v4, Lucide icons, SVG components in `src/components/`).
-2. Mascot character concept: vector SVG/CSS mascot (e.g. cute lively plant/sprout companion) with distinct expressive visual states:
-   - Thriving / Happy (شاداب، پرانرژی)
-   - Thirsty / Needs Attention (تشنه، بی‌حال، نیازمند آب)
-   - Celebrating / Completed (جشن و شادی، عینک دودی/ستاره، تبریک)
-   - Optional neutral / resting state
-3. Dynamic speech bubble system: contextual Persian messages based on:
-   - All plants watered / zero pending tasks
-   - Plants thirsty / overdue watering
-   - Daily streak achievements
-   - Weather conditions or general care tips
-4. Component placement and responsiveness: where the mascot sits on `/schedule` (desktop & mobile viewports), animation effects (bouncing, blinking, confetti/celebration).
-5. Identify any potential component boundaries or conflicts.
+Investigate how blog articles are structured, rendered, and typed, and how to implement:
+1. Automatic HowTo JSON-LD schema generation for tutorial blog articles in `src/app/blog/[slug]/page.tsx`:
+   - Inspect `src/app/blog/[slug]/page.tsx`, `src/lib/blogData.ts`, `src/lib/blogPostsExpansion1.ts`, `src/lib/blogPostsExpansion2.ts`, and any types (`BlogPost`, etc.).
+   - How are articles structured? Look at categories, tags, content headings (H2, H3), lists, or steps.
+   - Which articles represent tutorials (e.g. repotting/تعویض گلدان, water propagation/تکثیر در آب, moss pole building/ساخت قیم خزه, etc.)?
+   - How can we reliably detect tutorial posts without breaking non-tutorial posts?
+   - How to construct valid schema.org `HowTo` JSON-LD schema (with `name`, `description`, `step` array with `name`/`text` or `HowToStep`) while keeping existing `BlogPosting`/`Article` schema intact or alongside it.
+2. CTR Optimization of Blog Titles:
+   - Inspect current titles in `src/lib/blogData.ts` and expansion files.
+   - How are titles stored? Are they used in slugs or only as display titles? (IMPORTANT: Slugs must NEVER change to avoid breaking existing URLs and internal links!).
+   - Identify CTR-enhancing patterns (emojis, Persian brackets `【...】` or `[...]`, power words, actionable hooks) that can be applied to titles across the articles.
+   - Outline an exact strategy and safe modifications.
 
-## Deliverables
-Write your comprehensive analysis to `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2/handoff.md`.
-Report back when finished.
+## Output Requirements
+Produce a comprehensive handoff report at `/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2/handoff.md` with:
+- Codebase evidence (file paths, types, schema structure)
+- Proposed tutorial detection logic and HowTo schema generator code structure
+- Recommended CTR title updates and validation that slugs remain intact
+- Step-by-step implementation plan for R2 and R4
 
 
-## 2026-11-13T05:00:17Z
-You are explorer_survey_2, a teamwork_explorer subagent.
+## 2026-11-13T19:59:28Z
+From: eed6eb13-3f90-4d26-9c91-172933d897e5
+Content:
+You are teamwork_explorer_survey_2, a read-only exploration agent.
 Your working directory is: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2
-Read your dispatch instructions in /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2/DISPATCH.md.
-MANDATORY: You MUST read /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md before starting work.
-Focus on:
-1. Plant Mascot Companion requirements (R2) and existing SVG/styling patterns in Jaliz.
-2. Character design concepts for a vector SVG/CSS plant companion mascot with dynamic visual states:
-   - Thriving / Happy (شاداب، پرانرژی)
-   - Thirsty / Needs Attention (تشنه، بی‌حال، نیازمند آب)
-   - Celebrating / Completed (جشن و شادی، عینک دودی/ستاره، تبریک)
-   - Resting / Neutral
-3. Dynamic speech bubble system: contextual Persian messages based on plant care status, watering tasks, and streaks.
-4. Component placement and responsive layout on /schedule.
-Write your complete structured handoff report to:
-/Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2/handoff.md
-When done, notify your orchestrator via send_message.
+Your task assignment is in: /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2/DISPATCH.md
+The authoritative user request is in: /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md
+
+You MUST read /Users/sotoon/personal/jaliz/.agents/teamwork/ORIGINAL_REQUEST.md first before starting your investigation.
+Follow all instructions in DISPATCH.md.
+Investigate the codebase thoroughly regarding blog structure, HowTo JSON-LD schema generation in src/app/blog/[slug]/page.tsx for tutorial articles, and CTR title optimization for blog data.
+Produce a comprehensive handoff report at /Users/sotoon/personal/jaliz/.agents/teamwork/teamwork_explorer_survey_2/handoff.md.
+When done, message me with your completion notification.
 
 
-## 2026-11-13T05:10:48Z
-**Context**: Survey Phase for Expressive Mascot Plant Companion (Explorer Survey 2)
-**Content**: Checking in on your progress with the mascot SVG character design, visual states (thriving, thirsty, celebrating, resting), and contextual Persian speech bubble engine.
-**Action**: Please share your current progress or ETA, and finalize your handoff.md report when ready.
+## 2026-11-13T20:18:40Z
+From: eed6eb13-3f90-4d26-9c91-172933d897e5
+Content:
+**Context**: Server restart recovery
+**Content**: The server was restarted. Please resume your exploration of the blog system, HowTo JSON-LD schema generation in src/app/blog/[slug]/page.tsx for tutorial articles, and CTR title optimization per DISPATCH.md.
+**Action**: Complete your survey investigation, write your findings to handoff.md, and message me when finished.

@@ -1,39 +1,44 @@
-Redesign the Jaliz plant irrigation and care page (`/schedule`) into a dynamic, motivating, and gamified experience inspired by Duolingo, featuring an expressive mascot companion and automatic daily AI advice for production use.
+Implement the remaining SEO Master strategy items for Jaliz (jalizapp.ir), a Persian houseplant care assistant Next.js App Router project: a programmatic houseplant encyclopedia under `/wiki`, HowTo JSON-LD schema for tutorial blog articles, dynamic blog-to-marketplace cross-linking, and CTR optimization for blog titles.
 
+Working directory: /Users/sotoon/personal/jaliz
 Integrity mode: development
 
 ## Requirements
 
-### R1. Gamified Duolingo-Style Irrigation & Care Experience
-Redesign the `/schedule` view (rendered via `src/components/Dashboard.tsx`, `src/components/WateringSchedule.tsx`, and `src/components/WeatherAdvice.tsx`) with an inviting, gamified, and vibrant aesthetic that motivates users to open the app and tend to their plants daily.
+### R1. Programmatic SEO / Houseplant Encyclopedia
+Build a scalable plant encyclopedia directory at `/wiki` and dynamic individual plant pages (`/wiki/[slug]`) covering popular houseplants (such as سانسوریا، پتوس، زامیفولیا، برگ انجیری، فیکوس، آگلونما، یوکا، دیفن باخیا، شفلرا، کالانکوئه، قاشقی، اسپاتی فیلوم).
+- Each plant page must feature structured care specifications: Light, Watering, Temperature, Soil, Pet Safety (سمیت برای حیوانات), and Common Problems (مشکلات رایج), accompanied by valid JSON-LD structured data.
+- Include clear call-to-action (CTA) buttons on each plant page: add to user's garden / care reminder, browse matching marketplace listings (`/marketplace?query=...`), and diagnose plant leaf diseases with AI (`/plants/diagnose`).
+- Register `/wiki` and all generated plant pages in `src/app/sitemap.ts` and ensure `robots.txt` permits crawling.
 
-### R2. Expressive Mascot Plant Companion
-Implement a plant companion mascot with dynamic visual states (e.g., thriving, thirsty/needs attention, celebrating) rendered via vector SVG / CSS styling directly in project components. The mascot must present contextual, encouraging, and informative speech bubbles and messages regarding the user's plants and upcoming watering tasks.
+### R2. HowTo Schema for Tutorial Blog Articles
+In `src/app/blog/[slug]/page.tsx`, automatically detect tutorial blog posts (e.g. repotting, water propagation, moss pole building) based on their category, tags, or content structure, and generate valid structured `HowTo` JSON-LD schema with steps and required schema fields for search engine rich results without breaking non-tutorial posts.
 
-### R3. Automated Daily AI Advice with Daily Caching
-Automatically fetch and display daily plant care / weather advice on page load without requiring the user to press a manual consultation button ("مشاوره"). Advice results must be cached per user per calendar day (e.g. in local storage or application state) to prevent redundant API calls and unnecessary costs on subsequent visits during the same day.
+### R3. Blog & Marketplace Cross-Linking
+In species blog articles or at the bottom of blog articles, dynamically link to related marketplace listings based on matching plant keywords or tags to drive commercial intent.
 
-### R4. Preservation of Subscription Gating
-Preserve existing subscription gating logic: active subscribers enjoy full automated advice and gamified companion insights, while unsubscribed users see the locked paywall preview as established.
+### R4. CTR Optimization of Blog Titles
+Update and polish blog article titles in the blog dataset using emojis, brackets, and engaging hooks to improve click-through rates in search engine results.
 
 ## Acceptance Criteria
 
-### Gamified Page UI
-- [ ] The `/schedule` page reflects a gamified, welcoming design inspired by Duolingo that showcases daily plant care tasks.
-- [ ] Task completion and care status updates provide clear visual feedback.
+### Houseplant Encyclopedia
+- [ ] The `/wiki` index page and dynamic `/wiki/[slug]` plant pages render correctly with Persian typography and responsive styling.
+- [ ] Each plant page displays structured care details (Light, Watering, Temperature, Soil, Pet Safety, Common Problems).
+- [ ] Each plant page outputs valid JSON-LD structured data.
+- [ ] Direct CTAs on plant pages link correctly to garden care reminder, `/marketplace?query=...`, and `/plants/diagnose`.
+- [ ] `/wiki` and all plant slugs are included in `src/app/sitemap.ts` and crawlable per `robots.txt`.
 
-### Mascot Companion
-- [ ] Mascot is rendered via vector SVG/CSS components across multiple expressive states corresponding to plant care status.
-- [ ] Speech bubbles display contextual messages reflecting the health, schedule, or pending tasks of the user's plants.
+### HowTo Schema
+- [ ] Tutorial blog posts output valid `HowTo` JSON-LD schema containing name, description, and Step items.
+- [ ] Non-tutorial blog posts continue to render standard BlogPosting / Article schema without errors.
 
-### Automated Advice & Caching
-- [ ] AI advice loads automatically upon navigating to the care/irrigation page without manual button clicks.
-- [ ] When advice has already been fetched for the current calendar day, opening or reloading the page uses the cached advice rather than re-requesting from the API.
+### Blog & Marketplace Cross-Linking
+- [ ] Blog posts display relevant marketplace listing links matching post topics or plant species.
 
-### Subscription Rules
-- [ ] Non-subscribed users are presented with the locked paywall preview for premium care features.
-- [ ] Subscribed users have full access to automated daily advice and mascot insights.
+### CTR Title Optimization
+- [ ] Blog post titles in the blog data include CTR-enhancing elements (emojis, brackets, or hooks) while preserving topical relevance.
 
-### Build & Verification
-- [ ] Application builds without TypeScript or bundling errors (`npm run build`).
-- [ ] Existing automated test suites pass without regression.
+### Verification
+- [ ] `npm run build` completes with zero TypeScript or Next.js build errors.
+- [ ] `npm run lint` passes without errors.
