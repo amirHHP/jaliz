@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { getAllWikiPlants } from "@/lib/wikiData"
 import { WikiIndexClient } from "./WikiIndexClient"
+import { getCanonicalSiteUrl } from "@/lib/siteUrl"
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
+const SITE_URL = getCanonicalSiteUrl()
 
 export const metadata: Metadata = {
   title: "دانشنامه و راهنمای جامع گیاهان آپارتمانی | جالیز",

@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest"
 import { getAllWikiPlants } from "@/lib/wikiData"
+import { getCanonicalSiteUrl } from "@/lib/siteUrl"
 import {
   generateStaticParams,
   generateMetadata,
 } from "@/app/wiki/[slug]/page"
 
 describe("Milestone 2: Programmatic Wiki Pages & Schemas", () => {
-  const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
+  const SITE_URL = getCanonicalSiteUrl()
 
   describe("generateStaticParams()", () => {
     it("generates static route parameters for all wiki plants", async () => {

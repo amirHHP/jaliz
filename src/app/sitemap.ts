@@ -2,8 +2,9 @@ import { MetadataRoute } from "next"
 import prisma from "@/lib/prisma"
 import { blogPosts } from "@/lib/blogData"
 import { getAllWikiPlants } from "@/lib/wikiData"
+import { getCanonicalSiteUrl } from "@/lib/siteUrl"
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
+const SITE_URL = getCanonicalSiteUrl()
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Static pages

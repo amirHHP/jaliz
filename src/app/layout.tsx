@@ -50,6 +50,7 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { getCanonicalSiteUrl } from "@/lib/siteUrl";
 
 export const maxDuration = 60;
 
@@ -58,7 +59,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir"),
+  metadataBase: new URL(getCanonicalSiteUrl()),
   title: {
     default: "جالیز | فروشگاه گیاه، بذر و ابزار باغبانی",
     template: "%s | جالیز",

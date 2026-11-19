@@ -1,3 +1,5 @@
+import { getCanonicalSiteUrl } from "./siteUrl"
+
 const ZARINPAL_REQUEST_URL = "https://api.zarinpal.com/pg/v4/payment/request.json"
 const ZARINPAL_VERIFY_URL = "https://api.zarinpal.com/pg/v4/payment/verify.json"
 const ZARINPAL_START_PAY_URL = "https://www.zarinpal.com/pg/StartPay"
@@ -7,9 +9,7 @@ export function getZarinpalMerchantId(): string {
 }
 
 export function getSiteUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim()
-  if (fromEnv) return fromEnv.replace(/\/$/, "")
-  return "https://jalizapp.ir"
+  return getCanonicalSiteUrl()
 }
 
 /**

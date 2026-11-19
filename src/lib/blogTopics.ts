@@ -1,3 +1,5 @@
+import { getCanonicalSiteUrl } from "./siteUrl"
+
 export type BlogCluster =
   | "species"
   | "diagnosis"
@@ -46,8 +48,7 @@ export type BlogPostInput = Omit<
   "primaryKeyword" | "cluster" | "publishedAtIso" | "alternateSlug" | "faqs"
 >
 
-export const BLOG_SITE_URL =
-  (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
+export const BLOG_SITE_URL = getCanonicalSiteUrl()
 
 const blogSeoBySlug: Record<string, BlogSeoMeta> = {}
 

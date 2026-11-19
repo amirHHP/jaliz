@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest"
 import sitemap from "@/app/sitemap"
 import robots from "@/app/robots"
 import { getAllWikiPlants } from "../wikiData"
+import { getCanonicalSiteUrl } from "../siteUrl"
 
 describe("SEO Sitemap & Robots Registration (Tiers 1-4)", () => {
-  const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
+  const SITE_URL = getCanonicalSiteUrl()
 
   /* ==========================================================================
    * TIER 1: SITEMAP INDEX & STATIC ENCYCLOPEDIA ROUTE

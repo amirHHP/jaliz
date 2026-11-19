@@ -28,8 +28,9 @@ import {
   BookOpen,
   Info,
 } from "lucide-react"
+import { getCanonicalSiteUrl } from "@/lib/siteUrl"
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://jalizapp.ir").replace(/\/$/, "")
+const SITE_URL = getCanonicalSiteUrl()
 
 interface Props {
   params: Promise<{ slug: string }>
